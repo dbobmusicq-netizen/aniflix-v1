@@ -44,51 +44,62 @@
   <link rel="stylesheet" href="mobile.css">
   <link rel="stylesheet" href="animation.css">
 
-  <!-- INJECTED ANIMATIONS & BUG FIX STYLES -->
+  <!-- ANIMATIONS & PLAYER LOADING STYLES -->
   <style>
-    /* Global App Preloader */
-    #appPreloader {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #040406; z-index: 99999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
-    }
-    .loader-brand { font-size: 3rem; color: white; font-family: 'Outfit', sans-serif; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-    .loader-icon { color: #E50914; animation: pulse 1.5s infinite alternate; }
-    
-    /* Player Loading Overlay */
+    /* Player Loading Overlay Animation */
     .player-loader-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(4, 4, 6, 0.85); z-index: 50;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      backdrop-filter: blur(5px); transition: opacity 0.3s;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(4, 4, 6, 0.88);
+      z-index: 45;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .player-logo-pulsar {
+      font-size: 3rem;
+      color: #e50914;
+      animation: playerLogoPulse 1.4s ease-in-out infinite alternate;
     }
     .player-spinner {
-      width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1);
-      border-top-color: #E50914; border-radius: 50%;
-      animation: spin 1s linear infinite; margin-top: 15px;
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #e50914;
+      border-radius: 50%;
+      animation: spinLoader 0.9s linear infinite;
+      margin-top: 14px;
     }
-
-    /* Cinematic Animations */
-    @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.7; filter: drop-shadow(0 0 10px rgba(229,9,20,0.5)); } 100% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 25px rgba(229,9,20,0.9)); } }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    
-    .animate-slide-down { animation: slideDown 0.6s ease-out forwards; }
-    
-    /* Enhance Netflix button */
-    .netflix-toggle-btn:hover .netflix-svg-icon { animation: pulse 0.8s infinite alternate; }
+    .player-loading-text {
+      margin-top: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      color: #fff;
+      font-weight: 700;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    @keyframes playerLogoPulse {
+      0% { transform: scale(0.92); opacity: 0.65; filter: drop-shadow(0 0 8px rgba(229,9,20,0.4)); }
+      100% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 22px rgba(229,9,20,0.9)); }
+    }
+    @keyframes spinLoader {
+      to { transform: rotate(360deg); }
+    }
+    .brand-icon-wrapper i {
+      animation: playerLogoPulse 2.8s ease-in-out infinite alternate;
+    }
   </style>
 </head>
 <body class="theme-dark">
-
-  <!-- GLOBAL INITIAL PRELOADER -->
-  <div id="appPreloader">
-    <div class="loader-brand animate-slide-down">
-      <i class="fas fa-play loader-icon"></i> ANIFLIX<small style="color:#E50914; font-size:0.5em;">ULTRA</small>
-    </div>
-    <div class="player-spinner"></div>
-  </div>
 
   <!-- MULTIPLAYER VIRTUAL CURSOR LAYER -->
   <div id="p2pCursorLayer"></div>
@@ -107,7 +118,7 @@
   </div>
 
   <!-- CLEAN & SPACIOUS NAVIGATION HEADER -->
-  <header class="header animate-slide-down" id="mainHeader">
+  <header class="header" id="mainHeader">
     <div class="header-left">
       <!-- Menu Drawer Hamburger Toggle Button -->
       <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Open Navigation Menu" onclick="window.toggleMobileNav(true)">
@@ -115,7 +126,7 @@
       </button>
 
       <a href="#" class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-        <div class="brand-icon-wrapper" style="animation: pulse 3s infinite;">
+        <div class="brand-icon-wrapper">
           <i class="fas fa-play"></i>
         </div>
         <span class="brand-name" id="brandTitleText">ANIFLIX<small class="brand-badge">ULTRA</small></span>
@@ -123,15 +134,14 @@
         <span class="pwa-badge" id="appStatusPill" style="display:none;"><i class="fas fa-bolt"></i> APP</span>
       </a>
 
-      <!-- Desktop Navigation Links (FIXED: Added Data attributes & Missing categories) -->
+      <!-- Desktop Navigation Links -->
       <nav class="nav-desktop">
         <ul class="nav-links">
-          <li><a class="nav-link active" id="navHome" data-genre="Home" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li>
-          <li><a class="nav-link" data-genre="Movies" onclick="window.navigateGenre('Movies', 'Movies')"><i class="fas fa-film"></i> <span>Movies</span></a></li>
-          <li><a class="nav-link" data-genre="TV Shows" onclick="window.navigateGenre('TV', 'TV Shows')"><i class="fas fa-tv"></i> <span>TV Shows</span></a></li>
-          <li><a class="nav-link" data-genre="Action" onclick="window.navigateGenre('Action', 'Action Blockbusters')"><span>Action</span></a></li>
-          <li><a class="nav-link" data-genre="Romance" onclick="window.navigateGenre('Romance', 'Romance & Drama')"><span>Romance</span></a></li>
-          <li><a class="nav-link" data-genre="Hindi" id="navHindi" onclick="window.loadHindiDubbed()"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>
+          <li><a class="nav-link active" id="navHome" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li>
+          <li><a class="nav-link" id="navHindi" onclick="window.loadHindiDubbed()"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>
+          <li><a class="nav-link" onclick="window.navigateGenre('Action', 'Action Blockbusters')"><span>Action</span></a></li>
+          <li><a class="nav-link" onclick="window.navigateGenre('Romance', 'Romance & Drama')"><span>Romance</span></a></li>
+          <li><a class="nav-link" onclick="window.navigateGenre('Fantasy', 'Isekai & Fantasy')"><span>Fantasy</span></a></li>
         </ul>
       </nav>
     </div>
@@ -241,16 +251,16 @@
       </button>
     </div>
 
-    <!-- MAIN NAVIGATION LINKS (FIXED) -->
+    <!-- MAIN NAVIGATION LINKS -->
     <div class="drawer-section-label">CATEGORIES & NAV</div>
     <ul class="mobile-nav-list">
-      <li><a class="mobile-nav-link active" data-genre="Home" onclick="window.toggleMobileNav(false); window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> Home</a></li>
-      <li><a class="mobile-nav-link" data-genre="Movies" onclick="window.toggleMobileNav(false); window.navigateGenre('Movies', 'Movies')"><i class="fas fa-film"></i> Movies</a></li>
-      <li><a class="mobile-nav-link" data-genre="TV Shows" onclick="window.toggleMobileNav(false); window.navigateGenre('TV', 'TV Shows')"><i class="fas fa-tv"></i> TV Shows</a></li>
-      <li><a class="mobile-nav-link" data-genre="Action" onclick="window.toggleMobileNav(false); window.navigateGenre('Action', 'Action Blockbusters')"><i class="fas fa-bolt"></i> Action</a></li>
-      <li><a class="mobile-nav-link" data-genre="Romance" onclick="window.toggleMobileNav(false); window.navigateGenre('Romance', 'Romance & Drama')"><i class="fas fa-heart"></i> Romance</a></li>
-      <li><a class="mobile-nav-link" data-genre="Hindi" onclick="window.toggleMobileNav(false); window.loadHindiDubbed()"><i class="fas fa-language"></i> Hindi Dubbed</a></li>
+      <li><a class="mobile-nav-link active" onclick="window.toggleMobileNav(false); window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> Home</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.loadHindiDubbed()"><i class="fas fa-language"></i> Hindi Dubbed</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Action', 'Action Blockbusters')"><i class="fas fa-bolt"></i> Action</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Romance', 'Romance & Drama')"><i class="fas fa-heart"></i> Romance</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Fantasy', 'Isekai & Fantasy')"><i class="fas fa-dungeon"></i> Fantasy & Isekai</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.openWatchlistModal()"><i class="fas fa-bookmark"></i> My Watchlist (<span id="mobileWatchlistCount">0</span>)</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.toggleShortcutsModal(true)"><i class="fas fa-keyboard"></i> Keyboard Shortcuts</a></li>
     </ul>
 
     <!-- FOOTER AUDIO PREFERENCE PILL -->
@@ -302,7 +312,7 @@
       </div>
     </div>
 
-    <!-- Right Side Rail Indicators -->
+    <!-- Right Side Rail Indicators (Large Desktop Screens) -->
     <div class="hero-side-rail" aria-hidden="true">
       <span class="rail-indicator active"></span>
       <span class="rail-indicator"></span>
@@ -312,18 +322,17 @@
     </div>
   </section>
 
-  <!-- QUICK CHIPS HORIZONTAL FILTER BAR (FIXED: Added missing filters & data-filter attributes) -->
+  <!-- QUICK CHIPS HORIZONTAL FILTER BAR -->
   <section class="quick-chips-rail" aria-label="Quick Category Filter">
     <div class="chips-container" id="filterChips">
-      <button class="chip active" type="button" data-filter="ALL" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
-      <button class="chip" type="button" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button>
-      <button class="chip" type="button" data-filter="TV" onclick="window.applyQuickFilter('TV', this)"><i class="fas fa-tv"></i> TV Shows</button>
-      <button class="chip" type="button" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button>
-      <button class="chip" type="button" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tower-broadcast"></i> Top Rated</button>
-      <button class="chip" id="chipCategoryAction" type="button" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button>
-      <button class="chip" id="chipCategoryFantasy" type="button" data-filter="FANTASY" onclick="window.applyQuickFilter('FANTASY', this)"><i class="fas fa-dungeon"></i> Fantasy</button>
-      <button class="chip" id="chipCategorySciFi" type="button" data-filter="SCI_FI" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>
-      <button class="chip" id="chipCategoryRomance" type="button" data-filter="ROMANCE" onclick="window.applyQuickFilter('ROMANCE', this)"><i class="fas fa-heart"></i> Romance</button>
+      <button class="chip active" type="button" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
+      <button class="chip" type="button" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button>
+      <button class="chip" type="button" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tower-broadcast"></i> Airing</button>
+      <button class="chip" type="button" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button>
+      <button class="chip" id="chipCategory1" type="button" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button>
+      <button class="chip" id="chipCategory2" type="button" onclick="window.applyQuickFilter('SECONDARY', this)"><i class="fas fa-dungeon"></i> Fantasy</button>
+      <button class="chip" id="chipCategory3" type="button" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>
+      <button class="chip" type="button" onclick="window.applyQuickFilter('ROMANCE', this)"><i class="fas fa-heart"></i> Romance</button>
     </div>
   </section>
 
@@ -350,14 +359,11 @@
       
       <!-- Video Frame Viewport with AniSkip & P2P Realtime HUD Elements -->
       <div class="modal-player-wrap" id="modalPlayerWrap">
-        
-        <!-- NEW: ANIMATED PLAYER LOADING OVERLAY -->
+        <!-- PLAYER LOADING ANIMATION OVERLAY -->
         <div id="playerLoadingOverlay" class="player-loader-overlay" style="display:none;">
-          <div style="animation: pulse 1s infinite alternate; font-size: 40px; color:#E50914;">
-            <i class="fas fa-play"></i>
-          </div>
+          <i class="fas fa-play player-logo-pulsar"></i>
           <div class="player-spinner"></div>
-          <div style="margin-top: 15px; font-family: 'Space Grotesk'; color: white; font-weight: 700; letter-spacing: 1px;">BUFFERING STREAM</div>
+          <div class="player-loading-text">Loading Stream</div>
         </div>
 
         <!-- Screen Wake Lock Active HUD Indicator -->
@@ -444,6 +450,7 @@
           </div>
           <span class="server-status-caption" id="activeServerCaption">Server 1 (Native Direct Stream)</span>
         </div>
+
         <div class="server-pills-scroll" id="serverButtonsContainer">
           <!-- Dynamically populated by streaming-ui.js renderServerControlsDOM() -->
         </div>
@@ -658,19 +665,7 @@
     </div>
   </div>
 
-  <!-- SEPARATED MODULAR SCRIPT ENGINES -->
-  
-  <!-- Add a quick script to remove the preloader smoothly once the window loads -->
-  <script>
-    window.addEventListener('load', () => {
-      const preloader = document.getElementById('appPreloader');
-      if (preloader) {
-        preloader.style.opacity = '0';
-        setTimeout(() => preloader.style.display = 'none', 600);
-      }
-    });
-  </script>
-
+  <!-- SEPARATED MODULAR SCRIPT ENGINES (PROPER DEPENDENCY EXECUTION ORDER) -->
   <script src="core-engine.js"></script>
   <script src="dash-player.js"></script>
   <script src="adblock-engine.js"></script>
