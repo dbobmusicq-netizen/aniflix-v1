@@ -1,14 +1,15 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 22.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 23.0 Enterprise Master Architecture)
  * 
  * Core Enhancements:
- *  - Native Card Layout: Replaces detached footer blocks with seamless in-card bottom gradient vignettes.
- *  - Official TMDB v3 API Parameter Deduplicator: Prevents duplicate parameters and eliminates HTTP 400 errors.
- *  - Live-Action Isolation: Explicitly excludes Animation (without_genres=16) across TMDB discover queries.
- *  - Fluid Horizontal Rails: Employs dedicated flex tracks with horizontal scrolling and card hover scaling.
- *  - Mode-Aware Category Routing: Synchronizes navigation links, chips, and drawers across Anime and Netflix modes.
- *  - 4-Tier Stream Server Matrix (NxSha, Filmu, VidCore, VidFast) with health check probes.
+ *  - Fixed Text Offset Bug: Replaced negative CSS bleed-through with strict `box-sizing: border-box`,
+ *    explicit zero-margin bounds, and clean in-card gradient overlays.
+ *  - Official TMDB v3 API Parameter Deduplicator: Prevents duplicate query parameters and HTTP 400 errors.
+ *  - Live-Action Strict Isolation: Completely excludes Animation (without_genres=16) across TMDB discover queries.
+ *  - Fluid Horizontal Rails: Standardized responsive flex tracks with smooth scrolling and card hover scaling.
+ *  - Mode-Aware Dual-Universe Transformer: Synchronizes desktop/mobile navigation, chips, and modals.
+ *  - 4-Tier Stream Server Matrix (NxSha, Filmu, VidCore, VidFast) with auto-failover and health checks.
  */
 
 // ============================================================================
@@ -135,7 +136,6 @@ let STATE = {
 };
 window.STATE = STATE;
 
-// Deduplicates URL query parameters to eliminate HTTP 400 errors
 function cleanTMDBUrl(endpointPath, customParams = {}) {
   const base = endpointPath.startsWith('http')
     ? endpointPath
@@ -605,7 +605,7 @@ window.nextEpisode = function() {
 };
 
 // ============================================================================
-// 9. TMDB DISCOVER ENGINE & SEAMLESS CAROUSEL RAILS
+// 9. TMDB DISCOVER ENGINE & STREAMLINED CAROUSEL RAILS
 // ============================================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
@@ -732,8 +732,7 @@ window.updateHeroBillboard = function(item) {
 };
 
 /**
- * Builds cards with seamless, floating bottom vignette overlays
- * Matching the exact native AniFlix Ultra card design
+ * Builds cards with strict CSS overrides preventing negative margin/left bleeds
  */
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
@@ -744,7 +743,7 @@ window.generateRowHTML = function(title, items, rowIndex) {
 
     return `
       <div class="anime-card" 
-           style="flex: 0 0 170px; max-width: 170px; width: 170px; height: 255px; position: relative; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease; user-select: none; background: #16161c;"
+           style="flex: 0 0 170px !important; max-width: 170px !important; width: 170px !important; height: 255px !important; position: relative !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer !important; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important; user-select: none !important; background: #16161c !important; box-sizing: border-box !important;"
            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.7)';"
            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"
            onclick="if(typeof window.openModalById === 'function') window.openModalById(${item.id});">
@@ -752,25 +751,25 @@ window.generateRowHTML = function(title, items, rowIndex) {
         <img src="${poster}" 
              alt="${displayTitle}" 
              loading="lazy" 
-             style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+             style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important;" />
              
         <!-- Top Format Pill Badge -->
         <div class="card-badge-top" 
-             style="position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(6px); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; z-index: 2; border: 1px solid rgba(255, 255, 255, 0.1);">
+             style="position: absolute !important; top: 8px !important; right: 8px !important; background: rgba(0, 0, 0, 0.78) !important; backdrop-filter: blur(6px) !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 2 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;">
           ${format}
         </div>
         
-        <!-- Seamless Bottom Vignette Gradient with Title & Score -->
+        <!-- Safe In-Card Bottom Vignette (Isolated against CSS Bleed) -->
         <div class="card-overlay" 
-             style="position: absolute; inset: auto 0 0 0; background: linear-gradient(to top, rgba(4, 4, 6, 0.95) 0%, rgba(4, 4, 6, 0.7) 60%, transparent 100%); padding: 32px 10px 10px 10px; display: flex; flex-direction: column; justify-content: flex-end; z-index: 2;">
+             style="position: absolute !important; inset: auto 0 0 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; margin: 0 !important; padding: 36px 12px 10px 12px !important; box-sizing: border-box !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.96) 0%, rgba(4, 4, 6, 0.7) 65%, transparent 100%) !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; z-index: 2 !important; pointer-events: none !important;">
           <div class="card-title" 
-               style="font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);">
+               style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9) !important; width: 100% !important; text-align: left !important; margin: 0 !important; padding: 0 !important;">
             ${displayTitle}
           </div>
           <div class="card-meta" 
-               style="font-size: 11px; color: #a1a1aa; display: flex; gap: 8px; align-items: center; margin-top: 3px;">
-            <span class="card-score" style="color: #46d369; font-weight: 700;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span>
-            <span class="card-year">${item.year || '2026'}</span>
+               style="font-size: 11px !important; color: #a1a1aa !important; display: flex !important; gap: 8px !important; align-items: center !important; margin-top: 4px !important; width: 100% !important; text-align: left !important;">
+            <span class="card-score" style="color: #46d369 !important; font-weight: 700 !important; display: inline-flex !important; align-items: center !important; gap: 3px !important;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span>
+            <span class="card-year" style="color: #a1a1aa !important;">${item.year || '2026'}</span>
           </div>
         </div>
       </div>
