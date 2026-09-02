@@ -1,13 +1,13 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 24.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 25.0 Enterprise Master Architecture)
  * 
- * Core Enhancements & UI Restorations:
- *  - Native Glassmorphic Floating Cards: Full-bleed poster cards with in-card bottom gradient vignettes.
- *  - Zero Text-Clip Architecture: Strict box-sizing and boundary locks prevent text from shifting left or getting clipped.
- *  - TMDB Deduplicating Query Engine: Eliminates duplicate query parameters to guarantee 0 HTTP 400 Bad Requests.
- *  - Strict Live-Action Isolation: Filters out TMDB Animation (without_genres=16) in Netflix Mode.
- *  - Dual-Universe Mode Transformer: Synchronizes desktop/mobile navigation, chips, and hero billboard across modes.
+ * Subsystems:
+ *  - Native Card Layout: High-performance in-card bottom gradient vignette without text clipping.
+ *  - Dedicated TMDB Parameter Sanitizer: Strips duplicate query keys to avoid HTTP 400 Bad Requests.
+ *  - Strict Live-Action Isolation: Explicitly excludes Animation (without_genres=16) in Netflix Mode.
+ *  - Mode-Aware Dual-Universe Transformer: Accurately toggles Navigation, Chips, and Content between Anime & Netflix.
+ *  - Preserves Streaming UI: Delegates anime rendering directly to streaming-ui.js without altering anime cards.
  *  - 4-Tier Stream Server Matrix (NxSha, Filmu, VidCore, VidFast) with health check probes.
  */
 
@@ -135,6 +135,9 @@ let STATE = {
 };
 window.STATE = STATE;
 
+/**
+ * Strict URL Parameter Deduplicator: Ensures no query parameter is set twice.
+ */
 function cleanTMDBUrl(endpointPath, customParams = {}) {
   const base = endpointPath.startsWith('http')
     ? endpointPath
@@ -178,7 +181,7 @@ class LocalStorageDatabase {
         });
         this.ready = true;
       } catch (err) {
-        console.warn('[DB Engine] Dexie initialization fallback triggered:', err);
+        console.warn('[DB Engine] Dexie initialization warning:', err);
       }
     }
   }
@@ -604,7 +607,7 @@ window.nextEpisode = function() {
 };
 
 // ============================================================================
-// 9. TMDB DISCOVER ENGINE & HORIZONTAL CAROUSEL RAILS
+// 9. TMDB DISCOVER ENGINE & STREAMLINED CAROUSEL RAILS
 // ============================================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
@@ -731,10 +734,7 @@ window.updateHeroBillboard = function(item) {
 };
 
 /**
- * Clean Full-Bleed Card Architecture:
- * - 100% card height coverage for the poster.
- * - Inset bottom gradient vignette without gray block-footers.
- * - Strict box-sizing & zero-margin offsets preventing left text clipping.
+ * Builds cards with strict CSS overrides preventing negative margin/left bleeds
  */
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
@@ -761,7 +761,7 @@ window.generateRowHTML = function(title, items, rowIndex) {
           ${format}
         </div>
         
-        <!-- Seamless Full-Bleed In-Card Bottom Vignette (Isolated against CSS Bleed) -->
+        <!-- Safe In-Card Bottom Vignette (Isolated against CSS Bleed) -->
         <div class="card-overlay" 
              style="position: absolute !important; inset: auto 0 0 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; margin: 0 !important; padding: 42px 12px 10px 12px !important; box-sizing: border-box !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.7) 62%, transparent 100%) !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; z-index: 2 !important; pointer-events: none !important;">
           <div class="card-title" 
@@ -871,27 +871,24 @@ window.applyQuickFilter = async function(filterKey, element) {
   }
 
   // --- ANIME UNIVERSE PIPELINE ---
-  if (window.webApp && typeof window.webApp.applyFilter === 'function') {
-    window.webApp.applyFilter(key);
-    return;
-  }
-
+  // Delegates directly to streaming-ui.js functions to preserve the original anime card design
   if (key === 'ALL') {
-    if (typeof window.navigateGenre === 'function') window.navigateGenre(null, 'Home');
+    if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (key === 'HINDI') {
-    if (typeof window.loadHindiDubbed === 'function') window.loadHindiDubbed();
+    if (typeof window.loadHindiDubbed === 'function') await window.loadHindiDubbed();
   } else if (key === 'MOVIES') {
-    if (typeof window.navigateGenre === 'function') window.navigateGenre('Movie', 'Top Anime Movies');
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Movie', 'Top Anime Movies');
   } else if (key === 'TOP_AIRING' || key === 'TOP_RATED') {
-    if (typeof window.navigateGenre === 'function') window.navigateGenre('Top', 'Top Airing Anime');
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Top', 'Top Airing Anime');
   } else if (key === 'ACTION') {
-    if (typeof window.navigateGenre === 'function') window.navigateGenre('Action', 'Action Anime');
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Action', 'Action Anime');
   } else if (key === 'ROMANCE') {
-    if (typeof window.navigateGenre === 'function') window.navigateGenre('Romance', 'Romance & Drama');
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Romance', 'Romance & Drama');
   } else if (key === 'SCI_FI') {
-    if (typeof window.navigateGenre === 'function') window.navigateGenre('Sci-Fi', 'Sci-Fi & Cyberpunk');
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Sci-Fi', 'Sci-Fi & Cyberpunk');
   } else if (key === 'SECONDARY' || key === 'FANTASY') {
-    if (typeof window.navigateGenre === 'function') window.navigateGenre('Fantasy', 'Isekai & Fantasy');
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Fantasy', 'Isekai & Fantasy');
   }
 };
 
@@ -920,12 +917,21 @@ window.navigateGenre = async function(genre, label) {
     return;
   }
 
-  if (window.webApp && typeof window.webApp.loadGenreView === 'function') {
-    window.webApp.loadGenreView(genre, label);
-  } else if (typeof window.renderHomeRows === 'function') {
-    window.renderHomeRows(genre);
+  // Anime mode: Call streaming-ui.js renderers
+  const contentRows = document.getElementById('contentRows');
+  if (contentRows) contentRows.innerHTML = '';
+
+  if (!genre) {
+    if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (typeof window.renderRow === 'function') {
+    await window.renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
+    await window.renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
+  }
+  window.scrollTo({ top: 350, behavior: 'smooth' });
 };
 
 window.loadHindiDubbed = async function() {
@@ -933,10 +939,15 @@ window.loadHindiDubbed = async function() {
     await window.applyQuickFilter('HINDI');
     return;
   }
-  if (window.webApp && typeof window.webApp.loadHindiContent === 'function') {
-    window.webApp.loadHindiContent();
-  } else if (typeof window.navigateGenre === 'function') {
-    window.navigateGenre('Hindi', 'Hindi Dubbed Releases');
+  if (typeof window.renderHindiDubRow === 'function') {
+    const contentRows = document.getElementById('contentRows');
+    if (contentRows) contentRows.innerHTML = '';
+    await window.renderHindiDubRow();
+    if (typeof window.renderRow === 'function') {
+      await window.renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
+      await window.renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['POPULARITY_DESC'] }, false);
+    }
+    window.scrollTo({ top: 350, behavior: 'smooth' });
   }
 };
 
@@ -1061,6 +1072,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
 
     if (typeof window.showToast === 'function') window.showToast('Switched to Anime Universe');
 
+    // Trigger streaming-ui.js original anime home renderers
     if (typeof window.renderHeroSpotlight === 'function') await window.renderHeroSpotlight();
     if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
   }
