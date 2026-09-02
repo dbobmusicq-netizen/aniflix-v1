@@ -60,6 +60,237 @@ const CONFIG = {
 };
 window.CONFIG = CONFIG;
 
+// ============================================================================
+// API REQUEST PROTECTION / RATE-LIMIT GUARD
+// ============================================================================
+// Purpose:
+//  - Prevent API request bursts from this client.
+//  - Limit protected API concurrency.
+//  - Enforce a delay between protected requests.
+//  - Deduplicate simultaneous identical GET requests.
+//  - Cache successful GET responses for a short period.
+//  - Respect Retry-After on HTTP 429.
+//  - Back off and retry temporary 5xx/network failures.
+// ============================================================================
+
+(function () {
+  if (window.__AniFlixRequestGuard) return;
+
+  const nativeFetch = window.fetch.bind(window);
+
+  const GUARD = {
+    minDelay: 650,
+    maxConcurrent: 2,
+    maxRetries: 2,
+    cacheTTL: 5 * 60 * 1000,
+    queue: [],
+    active: 0,
+    lastRequestAt: 0,
+    cache: new Map(),
+    pending: new Map()
+  };
+
+  window.__AniFlixRequestGuard = GUARD;
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  function getUrl(input) {
+    return typeof input === 'string'
+      ? input
+      : (input && input.url) || String(input);
+  }
+
+  function isProtectedAPI(url) {
+    return (
+      url.includes('graphql.anilist.co') ||
+      url.includes('api.jikan.moe') ||
+      url.includes('kitsu.io/api') ||
+      url.includes('api.aniskip.com') ||
+      url.includes('db.speedracelight.com')
+    );
+  }
+
+  function requestKey(url, method) {
+    return `${method}:${url}`;
+  }
+
+  function enqueue(job) {
+    return new Promise((resolve, reject) => {
+      GUARD.queue.push({ job, resolve, reject });
+      drain();
+    });
+  }
+
+  let draining = false;
+
+  async function drain() {
+    if (draining) return;
+    draining = true;
+
+    try {
+      while (GUARD.queue.length) {
+        const item = GUARD.queue.shift();
+
+        try {
+          const result = await runLimited(item.job);
+          item.resolve(result);
+        } catch (error) {
+          item.reject(error);
+        }
+      }
+    } finally {
+      draining = false;
+    }
+  }
+
+  async function runLimited(job) {
+    while (GUARD.active >= GUARD.maxConcurrent) {
+      await sleep(100);
+    }
+
+    const elapsed = Date.now() - GUARD.lastRequestAt;
+    const remaining = GUARD.minDelay - elapsed;
+
+    if (remaining > 0) {
+      await sleep(remaining);
+    }
+
+    GUARD.active++;
+    GUARD.lastRequestAt = Date.now();
+
+    try {
+      return await job();
+    } finally {
+      GUARD.active--;
+    }
+  }
+
+  async function guardedFetch(input, init = {}) {
+    const url = getUrl(input);
+    const method = String(init.method || 'GET').toUpperCase();
+
+    // Leave images, iframe URLs and unrelated requests untouched.
+    if (!isProtectedAPI(url)) {
+      return nativeFetch(input, init);
+    }
+
+    // POST requests are never cached/deduplicated.
+    const cacheable = method === 'GET';
+    const key = requestKey(url, method);
+
+    if (cacheable) {
+      const cached = GUARD.cache.get(key);
+
+      if (cached && Date.now() - cached.timestamp < GUARD.cacheTTL) {
+        return cached.response.clone();
+      }
+
+      // If the exact same request is already running, share it.
+      if (GUARD.pending.has(key)) {
+        const response = await GUARD.pending.get(key);
+        return response.clone();
+      }
+    }
+
+    const requestPromise = enqueue(async () => {
+      let attempt = 0;
+
+      while (attempt <= GUARD.maxRetries) {
+        try {
+          const response = await nativeFetch(input, init);
+
+          // Respect API rate-limit responses.
+          if (response.status === 429) {
+            let retryAfterMs = Number(response.headers.get('Retry-After')) * 1000;
+
+            if (!Number.isFinite(retryAfterMs) || retryAfterMs <= 0) {
+              retryAfterMs = Math.min(
+                15000,
+                3000 * Math.pow(2, attempt)
+              );
+            }
+
+            retryAfterMs += Math.floor(Math.random() * 1000);
+
+            console.warn(
+              `[AniFlix Request Guard] HTTP 429. Backing off for ${retryAfterMs}ms.`
+            );
+
+            await sleep(retryAfterMs);
+            attempt++;
+            continue;
+          }
+
+          // Retry temporary upstream failures.
+          if (response.status >= 500 && attempt < GUARD.maxRetries) {
+            const retryDelay = Math.min(
+              10000,
+              2000 * Math.pow(2, attempt)
+            );
+
+            await sleep(retryDelay);
+            attempt++;
+            continue;
+          }
+
+          if (cacheable && response.ok) {
+            GUARD.cache.set(key, {
+              timestamp: Date.now(),
+              response: response.clone()
+            });
+          }
+
+          return response;
+
+        } catch (error) {
+          if (attempt >= GUARD.maxRetries) {
+            throw error;
+          }
+
+          const retryDelay = Math.min(
+            10000,
+            1500 * Math.pow(2, attempt)
+          );
+
+          console.warn(
+            `[AniFlix Request Guard] Network error. Retrying in ${retryDelay}ms.`
+          );
+
+          await sleep(retryDelay);
+          attempt++;
+        }
+      }
+
+      throw new Error('Protected API request failed after retries.');
+    });
+
+    if (!cacheable) {
+      return requestPromise;
+    }
+
+    GUARD.pending.set(key, requestPromise);
+
+    try {
+      const response = await requestPromise;
+      return response.clone();
+    } finally {
+      GUARD.pending.delete(key);
+    }
+  }
+
+  window.fetch = guardedFetch;
+
+  GUARD.clearCache = function () {
+    GUARD.cache.clear();
+  };
+
+  GUARD.clearRequest = function (url, method = 'GET') {
+    GUARD.cache.delete(requestKey(url, method));
+  };
+
+  console.log('[AniFlix] API Request Guard enabled.');
+})();
+
 const SERVER_CONFIG = {
   1: {
     id: 1,
@@ -506,27 +737,54 @@ window.renderServerSwitcherGrid = function() {
 // ===============================================================
 // 7. ANISKIP TELEMETRY (ANIMATION DEDICATED)
 // ===============================================================
+let __AniFlixAniSkipRequest = 0;
+
 async function resolveAndPollAniSkip(malId, episodeNumber) {
   if (STATE.isNetflixMode || !STATE.userPreferences.autoSkipIntro) return;
+
+  const requestId = ++__AniFlixAniSkipRequest;
+
   const skipBtn = document.getElementById('aniSkipIntroBtn');
   const skipLabel = document.getElementById('aniSkipLabel');
+
   if (skipBtn) skipBtn.style.display = 'none';
 
+  // Debounce rapid episode changes.
+  await new Promise(resolve => setTimeout(resolve, 450));
+
+  if (requestId !== __AniFlixAniSkipRequest) return;
+
   try {
-    const url = `${CONFIG.APIS.ANISKIP}/skip-times/${malId}/${episodeNumber}?types[]=op&types[]=ed&episodeLength=0`;
+    const url =
+      `${CONFIG.APIS.ANISKIP}?` +
+      `malId=${encodeURIComponent(malId)}` +
+      `episodeNumber=${encodeURIComponent(episodeNumber)}` +
+      `types[]=op&types[]=ed&episodeLength=0`;
+
     const res = await fetch(url);
+
     if (!res.ok) return;
     const data = await res.json();
 
+    // Ignore a response belonging to an old episode.
+    if (requestId !== __AniFlixAniSkipRequest) return;
+
     if (data.found && data.results?.length > 0) {
       STATE.activeAniSkipData = data.results;
+
       const opResult = data.results.find(x => x.skipType === 'op');
+
       if (opResult && skipBtn && skipLabel) {
-        skipLabel.innerText = `Skip Opening (${Math.round(opResult.interval.startTime)}s - ${Math.round(opResult.interval.endTime)}s)`;
+        skipLabel.innerText =
+          `Skip Opening (${Math.round(opResult.interval.startTime)}s - ` +
+          `${Math.round(opResult.interval.endTime)}s)`;
+
         skipBtn.style.display = 'inline-flex';
       }
     }
-  } catch (err) {}
+  } catch (err) {
+    console.warn('[AniSkip] Request failed:', err);
+  }
 }
 window.resolveAndPollAniSkip = resolveAndPollAniSkip;
 
