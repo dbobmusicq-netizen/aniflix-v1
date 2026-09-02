@@ -1,14 +1,14 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 21.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 22.0 Enterprise Master Architecture)
  * 
- * Core Fixes & Features:
- *  - Strict Horizontal Rails: Forces inline flexbox layouts with fixed-width card tracks to prevent vertical poster stacking.
- *  - Complete Live-Action Isolation: Filters out TMDB Animation (without_genres=16) to eliminate anime leaks in Netflix Mode.
- *  - Mode-Aware Navigation & Chips: Dynamic navigation bar, quick chips, and drawer items updated based on active mode.
- *  - Native Live-Action Hindi Pipeline: Queries TMDB Indian cinema directly instead of AniList anime GraphQL endpoints.
- *  - 4-Tier Stream Server Mirror Engine: NxSha Ultra, Filmu Native, VidCore, and VidFast with responsive fallback.
- *  - Dexie.js IndexedDB History Sync, Bi-directional URL Router, and Physical Keyboard Binds.
+ * Core Enhancements:
+ *  - Native Card Layout: Replaces detached footer blocks with seamless in-card bottom gradient vignettes.
+ *  - Official TMDB v3 API Parameter Deduplicator: Prevents duplicate parameters and eliminates HTTP 400 errors.
+ *  - Live-Action Isolation: Explicitly excludes Animation (without_genres=16) across TMDB discover queries.
+ *  - Fluid Horizontal Rails: Employs dedicated flex tracks with horizontal scrolling and card hover scaling.
+ *  - Mode-Aware Category Routing: Synchronizes navigation links, chips, and drawers across Anime and Netflix modes.
+ *  - 4-Tier Stream Server Matrix (NxSha, Filmu, VidCore, VidFast) with health check probes.
  */
 
 // ============================================================================
@@ -66,12 +66,8 @@ const SERVER_CONFIG = {
     latency: null,
     endpoint: (tmdbId, season, ep, isMovie, anilistId) => {
       const base = 'https://embed.filmu.in';
-      if (isMovie) {
-        return `${base}/movie/${tmdbId}`;
-      }
-      if (anilistId && !STATE.isNetflixMode) {
-        return `${base}/anime/${anilistId}/${season}/${ep}`;
-      }
+      if (isMovie) return `${base}/movie/${tmdbId}`;
+      if (anilistId && !STATE.isNetflixMode) return `${base}/anime/${anilistId}/${season}/${ep}`;
       return `${base}/tv/${tmdbId}/${season}/${ep}`;
     }
   },
@@ -138,6 +134,30 @@ let STATE = {
   searchDebounce: null
 };
 window.STATE = STATE;
+
+// Deduplicates URL query parameters to eliminate HTTP 400 errors
+function cleanTMDBUrl(endpointPath, customParams = {}) {
+  const base = endpointPath.startsWith('http')
+    ? endpointPath
+    : `https://db.speedracelight.com/3${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;
+
+  const url = new URL(base);
+
+  if (url.pathname.includes('/discover/')) {
+    if (!url.searchParams.has('without_genres')) {
+      url.searchParams.set('without_genres', '16');
+    }
+    if (!url.searchParams.has('vote_count.gte')) {
+      url.searchParams.set('vote_count.gte', '15');
+    }
+  }
+
+  for (const [key, value] of Object.entries(customParams)) {
+    url.searchParams.set(key, String(value));
+  }
+
+  return url.toString();
+}
 
 // ============================================================================
 // 3. PERSISTENT STORAGE LAYER (INDEXEDDB SYNC VIA DEXIE)
@@ -275,8 +295,8 @@ const Router = {
     }
 
     if (p.drawer === 'menu') window.toggleMobileNav(true, true);
-    if (p.drawer === 'watchlist') {
-      if (typeof window.openWatchlistModal === 'function') window.openWatchlistModal(true);
+    if (p.drawer === 'watchlist' && typeof window.openWatchlistModal === 'function') {
+      window.openWatchlistModal(true);
     }
 
     if (p.modal === 'schedule' && typeof window.openScheduleModal === 'function') window.openScheduleModal(true);
@@ -585,7 +605,7 @@ window.nextEpisode = function() {
 };
 
 // ============================================================================
-// 9. TMDB DISCOVER ENGINE & HORIZONTAL CAROUSEL RAILS
+// 9. TMDB DISCOVER ENGINE & SEAMLESS CAROUSEL RAILS
 // ============================================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
@@ -620,15 +640,10 @@ window.formatTmdbMediaItem = function(item, forceFormat = null) {
   };
 };
 
-/**
- * Queries TMDB v3 API discover endpoint using `without_genres=16`
- * to strictly isolate live-action content and prevent anime leaks.
- */
 window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = null) {
   try {
-    const glue = endpoint.includes('?') ? '&' : '?';
-    const sanitizedEndpoint = `${endpoint}${glue}without_genres=${CONFIG.TMDB_GENRES.ANIMATION_EXCLUDE_ID}&vote_count.gte=15`;
-    const res = await fetch(`${CONFIG.APIS.TMDB_BASE}${sanitizedEndpoint}`);
+    const sanitizedUrl = cleanTMDBUrl(endpoint);
+    const res = await fetch(sanitizedUrl);
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.results || !data.results.length) return null;
@@ -660,13 +675,13 @@ window.renderTmdbLiveActionHome = async function() {
 
   const G = CONFIG.TMDB_GENRES;
   const rowPromises = [
-    window.fetchTmdbLiveActionRail(`/discover/movie?sort_by=popularity.desc`, 'Trending Movies Worldwide', 'MOVIE'),
-    window.fetchTmdbLiveActionRail(`/discover/tv?sort_by=popularity.desc`, 'Top Binge-Worthy TV Series', 'TV'),
+    window.fetchTmdbLiveActionRail('/discover/movie?sort_by=popularity.desc', 'Trending Movies Worldwide', 'MOVIE'),
+    window.fetchTmdbLiveActionRail('/discover/tv?sort_by=popularity.desc', 'Top Binge-Worthy TV Series', 'TV'),
     window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.ACTION.movie}&sort_by=popularity.desc`, 'Explosive Action & Thrillers', 'MOVIE'),
     window.fetchTmdbLiveActionRail(`/discover/tv?with_genres=${G.ACTION.tv}&sort_by=popularity.desc`, 'Action & Adventure Series', 'TV'),
     window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.ROMANCE.movie}&sort_by=popularity.desc`, 'Romance & Heartwarming Dramas', 'MOVIE'),
     window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.SCI_FI.movie}&sort_by=popularity.desc`, 'Sci-Fi & High Concept Cinema', 'MOVIE'),
-    window.fetchTmdbLiveActionRail(`/discover/movie?with_original_language=hi&sort_by=popularity.desc`, 'Hindi Dubbed & Bollywood Cinema', 'MOVIE')
+    window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Dubbed & Bollywood Cinema', 'MOVIE')
   ];
 
   const rows = (await Promise.all(rowPromises)).filter(Boolean);
@@ -717,8 +732,8 @@ window.updateHeroBillboard = function(item) {
 };
 
 /**
- * Generates horizontal scrolling rails with embedded flexbox properties
- * to prevent cards from stacking vertically.
+ * Builds cards with seamless, floating bottom vignette overlays
+ * Matching the exact native AniFlix Ultra card design
  */
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
@@ -728,22 +743,33 @@ window.generateRowHTML = function(title, items, rowIndex) {
     const format = item.format || 'TV';
 
     return `
-      <div class="card anime-card" 
-           style="flex: 0 0 190px; max-width: 190px; width: 190px; cursor: pointer; transition: transform 0.25s ease; user-select: none;"
-           onmouseover="this.style.transform='scale(1.05)'"
-           onmouseout="this.style.transform='scale(1)'"
+      <div class="anime-card" 
+           style="flex: 0 0 170px; max-width: 170px; width: 170px; height: 255px; position: relative; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease; user-select: none; background: #16161c;"
+           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.7)';"
+           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"
            onclick="if(typeof window.openModalById === 'function') window.openModalById(${item.id});">
-        <div class="card-thumb" style="position: relative; width: 100%; height: 280px; border-radius: 8px; overflow: hidden; background: #16161c;">
-          <img src="${poster}" 
-               alt="${displayTitle}" 
-               loading="lazy" 
-               style="width: 100%; height: 100%; object-fit: cover; display: block;" />
-          <div class="card-badge" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px;">${format}</div>
+        
+        <img src="${poster}" 
+             alt="${displayTitle}" 
+             loading="lazy" 
+             style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+             
+        <!-- Top Format Pill Badge -->
+        <div class="card-badge-top" 
+             style="position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(6px); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; z-index: 2; border: 1px solid rgba(255, 255, 255, 0.1);">
+          ${format}
         </div>
-        <div class="card-info" style="padding: 8px 2px;">
-          <div class="card-title" style="font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayTitle}</div>
-          <div class="card-meta" style="font-size: 12px; color: #a1a1aa; display: flex; gap: 8px; margin-top: 3px;">
-            <span class="card-score" style="color: #46d369;"><i class="fas fa-star" style="font-size: 10px;"></i> ${score}</span>
+        
+        <!-- Seamless Bottom Vignette Gradient with Title & Score -->
+        <div class="card-overlay" 
+             style="position: absolute; inset: auto 0 0 0; background: linear-gradient(to top, rgba(4, 4, 6, 0.95) 0%, rgba(4, 4, 6, 0.7) 60%, transparent 100%); padding: 32px 10px 10px 10px; display: flex; flex-direction: column; justify-content: flex-end; z-index: 2;">
+          <div class="card-title" 
+               style="font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);">
+            ${displayTitle}
+          </div>
+          <div class="card-meta" 
+               style="font-size: 11px; color: #a1a1aa; display: flex; gap: 8px; align-items: center; margin-top: 3px;">
+            <span class="card-score" style="color: #46d369; font-weight: 700;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span>
             <span class="card-year">${item.year || '2026'}</span>
           </div>
         </div>
@@ -752,13 +778,13 @@ window.generateRowHTML = function(title, items, rowIndex) {
   }).join('');
 
   return `
-    <section class="content-row" style="margin: 28px 0; padding: 0 4%;">
+    <section class="content-row" style="margin: 24px 0; padding: 0 4%;">
       <div class="row-header" style="margin-bottom: 12px;">
-        <h2 class="row-title" style="font-size: 20px; font-weight: 700; color: #fff;">${title}</h2>
+        <h2 class="row-title" style="font-size: 19px; font-weight: 800; color: #fff; letter-spacing: 0.2px;">${title}</h2>
       </div>
       <div class="carousel-container" style="position: relative; width: 100%; overflow: hidden;">
         <div class="carousel-rail" id="rail-${rowIndex}" 
-             style="display: flex; gap: 16px; overflow-x: auto; scroll-behavior: smooth; padding: 10px 0 16px 0; -webkit-overflow-scrolling: touch; scrollbar-width: thin;">
+             style="display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 6px 0 16px 0; -webkit-overflow-scrolling: touch; scrollbar-width: thin;">
           ${cardsHTML}
         </div>
       </div>
@@ -772,7 +798,6 @@ window.generateRowHTML = function(title, items, rowIndex) {
 window.applyQuickFilter = async function(filterKey, element) {
   const key = (filterKey || 'ALL').toUpperCase();
 
-  // Synchronize active chips UI
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   if (element) {
     element.classList.add('active');
@@ -806,7 +831,6 @@ window.applyQuickFilter = async function(filterKey, element) {
         window.fetchTmdbLiveActionRail('/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', 'All-Time Greatest TV Shows', 'TV')
       ];
     } else if (key === 'HINDI') {
-      // Pure Live-Action Hindi Queries (Strictly prevents anime routing)
       fetchPromises = [
         window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Blockbuster Movies', 'MOVIE'),
         window.fetchTmdbLiveActionRail('/discover/tv?with_original_language=hi&sort_by=popularity.desc', 'Hindi Web Series & Dramas', 'TV'),
@@ -903,7 +927,6 @@ window.navigateGenre = async function(genre, label) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// Mode-aware Hindi route: In Netflix mode, it calls the TMDB Live-Action Hindi pipeline
 window.loadHindiDubbed = async function() {
   if (STATE.isNetflixMode) {
     await window.applyQuickFilter('HINDI');
@@ -940,13 +963,11 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
     if (brandText) brandText.innerHTML = 'NETFLIX<small class="brand-badge" style="background:#ff0844; color:#fff;">LIVE</small>';
     if (searchInput) searchInput.placeholder = "Search movies, TV series, actors, directors...";
 
-    // Hide anime-only tools from floating quick dock
     if (quickDock) {
       const animeButtons = quickDock.querySelectorAll('button[onclick*="TraceMoe"], button[onclick*="Schedule"]');
       animeButtons.forEach(b => b.style.display = 'none');
     }
 
-    // Dynamic Netflix Desktop Navigation
     if (desktopNav) {
       desktopNav.innerHTML = `
         <li><a class="nav-link active" id="navHome" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li>
@@ -959,7 +980,6 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
       `;
     }
 
-    // Dynamic Mobile Drawer
     if (mobileNav) {
       mobileNav.innerHTML = `
         <li><a class="mobile-nav-link active" onclick="window.toggleMobileNav(false); window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> Home</a></li>
@@ -974,7 +994,6 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
       `;
     }
 
-    // Dynamic Horizontal Filter Chips
     if (filterChips) {
       filterChips.innerHTML = `
         <button class="chip active" type="button" data-filter="ALL" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
@@ -996,7 +1015,6 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
     if (brandText) brandText.innerHTML = 'ANIFLIX<small class="brand-badge">ULTRA</small>';
     if (searchInput) searchInput.placeholder = "Search anime, movies, series...";
 
-    // Restore anime tools on quick dock
     if (quickDock) {
       const animeButtons = quickDock.querySelectorAll('button[onclick*="TraceMoe"], button[onclick*="Schedule"]');
       animeButtons.forEach(b => b.style.display = '');
@@ -1341,7 +1359,6 @@ function extractSeasonInfo(anime) {
 }
 window.extractSeasonInfo = extractSeasonInfo;
 
-// Cross-Window PostMessage Event Protocol for Embed Synchronizers
 window.addEventListener('message', (e) => {
   if (!e.data || typeof e.data !== 'object') return;
 
