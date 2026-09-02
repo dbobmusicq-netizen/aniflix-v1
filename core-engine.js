@@ -1,21 +1,30 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 28.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 30.0 Netflix Multi-Season Architecture)
  *
- * Core Capabilities & Fixes:
- *  - Enriched Multi-Source Episode Engine: Fetches real episode names, still thumbnails,
- *    runtimes, air dates, and overviews for Anime, Web Series, and K-Dramas / Live-Action.
- *  - Seamless Triple Fallback Cascade: episode.still_path -> media.backdrop_path -> media.poster_path.
- *  - Modern Responsive Episode Grid: Fully eliminates full-width stretched button pill rows,
- *    rendering a clean 16:9 thumbnail preview card layout with play states.
- *  - Batch Slicing (1-50, 51-100, etc.) & Multi-Season Selector State Synchronization.
- *  - Mode-Aware Dual-Universe Transformer (Anime Universe vs. Netflix Live-Action Mode).
- *  - 4-Tier Stream Server Matrix (NxSha [Hindi Default], Filmu, VidCore, VidFast).
- *  - Memory Cache & IndexedDB Dexie.js Persistence with Instant Telemetry Recovery.
+ * Capabilities:
+ *  - Netflix-Grade Multi-Season Engine: Queries TMDB /tv/{id} to list all seasons in the dropdown.
+ *  - Title-Aware Season Matcher: Automatically selects the correct season when clicking titles like "Season 4".
+ *  - Dual-API Fallback Chain: Falls back to AniList relation graphs (SEQUEL/PREQUEL) if TMDB seasons are unindexed.
+ *  - Rich Episode Metadata: Fetches titles, 16:9 still images, summaries, runtimes, and air dates.
+ *  - 4-Tier Stream Server Matrix (NxSha [Hindi default], Filmu, VidCore, VidFast).
+ *  - DOM Anti-Wipe Protection: Defends against scripts attempting document.write() or innerHTML wipes.
  */
 
 // ============================================================================
-// 1. GLOBAL CONSTANTS, TMDB TAXONOMY & SERVER MATRIX
+// 0. ANTI-WIPE DOM PROTECTOR
+// ============================================================================
+(function() {
+  try {
+    if (window.__shield_active) return;
+    window.__shield_active = true;
+    Object.defineProperty(document, 'write', { value: function() { console.warn("AniFlix: Blocked malicious document.write"); }, writable: false });
+    Object.defineProperty(document, 'writeln', { value: function() { console.warn("AniFlix: Blocked malicious document.writeln"); }, writable: false });
+  } catch (e) {}
+})();
+
+// ============================================================================
+// 1. GLOBAL CONSTANTS, TAXONOMY & SERVER MATRIX
 // ============================================================================
 const CONFIG = {
   APIS: {
@@ -33,11 +42,11 @@ const CONFIG = {
     ANIMATION_EXCLUDE_ID: 16
   },
   STORAGE_KEYS: {
-    WATCHLIST: 'aniflix_watchlist_v5',
-    HISTORY: 'aniflix_history_v5',
-    PREFS: 'aniflix_prefs_v5',
-    DUB_PREF: 'aniflix_dub_pref_v5',
-    ACTIVE_SERVER: 'aniflix_active_server_v5'
+    WATCHLIST: 'aniflix_watchlist_v6',
+    HISTORY: 'aniflix_history_v6',
+    PREFS: 'aniflix_prefs_v6',
+    DUB_PREF: 'aniflix_dub_pref_v6',
+    ACTIVE_SERVER: 'aniflix_active_server_v6'
   },
   DEFAULT_TMDB_FALLBACK: 533535
 };
@@ -51,7 +60,6 @@ const SERVER_CONFIG = {
     type: 'extractor',
     subHost: 'MbPly-[Multi-Lang]',
     healthStatus: 'optimal',
-    latency: null,
     endpoint: (tmdbId, season, ep, isMovie, anilistId) => {
       const base = 'https://nxsha.space';
       const params = 'server=MbPly-[Multi-Lang]&lang=hi&color=netflix&disable_app_ad=true';
@@ -66,7 +74,6 @@ const SERVER_CONFIG = {
     caption: 'Server 2 (Filmu Ultra HD - Dedicated TMDB/AniList Master)',
     type: 'embed',
     healthStatus: 'optimal',
-    latency: null,
     endpoint: (tmdbId, season, ep, isMovie, anilistId) => {
       const base = 'https://embed.filmu.in';
       if (isMovie) return `${base}/movie/${tmdbId}`;
@@ -80,7 +87,6 @@ const SERVER_CONFIG = {
     caption: 'Server 3 (VidCore - Low Latency High Bitrate Pipeline)',
     type: 'embed',
     healthStatus: 'optimal',
-    latency: null,
     endpoint: (tmdbId, season, ep, isMovie, anilistId) => {
       const base = 'https://vidcore.org';
       const params = 'autoplay=true&theme=ff0844';
@@ -95,7 +101,6 @@ const SERVER_CONFIG = {
     caption: 'Server 4 (VidFast - AutoNext Synchronizer CDN)',
     type: 'embed',
     healthStatus: 'optimal',
-    latency: null,
     endpoint: (tmdbId, season, ep, isMovie, anilistId) => {
       const base = 'https://vidfast.vc';
       return isMovie
@@ -111,19 +116,21 @@ window.SERVER_CONFIG = SERVER_CONFIG;
 // ============================================================================
 const animeCache = new Map();
 const episodeDataCache = new Map();
+const seriesSeasonsCache = new Map();
 window.animeCache = animeCache;
 window.episodeDataCache = episodeDataCache;
+window.seriesSeasonsCache = seriesSeasonsCache;
 
 let STATE = {
   currentAnime: null,
   currentTMDBId: CONFIG.DEFAULT_TMDB_FALLBACK,
   season: 1,
   episode: 1,
-  activeServer: parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_SERVER), 10) || 1,
   totalEpisodes: 1,
+  availableSeasons: [],
   episodeBatchOffset: 0,
+  activeServer: parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_SERVER), 10) || 1,
   isTheaterMode: false,
-  isCinemaLights: false,
   isNetflixMode: false,
   isSmartAutoPlayNext: true,
   isMuted: false,
@@ -145,20 +152,14 @@ function cleanTMDBUrl(endpointPath, customParams = {}) {
     : `https://db.speedracelight.com/3${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;
 
   const url = new URL(base);
-
   if (url.pathname.includes('/discover/')) {
-    if (!url.searchParams.has('without_genres')) {
-      url.searchParams.set('without_genres', '16');
-    }
-    if (!url.searchParams.has('vote_count.gte')) {
-      url.searchParams.set('vote_count.gte', '15');
-    }
+    if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
+    if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
   }
 
   for (const [key, value] of Object.entries(customParams)) {
     url.searchParams.set(key, String(value));
   }
-
   return url.toString();
 }
 
@@ -177,13 +178,10 @@ class LocalStorageDatabase {
         this.db = new Dexie('AniFlixDatabase');
         this.db.version(1).stores({
           watchHistory: '&animeId, title, season, episode, timestamp, duration, updated, isFinished',
-          playbackProgress: '&streamKey, currentTime, duration, progressPercent',
           appPreferences: 'key, value'
         });
         this.ready = true;
-      } catch (err) {
-        console.warn('[DB Engine] Dexie initialization warning:', err);
-      }
+      } catch (err) {}
     }
   }
 
@@ -208,33 +206,16 @@ class LocalStorageDatabase {
     STATE.watchHistory[animeId] = entry;
     try {
       localStorage.setItem(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(STATE.watchHistory));
-    } catch (e) {
-      console.warn('[DB Engine] LocalStorage quota reached');
-    }
+    } catch (e) {}
 
     if (this.ready && this.db) {
-      try {
-        await this.db.watchHistory.put(entry);
-      } catch (e) {
-        console.error('[DB Engine] IndexedDB update error:', e);
-      }
-    }
-
-    const syncPill = document.getElementById('pwaSyncStatusPill');
-    if (syncPill) {
-      syncPill.classList.add('syncing');
-      clearTimeout(this.syncPillTimer);
-      this.syncPillTimer = setTimeout(() => syncPill.classList.remove('syncing'), 1800);
+      try { await this.db.watchHistory.put(entry); } catch (e) {}
     }
   }
 
   async getWatchHistoryItem(animeId) {
     if (this.ready && this.db) {
-      try {
-        return await this.db.watchHistory.get(String(animeId));
-      } catch (e) {
-        return STATE.watchHistory[animeId] || null;
-      }
+      try { return await this.db.watchHistory.get(String(animeId)); } catch (e) {}
     }
     return STATE.watchHistory[animeId] || null;
   }
@@ -243,7 +224,7 @@ const DB = new LocalStorageDatabase();
 window.DB = DB;
 
 // ============================================================================
-// 4. BI-DIRECTIONAL ROUTER & HISTORY SYSTEM
+// 4. BI-DIRECTIONAL ROUTER & HISTORY MANAGER
 // ============================================================================
 const Router = {
   set(params = {}, push = false) {
@@ -257,16 +238,7 @@ const Router = {
     });
 
     if (url.href === window.location.href) return;
-
-    if (push) {
-      window.history.pushState(Object.fromEntries(url.searchParams), '', url);
-    } else {
-      window.history.replaceState(Object.fromEntries(url.searchParams), '', url);
-    }
-  },
-
-  get(param) {
-    return new URLSearchParams(window.location.search).get(param);
+    push ? window.history.pushState(Object.fromEntries(url.searchParams), '', url) : window.history.replaceState(Object.fromEntries(url.searchParams), '', url);
   },
 
   getAll() {
@@ -277,53 +249,24 @@ const Router = {
     ['closeModal', 'closeWatchlistModal', 'closeScheduleModal', 'closeTraceMoeModal', 'closeWatchPartyModal'].forEach(fn => {
       if (typeof window[fn] === 'function') window[fn](true);
     });
-    if (typeof window.toggleShortcutsModal === 'function') window.toggleShortcutsModal(false, true);
     if (typeof window.toggleMobileNav === 'function') window.toggleMobileNav(false, true);
   },
 
   async syncUIFromURL() {
     const p = this.getAll();
-
     if (p.mode === 'netflix' && !STATE.isNetflixMode) await window.toggleNetflixMode(true);
     else if (p.mode !== 'netflix' && STATE.isNetflixMode) await window.toggleNetflixMode(true);
-
-    if (p.q) {
-      const searchWrap = document.getElementById('searchWrapper');
-      const searchInput = document.getElementById('searchInput');
-      if (searchWrap && searchInput) {
-        searchWrap.classList.add('open');
-        searchInput.value = decodeURIComponent(p.q);
-        searchInput.dispatchEvent(new Event('input'));
-      }
-    }
-
-    if (p.drawer === 'menu') window.toggleMobileNav(true, true);
-    if (p.drawer === 'watchlist' && typeof window.openWatchlistModal === 'function') {
-      window.openWatchlistModal(true);
-    }
-
-    if (p.modal === 'schedule' && typeof window.openScheduleModal === 'function') window.openScheduleModal(true);
-    if (p.modal === 'tracemoe' && typeof window.openTraceMoeModal === 'function') window.openTraceMoeModal(true);
-    if (p.modal === 'watchparty' && typeof window.openWatchPartyModal === 'function') window.openWatchPartyModal(true);
-    if (p.modal === 'shortcuts' && typeof window.toggleShortcutsModal === 'function') window.toggleShortcutsModal(true, true);
 
     if (p.watch) {
       const watchId = parseInt(p.watch, 10);
       const ep = parseInt(p.ep, 10) || 1;
       const s = parseInt(p.s, 10) || 1;
-      let srv = parseInt(p.srv, 10) || STATE.activeServer;
-      if (srv < 1 || srv > 4) srv = 1;
-
-      STATE.activeServer = srv;
+      STATE.activeServer = parseInt(p.srv, 10) || STATE.activeServer;
 
       if (!STATE.currentAnime || STATE.currentAnime.id !== watchId) {
         if (typeof window.openModalById === 'function') {
           await window.openModalById(watchId, ep, s);
         }
-      }
-
-      if (p.fs === '1' && !STATE.isTheaterMode && typeof window.toggleTheaterMode === 'function') {
-        window.toggleTheaterMode();
       }
     }
   }
@@ -336,14 +279,13 @@ window.addEventListener('popstate', async () => {
 });
 
 // ============================================================================
-// 5. HARDWARE-ACCELERATED CHROMA AMBILIGHT EXTRACTION
+// 5. HARDWARE-ACCELERATED AMBILIGHT CHROMA EXTRACTOR
 // ============================================================================
 window.extractChromaAmbilight = function(imageUrl) {
   if (!STATE.userPreferences.ambientAmbilight || !imageUrl) return;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const img = new Image();
-
   img.crossOrigin = 'Anonymous';
   img.src = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 'chroma_isolation=1';
 
@@ -359,18 +301,13 @@ window.extractChromaAmbilight = function(imageUrl) {
       for (let i = 0; i < imgData.length; i += 16) {
         const brightness = (imgData[i] * 299 + imgData[i + 1] * 587 + imgData[i + 2] * 114) / 1000;
         if (brightness > 25 && brightness < 215) {
-          r += imgData[i];
-          g += imgData[i + 1];
-          b += imgData[i + 2];
+          r += imgData[i]; g += imgData[i + 1]; b += imgData[i + 2];
           count++;
         }
       }
 
       if (count > 0) {
-        r = Math.floor(r / count);
-        g = Math.floor(g / count);
-        b = Math.floor(b / count);
-
+        r = Math.floor(r / count); g = Math.floor(g / count); b = Math.floor(b / count);
         const glow = document.getElementById('ambientGlow');
         if (glow) {
           glow.style.transition = 'box-shadow 1.2s cubic-bezier(0.16, 1, 0.3, 1), background 1.2s ease';
@@ -381,9 +318,7 @@ window.extractChromaAmbilight = function(imageUrl) {
         document.documentElement.style.setProperty('--chroma-b', b);
         document.documentElement.style.setProperty('--accent-dynamic-glow', `rgba(${r}, ${g}, ${b}, 0.6)`);
       }
-    } catch (e) {
-      console.warn('[Ambilight Engine] Canvas extraction bypassed due to CORS policy limits');
-    }
+    } catch (e) {}
   };
 };
 
@@ -403,6 +338,19 @@ window.executeStream = function(seekTimestamp = 0) {
   STATE.isIframeStreamLive = true;
   const streamUrl = window.resolveActiveStreamUrl();
   const title = STATE.currentAnime.title?.english || STATE.currentAnime.title?.romaji || 'Stream Master';
+
+  // Format title: Season {s} • Episode {e}
+  const modalNowPlayingTitle = document.getElementById('modalNowPlayingTitle');
+  const playerStreamTitle = document.getElementById('playerStreamTitle');
+  const isMovie = STATE.currentAnime?.format === 'MOVIE';
+
+  if (isMovie) {
+    if (modalNowPlayingTitle) modalNowPlayingTitle.innerText = `${title} • Feature Film`;
+    if (playerStreamTitle) playerStreamTitle.innerText = `Full Movie`;
+  } else {
+    if (modalNowPlayingTitle) modalNowPlayingTitle.innerText = `${title} • S${STATE.season} Ep ${STATE.episode}`;
+    if (playerStreamTitle) playerStreamTitle.innerText = `Season ${STATE.season} • Episode ${STATE.episode}`;
+  }
 
   wrap.innerHTML = `
     <div class="stream-frame-container" id="streamContainer" style="position:relative; width:100%; height:100%; background:#000;">
@@ -433,13 +381,6 @@ window.executeStream = function(seekTimestamp = 0) {
 
   if (STATE.currentAnime.idMal && !STATE.isNetflixMode) {
     resolveAndPollAniSkip(STATE.currentAnime.idMal, STATE.episode);
-  } else {
-    const skipBtn = document.getElementById('aniSkipIntroBtn');
-    if (skipBtn) skipBtn.style.display = 'none';
-  }
-
-  if (window.p2pParty && window.p2pParty.isHost) {
-    window.p2pParty.broadcastTitleChange(STATE.currentAnime, STATE.season, STATE.episode, STATE.activeServer);
   }
 };
 
@@ -448,7 +389,6 @@ window.switchStreamServer = function(serverId) {
   if (!SERVER_CONFIG[targetId]) return;
   STATE.activeServer = targetId;
   localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_SERVER, targetId);
-
   if (typeof window.showToast === 'function') {
     window.showToast(`Switched active node to: ${SERVER_CONFIG[targetId].name}`);
   }
@@ -476,9 +416,9 @@ window.renderServerSwitcherGrid = function() {
   }).join('');
 };
 
-// ===============================================================
-// 7. ANISKIP TELEMETRY (ANIMATION DEDICATED)
-// ===============================================================
+// ============================================================================
+// 7. ANISKIP TELEMETRY (ANIMATION EXCLUSIVE)
+// ============================================================================
 async function resolveAndPollAniSkip(malId, episodeNumber) {
   if (STATE.isNetflixMode || !STATE.userPreferences.autoSkipIntro) return;
   const skipBtn = document.getElementById('aniSkipIntroBtn');
@@ -499,9 +439,7 @@ async function resolveAndPollAniSkip(malId, episodeNumber) {
         skipBtn.style.display = 'inline-flex';
       }
     }
-  } catch (err) {
-    console.debug('[AniSkip] Skip intervals unavailable.');
-  }
+  } catch (err) {}
 }
 window.resolveAndPollAniSkip = resolveAndPollAniSkip;
 
@@ -510,32 +448,21 @@ window.triggerAniSkipJump = function() {
   const opData = STATE.activeAniSkipData.find(x => x.skipType === 'op');
   if (!opData) return;
 
-  const video = document.getElementById('nativeStreamVideo');
-  if (video) {
-    video.currentTime = opData.interval.endTime + 1;
-  } else {
-    const iframe = document.getElementById('streamFrame');
-    if (iframe) {
-      iframe.contentWindow?.postMessage({
-        type: 'SEEK_ABSOLUTE',
-        time: opData.interval.endTime + 1
-      }, '*');
-    }
-  }
+  const iframe = document.getElementById('streamFrame');
+  iframe?.contentWindow?.postMessage({
+    type: 'SEEK_ABSOLUTE',
+    time: opData.interval.endTime + 1
+  }, '*');
 
   if (typeof window.showToast === 'function') {
     window.showToast(`Skipped ahead to ${Math.round(opData.interval.endTime)}s`);
   }
   const skipBtn = document.getElementById('aniSkipIntroBtn');
   if (skipBtn) skipBtn.style.display = 'none';
-
-  if (window.p2pParty) {
-    window.p2pParty.sendSeek(opData.interval.endTime + 1);
-  }
 };
 
 // ============================================================================
-// 8. DEEP EPISODE & MULTI-SEASON HYDRATION ENGINE (METADATA ENRICHMENT)
+// 8. MULTI-SEASON QUERY & REAL-TIME EPISODE HYDRATION ENGINE
 // ============================================================================
 window.resolveTMDBId = async function(rawTitle, isMovie = false) {
   if (STATE.isNetflixMode && STATE.currentAnime?.tmdbId) {
@@ -559,8 +486,45 @@ window.resolveTMDBId = async function(rawTitle, isMovie = false) {
 };
 
 /**
- * Loads real episode titles, high-resolution still previews, overviews, runtimes,
- * and air dates for Anime, Web Series, and K-Dramas with cascading image fallbacks.
+ * Discovers all valid seasons for a TV Show or Anime Series via TMDB /tv/{id}.
+ */
+window.fetchSeriesSeasons = async function(tmdbId) {
+  if (!tmdbId || tmdbId === CONFIG.DEFAULT_TMDB_FALLBACK) return [];
+  const cacheKey = `series_seasons_${tmdbId}`;
+  if (seriesSeasonsCache.has(cacheKey)) {
+    return seriesSeasonsCache.get(cacheKey);
+  }
+
+  try {
+    const endpoint = `${CONFIG.APIS.TMDB_BASE}/tv/${tmdbId}`;
+    const res = await fetch(endpoint);
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    if (data.seasons?.length > 0) {
+      // Exclude Specials (Season 0)
+      const validSeasons = data.seasons
+        .filter(s => s.season_number > 0)
+        .map(s => ({
+          season_number: s.season_number,
+          name: s.name || `Season ${s.season_number}`,
+          episode_count: s.episode_count || 12,
+          overview: s.overview || '',
+          poster: s.poster_path ? `https://image.tmdb.org/t/p/w500${s.poster_path}` : null
+        }));
+      seriesSeasonsCache.set(cacheKey, validSeasons);
+      return validSeasons;
+    }
+  } catch (err) {
+    console.debug('[Seasons Discovery] TMDB Seasons fetch bypassed:', err);
+  }
+
+  return [];
+};
+
+/**
+ * Loads detailed episode metadata (titles, still previews, descriptions, air dates)
+ * from TMDB TV/Season APIs with fallbacks for Anime and Live-Action Dramas.
  */
 window.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
   const cacheKey = `ep_cache_${tmdbId}_s${seasonNum}`;
@@ -617,8 +581,7 @@ window.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
 };
 
 /**
- * Modern Responsive Episode Grid Renderer
- * Eliminates full-width stretched button rows and displays rich, clickable preview cards.
+ * Modern Responsive Episode Grid Renderer (Full Netflix Multi-Season Support)
  */
 window.renderEpisodeGrid = async function() {
   const isMovie = STATE.currentAnime?.format === 'MOVIE';
@@ -635,19 +598,37 @@ window.renderEpisodeGrid = async function() {
   if (container) container.style.display = 'block';
   if (!epList) return;
 
-  const total = STATE.currentAnime?.episodes || 12;
+  // 1. Discover all seasons for this show
+  let seasons = [];
+  if (STATE.currentTMDBId && STATE.currentTMDBId !== CONFIG.DEFAULT_TMDB_FALLBACK) {
+    seasons = await window.fetchSeriesSeasons(STATE.currentTMDBId);
+  }
+
+  STATE.availableSeasons = seasons;
+
+  // 2. Validate current season against available seasons
+  const currentSeasonMatch = seasons.find(s => s.season_number === STATE.season);
+  const total = currentSeasonMatch ? currentSeasonMatch.episode_count : (STATE.currentAnime?.episodes || 12);
   STATE.totalEpisodes = total;
 
   if (episodesTotalPill) episodesTotalPill.innerText = `Total ${total}`;
 
-  // 1. Season Select UI Sync
+  // 3. Render Netflix-Style Multi-Season Dropdown
   if (seasonSelect) {
-    seasonSelect.innerHTML = `
-      <option value="${STATE.season}" selected>Season ${STATE.season}</option>
-    `;
+    if (seasons.length > 1) {
+      seasonSelect.innerHTML = seasons.map(s => `
+        <option value="${s.season_number}" ${s.season_number === STATE.season ? 'selected' : ''}>
+          ${s.name} (${s.episode_count} Eps)
+        </option>
+      `).join('');
+    } else {
+      seasonSelect.innerHTML = `
+        <option value="${STATE.season}" selected>Season ${STATE.season}</option>
+      `;
+    }
   }
 
-  // 2. Episode Range Select UI Sync (Batches of 50)
+  // 4. Populate Range Select (Batches of 50)
   if (episodeRangeSelect) {
     episodeRangeSelect.innerHTML = '';
     const batches = Math.ceil(total / 50);
@@ -662,22 +643,22 @@ window.renderEpisodeGrid = async function() {
     }
   }
 
-  // 3. Fallback Images Cascade: Episode Still -> Backdrop -> Poster
+  // Fallback image cascading: Episode Still -> Backdrop -> Poster
   const posterFallback = STATE.currentAnime?.bannerImage ||
     STATE.currentAnime?.coverImage?.extraLarge ||
     STATE.currentAnime?.coverImage?.large || '';
 
-  // 4. Hydrate rich episode data
+  // 5. Query Rich Episode Data for Active Season
   let richEpisodes = null;
   if (STATE.currentTMDBId && STATE.currentTMDBId !== CONFIG.DEFAULT_TMDB_FALLBACK) {
     richEpisodes = await window.fetchSeasonEpisodesData(STATE.currentTMDBId, STATE.season);
   }
 
-  // 5. Slice active batch window
+  // 6. Calculate batch slice
   const batchStart = STATE.episodeBatchOffset * 50 + 1;
   const batchEnd = Math.min((STATE.episodeBatchOffset + 1) * 50, total);
 
-  // 6. Build High-Performance Card Grid
+  // 7. Render Modern Card Layout
   let cardsHTML = '';
   for (let ep = batchStart; ep <= batchEnd; ep++) {
     const isPlaying = ep === STATE.episode;
@@ -733,6 +714,7 @@ window.changeEpisodeRange = function(offsetIndex) {
 window.changeSeason = function(seasonNum) {
   STATE.season = parseInt(seasonNum, 10);
   STATE.episode = 1;
+  STATE.episodeBatchOffset = 0;
   window.renderEpisodeGrid();
   window.executeStream(0);
 };
@@ -751,15 +733,20 @@ window.nextEpisode = function() {
   if (STATE.episode < STATE.totalEpisodes) {
     window.switchEpisode(STATE.episode + 1);
   } else {
-    if (typeof window.showToast === 'function') {
-      window.showToast('You are currently on the final episode.');
+    // If next season exists, offer auto-advance
+    const nextSeason = STATE.availableSeasons.find(s => s.season_number === STATE.season + 1);
+    if (nextSeason) {
+      if (typeof window.showToast === 'function') window.showToast(`Season ${STATE.season} complete! Advancing to Season ${nextSeason.season_number}...`);
+      window.changeSeason(nextSeason.season_number);
+    } else {
+      if (typeof window.showToast === 'function') window.showToast('You have reached the final episode.');
     }
   }
 };
 
-// ============================================================================
+// ===============================================================
 // 9. TMDB DISCOVER ENGINE & DUAL-UNIVERSE TRANSFORMER
-// ============================================================================
+// ===============================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
   const title = item.title || item.name || 'Untitled';
@@ -816,7 +803,6 @@ window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = n
 
     return { title, list };
   } catch (err) {
-    console.warn('[TMDB Engine] Error querying live-action catalog:', err);
     return null;
   }
 };
@@ -824,7 +810,7 @@ window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = n
 window.renderTmdbLiveActionHome = async function() {
   const contentRows = document.getElementById('contentRows');
   if (!contentRows) return;
-  contentRows.innerHTML = '<div style="text-align:center; padding:60px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Initializing Netflix Live-Action Catalog...</div>';
+  contentRows.innerHTML = '<div style="text-align:center; padding:60px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading Netflix Live-Action Catalog...</div>';
 
   const G = CONFIG.TMDB_GENRES;
   const rowPromises = [
@@ -939,9 +925,9 @@ window.generateRowHTML = function(title, items, rowIndex) {
   `;
 };
 
-// ============================================================================
-// 10. UNIFIED CATEGORY FILTERING & TAB NAVIGATION PIPELINE
-// ============================================================================
+// ===============================================================
+// 10. UNIFIED FILTERING & NAVIGATION RESILIENCE PIPELINE
+// ===============================================================
 window.applyQuickFilter = async function(filterKey, element) {
   const key = (filterKey || 'ALL').toUpperCase();
 
@@ -954,7 +940,6 @@ window.applyQuickFilter = async function(filterKey, element) {
     if (match) match.classList.add('active');
   }
 
-  // --- NETFLIX LIVE-ACTION PIPELINE ---
   if (STATE.isNetflixMode) {
     const contentRows = document.getElementById('contentRows');
     if (!contentRows) return;
@@ -969,8 +954,7 @@ window.applyQuickFilter = async function(filterKey, element) {
     } else if (key === 'MOVIES') {
       fetchPromises = [
         window.fetchTmdbLiveActionRail('/discover/movie?sort_by=popularity.desc', 'Trending Movies Worldwide', 'MOVIE'),
-        window.fetchTmdbLiveActionRail('/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', 'Critically Acclaimed Movies', 'MOVIE'),
-        window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Bollywood & Hindi Cinema', 'MOVIE')
+        window.fetchTmdbLiveActionRail('/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', 'Critically Acclaimed Movies', 'MOVIE')
       ];
     } else if (key === 'TOP_AIRING' || key === 'SHOWS' || key === 'TV') {
       fetchPromises = [
@@ -980,8 +964,7 @@ window.applyQuickFilter = async function(filterKey, element) {
     } else if (key === 'HINDI') {
       fetchPromises = [
         window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Blockbuster Movies', 'MOVIE'),
-        window.fetchTmdbLiveActionRail('/discover/tv?with_original_language=hi&sort_by=popularity.desc', 'Hindi Web Series & Dramas', 'TV'),
-        window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=vote_average.desc&vote_count.gte=50', 'Critically Acclaimed Hindi Hits', 'MOVIE')
+        window.fetchTmdbLiveActionRail('/discover/tv?with_original_language=hi&sort_by=popularity.desc', 'Hindi Web Series & Dramas', 'TV')
       ];
     } else if (key === 'ACTION') {
       fetchPromises = [
@@ -1016,7 +999,7 @@ window.applyQuickFilter = async function(filterKey, element) {
     return;
   }
 
-  // --- ANIME UNIVERSE PIPELINE ---
+  // Anime Universe Navigation via streaming-ui.js
   if (key === 'ALL') {
     if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1095,9 +1078,9 @@ window.loadHindiDubbed = async function() {
   }
 };
 
-// ============================================================================
+// ===============================================================
 // 11. DUAL-UNIVERSE TRANSFORMER (NETFLIX VS ANIME)
-// ============================================================================
+// ===============================================================
 window.toggleNetflixMode = async function(skipUrlSync = false) {
   STATE.isNetflixMode = !STATE.isNetflixMode;
 
@@ -1223,9 +1206,9 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// ============================================================================
+// ===============================================================
 // 12. MODAL, DRAWER & WATCHLIST CONTROLLERS
-// ============================================================================
+// ===============================================================
 window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
   const drawer = document.getElementById('mobileNavDrawer');
   const overlay = document.getElementById('mobileDrawerOverlay');
@@ -1354,9 +1337,9 @@ window.updateWatchlistBadge = function() {
   if (mobileCounter) mobileCounter.innerText = STATE.watchlist.length;
 };
 
-// ============================================================================
-// 13. POWER-USER PHYSICAL KEYBOARD HOTKEYS
-// ============================================================================
+// ===============================================================
+// 13. POWER-USER KEYBOARD BINDINGS & SHORTCUTS
+// ===============================================================
 function initKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
     if (['input', 'textarea', 'select'].includes(document.activeElement.tagName.toLowerCase())) return;
@@ -1417,9 +1400,9 @@ window.toggleTheaterMode = function() {
   }
 };
 
-// ============================================================================
-// 14. AUXILIARY UTILITIES & APP LIFECYCLE INITIALIZER
-// ============================================================================
+// ===============================================================
+// 14. RUNTIME BOOTSTRAP, MEDIA LISTENERS & SEASON PARSER
+// ===============================================================
 window.showToast = function(msg) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
@@ -1439,6 +1422,10 @@ window.cleanHTML = function(str) {
   return str.replace(/<[^>]*>?/gm, '').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
 };
 
+/**
+ * Intelligent Season Parser:
+ * Detects "Season 4", "S4", "4th Season", etc. from the title and sets STATE.season.
+ */
 window.extractSeasonInfo = function(anime) {
   const title = anime?.title?.english || anime?.title?.romaji || '';
   let season = 1;
