@@ -1561,3 +1561,1147 @@ body {
     transition: none !important;
   }
 }
+/* ==========================================================================
+   ANIFLIX CINEMATIC MODAL X — ADVANCED VISUAL ENHANCEMENT LAYER
+   --------------------------------------------------------------------------
+   Compatibility-first: preserves the existing component/class API and adds
+   visual depth, motion, focus states, glass surfaces, hover physics, shimmer,
+   responsive polish and reduced-motion fallbacks.
+   No JavaScript dependencies. No structural HTML assumptions.
+   ========================================================================== */
+
+:root {
+  --modal-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --modal-spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --modal-fast: 160ms;
+  --modal-med: 280ms;
+  --modal-slow: 520ms;
+  --modal-glass: rgba(255, 255, 255, 0.045);
+  --modal-glass-strong: rgba(255, 255, 255, 0.075);
+  --modal-shadow-deep: 0 28px 90px rgba(0, 0, 0, 0.68);
+  --modal-shadow-soft: 0 12px 38px rgba(0, 0, 0, 0.42);
+  --modal-focus-ring: 0 0 0 3px rgba(0, 242, 254, 0.14);
+}
+
+/* ---------- Layered modal atmosphere ---------- */
+.modal-overlay.active {
+  background:
+    radial-gradient(900px 520px at 50% 10%, rgba(255, 8, 68, 0.09), transparent 65%),
+    radial-gradient(720px 480px at 85% 75%, rgba(0, 242, 254, 0.055), transparent 68%),
+    radial-gradient(circle at 50% 30%, rgba(14, 14, 24, 0.9), rgba(4, 4, 6, 0.985));
+}
+
+.modal-overlay.active::before,
+.modal-overlay.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.modal-overlay.active::before {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 85%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 85%);
+  animation: modalGridDrift 18s linear infinite;
+  opacity: .34;
+}
+
+.modal-overlay.active::after {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 34%, rgba(0,0,0,.16) 70%, rgba(0,0,0,.42) 100%);
+  animation: modalAtmospherePulse 7s ease-in-out infinite;
+}
+
+/* ---------- Dialog depth + animated edge ---------- */
+.modal-dialog {
+  isolation: isolate;
+  box-shadow: var(--modal-shadow-deep), 0 0 0 1px rgba(255,255,255,.025);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.012), transparent 16%),
+    var(--modal-bg-surface);
+  transform-origin: 50% 22%;
+}
+
+.modal-dialog::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 80;
+  padding: 1px;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,.16),
+    transparent 24%,
+    transparent 68%,
+    rgba(0,242,254,.11)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: .72;
+}
+
+.modal-dialog::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -38%;
+  width: 30%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+  filter: blur(.5px);
+  pointer-events: none;
+  z-index: 81;
+  animation: modalEdgeSweep 7s ease-in-out infinite;
+}
+
+.modal-container.active .modal-dialog {
+  animation: modalDialogEnter 620ms var(--modal-spring) both;
+}
+
+/* ---------- Navigation strip ---------- */
+.modal-nav-strip {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)),
+    rgba(10,10,15,.94);
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+}
+
+.modal-nav-strip::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,8,68,.55), rgba(0,242,254,.45), transparent);
+  transform: scaleX(.25);
+  transform-origin: center;
+  transition: transform 500ms var(--modal-spring);
+}
+
+.modal-container.active .modal-nav-strip::after {
+  transform: scaleX(1);
+}
+
+.modal-brand-tag {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(255,8,68,.22);
+  transition: transform var(--modal-med) var(--modal-spring), box-shadow var(--modal-med) ease;
+}
+
+.modal-brand-tag::after {
+  content: "";
+  position: absolute;
+  inset: -60% -100%;
+  background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.28) 50%, transparent 58%);
+  transform: translateX(-60%) rotate(8deg);
+  animation: modalBrandSweep 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.modal-brand-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 26px rgba(255,8,68,.34);
+}
+
+.modal-now-playing-text {
+  transition: color var(--modal-fast) ease, transform var(--modal-fast) var(--modal-spring);
+}
+
+.modal-nav-left:hover .modal-now-playing-text {
+  color: #fff;
+}
+
+/* ---------- Close controls ---------- */
+.btn-close-modal,
+.drawer-close-btn {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0,0,0,.22);
+}
+
+.btn-close-modal::before,
+.drawer-close-btn::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,.055);
+  pointer-events: none;
+}
+
+.btn-close-modal::after,
+.drawer-close-btn::after {
+  content: "";
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  left: -140%;
+  top: -10%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+  transform: skewX(-20deg);
+  transition: left 520ms var(--modal-spring);
+  pointer-events: none;
+}
+
+.btn-close-modal:hover::after,
+.drawer-close-btn:hover::after {
+  left: 120%;
+}
+
+/* ---------- Player viewport ---------- */
+.modal-player-wrap {
+  isolation: isolate;
+  box-shadow: inset 0 -80px 100px rgba(0,0,0,.18);
+}
+
+.modal-player-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 45%, rgba(0,0,0,.22) 100%),
+    linear-gradient(90deg, rgba(255,8,68,.04), transparent 24%, transparent 76%, rgba(0,242,254,.035));
+  opacity: .9;
+}
+
+.modal-player-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 58%, rgba(0,0,0,.2) 100%);
+}
+
+.modal-backdrop-preview {
+  transform: scale(1.015);
+  filter: brightness(.72) saturate(1.12) contrast(1.03);
+  transition: transform 1.2s var(--modal-spring), filter 700ms ease;
+}
+
+.modal-container.active .modal-backdrop-preview {
+  animation: modalBackdropBreath 11s ease-in-out infinite;
+}
+
+.modal-player-wrap:hover .modal-backdrop-preview {
+  transform: scale(1.045);
+  filter: brightness(.77) saturate(1.16) contrast(1.04);
+}
+
+.modal-hero-gradient {
+  background:
+    linear-gradient(180deg, rgba(5,5,8,.06) 0%, rgba(8,8,13,.34) 45%, rgba(8,8,13,.985) 100%),
+    linear-gradient(90deg, rgba(255,8,68,.025), transparent 35%, transparent 65%, rgba(0,242,254,.02));
+}
+
+.player-cover-overlay {
+  text-shadow: 0 4px 24px rgba(0,0,0,.92);
+}
+
+.player-cover-overlay h2 {
+  animation: modalTitleReveal 650ms var(--modal-spring) both;
+}
+
+/* ---------- Action deck ---------- */
+.player-action-strip {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.012)),
+    linear-gradient(180deg, rgba(16,16,24,.98), rgba(10,10,16,.99));
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+
+.player-action-strip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 7%;
+  right: 7%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+  pointer-events: none;
+}
+
+.modal-pill-btn {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255,255,255,.095);
+  box-shadow: 0 4px 14px rgba(0,0,0,.16);
+  transform: translateZ(0);
+  transition:
+    transform var(--modal-med) var(--modal-spring),
+    background var(--modal-fast) ease,
+    border-color var(--modal-fast) ease,
+    box-shadow var(--modal-med) ease,
+    color var(--modal-fast) ease;
+}
+
+.modal-pill-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.14) 50%, transparent 65%);
+  transform: translateX(-135%);
+  transition: transform 620ms var(--modal-spring);
+  pointer-events: none;
+}
+
+.modal-pill-btn:hover::before {
+  transform: translateX(135%);
+}
+
+.modal-pill-btn:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 10px 26px rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.025);
+}
+
+.modal-pill-btn:active {
+  transform: translateY(0) scale(.965);
+}
+
+.modal-pill-btn i,
+.modal-pill-btn svg {
+  transform-origin: center;
+}
+
+.modal-pill-btn:hover i,
+.modal-pill-btn:hover svg {
+  animation: modalIconPop 420ms var(--modal-spring);
+}
+
+.modal-pill-btn.primary-action {
+  background:
+    linear-gradient(120deg, rgba(255,255,255,.1), transparent 36%),
+    linear-gradient(135deg, var(--modal-accent-red), #b5052f);
+  box-shadow: 0 0 0 1px rgba(255,8,68,.2), 0 8px 26px rgba(255,8,68,.2);
+}
+
+.modal-pill-btn.primary-action:hover {
+  box-shadow: 0 0 0 1px rgba(255,8,68,.35), 0 12px 34px rgba(255,8,68,.3);
+}
+
+.modal-pill-btn.next-ep-btn {
+  position: relative;
+  isolation: isolate;
+}
+
+.modal-pill-btn.next-ep-btn::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  border: 1px solid rgba(0,242,254,.16);
+  animation: modalNextPulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ---------- Server controls ---------- */
+.server-controls {
+  background:
+    radial-gradient(420px 120px at 18% 0%, rgba(0,242,254,.035), transparent 72%),
+    rgba(10,11,16,.98);
+}
+
+.server-controls::before {
+  content: "";
+  position: absolute;
+  left: var(--modal-pad);
+  right: var(--modal-pad);
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,242,254,.16), rgba(255,8,68,.13), transparent);
+  pointer-events: none;
+}
+
+.server-btn,
+.server-node-btn {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  box-shadow: 0 4px 14px rgba(0,0,0,.16);
+  transition:
+    transform var(--modal-med) var(--modal-spring),
+    background var(--modal-fast) ease,
+    border-color var(--modal-fast) ease,
+    box-shadow var(--modal-med) ease,
+    color var(--modal-fast) ease;
+}
+
+.server-btn::before,
+.server-node-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 32%, rgba(255,255,255,.12) 50%, transparent 68%);
+  transform: translateX(-140%);
+  transition: transform 620ms var(--modal-spring);
+  pointer-events: none;
+}
+
+.server-btn:hover::before,
+.server-node-btn:hover::before {
+  transform: translateX(140%);
+}
+
+.server-btn:hover,
+.server-node-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.025);
+}
+
+.server-btn.active,
+.server-node-btn.active,
+.server-node-btn.active-server {
+  background:
+    linear-gradient(120deg, rgba(255,255,255,.1), transparent 36%),
+    linear-gradient(135deg, var(--modal-accent-red), #ab0611);
+  box-shadow: 0 0 0 1px rgba(255,8,68,.2), 0 0 26px rgba(255,8,68,.24);
+}
+
+.server-status-dot.online,
+.server-status-dot.optimal,
+.server-dot.online,
+.server-dot.optimal {
+  animation: modalStatusPulse 1.9s ease-in-out infinite;
+}
+
+.server-status-dot.slow,
+.server-dot.slow {
+  animation: modalSlowPulse 1.35s ease-in-out infinite;
+}
+
+.server-status-dot.offline,
+.server-dot.offline {
+  animation: modalOfflinePulse 1.8s ease-in-out infinite;
+}
+
+/* ---------- Tabs ---------- */
+.modal-tabs {
+  position: relative;
+  border-bottom-color: rgba(255,255,255,.075);
+  mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+
+.tab-btn {
+  transition: color var(--modal-fast) ease, transform var(--modal-med) var(--modal-spring);
+}
+
+.tab-btn:hover {
+  transform: translateY(-1px);
+}
+
+.tab-btn::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  border-radius: 4px;
+  background: rgba(255,255,255,.12);
+  transform: translateX(-50%);
+  transition: width 350ms var(--modal-spring);
+}
+
+.tab-btn:hover::before {
+  width: 70%;
+}
+
+.tab-btn.active::after {
+  animation: modalTabGlow 2.2s ease-in-out infinite;
+}
+
+/* ---------- Metadata / overview ---------- */
+.badge-meta {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(0,0,0,.12);
+  transition: transform var(--modal-med) var(--modal-spring), border-color var(--modal-fast) ease;
+}
+
+.badge-meta::after,
+.genre-tag::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.1) 50%, transparent 65%);
+  transform: translateX(-130%);
+  transition: transform 600ms var(--modal-spring);
+  pointer-events: none;
+}
+
+.badge-meta:hover,
+.genre-tag:hover {
+  transform: translateY(-2px);
+}
+
+.badge-meta:hover::after,
+.genre-tag:hover::after {
+  transform: translateX(130%);
+}
+
+.side-info-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(260px 180px at 100% 0%, rgba(0,242,254,.035), transparent 72%),
+    rgba(255,255,255,.025);
+  box-shadow: var(--modal-shadow-soft);
+}
+
+.side-info-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--modal-accent-red), transparent 42%, var(--modal-accent-cyan));
+  opacity: .55;
+}
+
+.side-info-row {
+  position: relative;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+}
+
+.side-info-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* ---------- Episode browser ---------- */
+.episodes-master-section {
+  position: relative;
+}
+
+.episodes-master-section::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--modal-accent-red), transparent);
+}
+
+.episodes-total-pill {
+  transition: transform var(--modal-med) var(--modal-spring), background var(--modal-fast) ease;
+}
+
+.episodes-total-pill:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.09);
+}
+
+.ep-select {
+  box-shadow: 0 5px 18px rgba(0,0,0,.18);
+}
+
+.ep-select:hover {
+  border-color: rgba(255,255,255,.3);
+}
+
+.ep-card {
+  isolation: isolate;
+  box-shadow: 0 5px 18px rgba(0,0,0,.15);
+  transition:
+    transform 330ms var(--modal-spring),
+    background 250ms ease,
+    border-color 250ms ease,
+    box-shadow 330ms ease;
+}
+
+.ep-card::before {
+  background:
+    linear-gradient(90deg, rgba(255,8,68,.075), transparent 48%),
+    radial-gradient(180px 80px at 0 50%, rgba(255,8,68,.05), transparent 75%);
+}
+
+.ep-card::after {
+  transition: opacity 250ms ease, box-shadow 250ms ease;
+}
+
+.ep-card:hover {
+  transform: translateY(-3px) translateX(5px);
+  box-shadow: 0 16px 34px rgba(0,0,0,.42), 0 0 0 1px rgba(255,255,255,.025);
+}
+
+.ep-card:hover .ep-title {
+  transform: translateX(2px);
+}
+
+.ep-title {
+  transition: transform 280ms var(--modal-spring), color 180ms ease;
+}
+
+.ep-thumb-box {
+  box-shadow: 0 8px 22px rgba(0,0,0,.36);
+}
+
+.ep-thumb-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.12) 50%, transparent 65%);
+  transform: translateX(-140%);
+  transition: transform 700ms var(--modal-spring);
+  pointer-events: none;
+}
+
+.ep-card:hover .ep-thumb-box::after {
+  transform: translateX(140%);
+}
+
+.ep-card.playing {
+  animation: modalPlayingCard 2.8s ease-in-out infinite;
+}
+
+.ep-card.playing::after {
+  animation: modalPlayingRail 1.8s ease-in-out infinite;
+}
+
+.ep-play-overlay {
+  background:
+    radial-gradient(circle, rgba(255,8,68,.18), transparent 50%),
+    rgba(0,0,0,.55);
+}
+
+.ep-play-overlay i,
+.ep-play-overlay svg {
+  filter: drop-shadow(0 0 14px rgba(255,8,68,.42));
+}
+
+/* ---------- Cast cards ---------- */
+.cast-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,.13);
+  transition:
+    transform 320ms var(--modal-spring),
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 320ms ease;
+}
+
+.cast-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.09) 50%, transparent 70%);
+  transform: translateX(-130%);
+  transition: transform 700ms var(--modal-spring);
+  pointer-events: none;
+}
+
+.cast-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,.18);
+  box-shadow: 0 14px 32px rgba(0,0,0,.3);
+}
+
+.cast-card:hover::before {
+  transform: translateX(130%);
+}
+
+.cast-card img {
+  transition: transform 450ms var(--modal-spring), box-shadow 350ms ease;
+}
+
+.cast-card:hover img {
+  transform: scale(1.055);
+  box-shadow: 0 0 18px rgba(255,8,68,.38);
+}
+
+/* ---------- Watchlist drawer ---------- */
+.drawer-overlay.active {
+  animation: drawerOverlayIn 420ms ease both;
+}
+
+.watchlist-drawer {
+  overflow: hidden;
+  background:
+    radial-gradient(520px 360px at 100% 0%, rgba(255,8,68,.055), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 24%),
+    var(--modal-bg-surface);
+  box-shadow: -25px 0 70px rgba(0,0,0,.95);
+}
+
+.watchlist-drawer::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8%;
+  width: 1px;
+  height: 84%;
+  background: linear-gradient(180deg, transparent, rgba(255,8,68,.6), rgba(0,242,254,.3), transparent);
+  box-shadow: 0 0 14px rgba(255,8,68,.25);
+  pointer-events: none;
+}
+
+.watchlist-drawer.open {
+  animation: drawerEnter 520ms var(--modal-spring) both;
+}
+
+.drawer-header {
+  position: relative;
+}
+
+.drawer-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 82px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--modal-accent-red), transparent);
+}
+
+.watchlist-items-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.18) transparent;
+}
+
+.watchlist-items-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.watchlist-items-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.watchlist-items-container::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.16);
+  border-radius: 999px;
+}
+
+.empty-watchlist-state {
+  animation: emptyStateFloat 4.5s ease-in-out infinite;
+}
+
+/* ---------- Shortcut modal ---------- */
+.shortcuts-modal {
+  background:
+    radial-gradient(620px 420px at 50% 45%, rgba(255,8,68,.07), transparent 72%),
+    rgba(0,0,0,.88);
+}
+
+.shortcuts-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 30px 90px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.025);
+}
+
+.shortcuts-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--modal-accent-red), var(--modal-accent-cyan));
+  background-size: 200% 100%;
+  animation: modalGradientFlow 4s linear infinite;
+}
+
+.shortcut-row {
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background var(--modal-fast) ease, transform var(--modal-med) var(--modal-spring);
+}
+
+.shortcut-row:hover {
+  background: rgba(255,255,255,.035);
+  transform: translateX(3px);
+}
+
+.shortcut-row kbd {
+  transition: transform var(--modal-med) var(--modal-spring), border-color var(--modal-fast) ease;
+}
+
+.shortcut-row:hover kbd {
+  transform: translateY(-1px);
+  border-color: rgba(0,242,254,.32);
+}
+
+/* ---------- Generic generated-content hooks ---------- */
+.modal-body img,
+.watchlist-drawer img {
+  backface-visibility: hidden;
+}
+
+.modal-body button,
+.watchlist-drawer button,
+.shortcuts-modal button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-body :where(a, button, select, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible,
+.watchlist-drawer :where(a, button, select, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--modal-accent-cyan);
+  outline-offset: 3px;
+  box-shadow: var(--modal-focus-ring);
+}
+
+.modal-body ::selection,
+.watchlist-drawer ::selection,
+.shortcuts-modal ::selection {
+  background: rgba(255,8,68,.35);
+  color: #fff;
+}
+
+/* ---------- Touch / mobile polish ---------- */
+@media (hover: none) and (pointer: coarse) {
+  .modal-pill-btn:hover,
+  .server-btn:hover,
+  .server-node-btn:hover,
+  .ep-card:hover,
+  .cast-card:hover {
+    transform: none;
+  }
+
+  .modal-pill-btn:active,
+  .server-btn:active,
+  .server-node-btn:active {
+    transform: scale(.97);
+  }
+
+  .ep-card:active {
+    transform: scale(.985);
+  }
+
+  .modal-backdrop-preview {
+    transform: none;
+  }
+
+  .ep-card,
+  .cast-card,
+  .modal-pill-btn,
+  .server-btn,
+  .server-node-btn {
+    touch-action: manipulation;
+  }
+}
+
+/* ---------- Responsive cinematic tuning ---------- */
+@media (max-width: 900px) {
+  .modal-dialog {
+    box-shadow: 0 24px 60px rgba(0,0,0,.72);
+  }
+
+  .overview-grid {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .modal-nav-strip {
+    background: rgba(8,8,13,.97);
+  }
+
+  .modal-player-wrap {
+    box-shadow: 0 10px 32px rgba(0,0,0,.8);
+  }
+
+  .player-action-strip {
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  }
+
+  .ep-card {
+    border-radius: 14px;
+  }
+
+  .watchlist-drawer {
+    width: min(440px, 94vw);
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-dialog::before {
+    opacity: .45;
+  }
+
+  .modal-brand-tag {
+    padding-inline: 8px;
+  }
+
+  .modal-pill-btn {
+    min-height: 42px !important;
+  }
+
+  .ep-card:hover {
+    transform: none;
+  }
+
+  .ep-thumb-box {
+    width: clamp(96px, 29vw, 125px);
+  }
+
+  .cast-card {
+    border-radius: 14px;
+  }
+}
+
+/* ---------- High-density / large desktop ---------- */
+@media (min-width: 1440px) {
+  .modal-dialog {
+    box-shadow: 0 40px 120px rgba(0,0,0,.72), 0 0 0 1px rgba(255,255,255,.025);
+  }
+
+  .modal-player-wrap {
+    box-shadow: inset 0 -120px 140px rgba(0,0,0,.16);
+  }
+}
+
+/* ---------- Animation definitions ---------- */
+@keyframes modalDialogEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(.965);
+    filter: blur(5px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes modalGridDrift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 44px 44px, 44px 44px; }
+}
+
+@keyframes modalAtmospherePulse {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50% { opacity: .9; transform: scale(1.025); }
+}
+
+@keyframes modalEdgeSweep {
+  0%, 14% { left: -38%; opacity: 0; }
+  20% { opacity: .7; }
+  42% { left: 110%; opacity: 0; }
+  100% { left: 110%; opacity: 0; }
+}
+
+@keyframes modalBrandSweep {
+  0%, 24% { transform: translateX(-65%) rotate(8deg); }
+  45%, 100% { transform: translateX(65%) rotate(8deg); }
+}
+
+@keyframes modalBackdropBreath {
+  0%, 100% { transform: scale(1.015); }
+  50% { transform: scale(1.035); }
+}
+
+@keyframes modalTitleReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes modalIconPop {
+  0% { transform: scale(1) rotate(0); }
+  45% { transform: scale(1.22) rotate(-4deg); }
+  100% { transform: scale(1.08) rotate(0); }
+}
+
+@keyframes modalNextPulse {
+  0%, 100% { opacity: .28; transform: scale(1); }
+  50% { opacity: .75; transform: scale(1.018); }
+}
+
+@keyframes modalStatusPulse {
+  0%, 100% { box-shadow: 0 0 5px currentColor; transform: scale(.92); }
+  50% { box-shadow: 0 0 14px currentColor; transform: scale(1.12); }
+}
+
+@keyframes modalSlowPulse {
+  0%, 100% { box-shadow: 0 0 5px currentColor; }
+  50% { box-shadow: 0 0 13px currentColor; }
+}
+
+@keyframes modalOfflinePulse {
+  0%, 100% { opacity: .65; }
+  50% { opacity: 1; box-shadow: 0 0 14px currentColor; }
+}
+
+@keyframes modalTabGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,8,68,.32); }
+  50% { box-shadow: 0 0 20px rgba(255,8,68,.58), 0 0 8px rgba(0,242,254,.22); }
+}
+
+@keyframes modalPlayingCard {
+  0%, 100% { box-shadow: 0 0 22px rgba(255,8,68,.22); }
+  50% { box-shadow: 0 0 34px rgba(255,8,68,.34); }
+}
+
+@keyframes modalPlayingRail {
+  0%, 100% { opacity: .75; }
+  50% { opacity: 1; box-shadow: 0 0 20px var(--modal-accent-red); }
+}
+
+@keyframes drawerOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drawerEnter {
+  from { transform: translateX(34px); }
+  to { transform: translateX(0); }
+}
+
+@keyframes emptyStateFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes modalGradientFlow {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+
+/* ---------- Accessibility / stability ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay.active::before,
+  .modal-overlay.active::after,
+  .modal-dialog,
+  .modal-dialog::after,
+  .modal-brand-tag::after,
+  .modal-backdrop-preview,
+  .player-cover-overlay h2,
+  .modal-pill-btn,
+  .modal-pill-btn::before,
+  .modal-pill-btn.next-ep-btn::after,
+  .server-btn,
+  .server-node-btn,
+  .server-btn::before,
+  .server-node-btn::before,
+  .server-status-dot,
+  .server-dot,
+  .tab-btn.active::after,
+  .badge-meta::after,
+  .genre-tag::after,
+  .ep-card,
+  .ep-card::after,
+  .ep-thumb-box::after,
+  .cast-card::before,
+  .cast-card img,
+  .drawer-overlay,
+  .watchlist-drawer,
+  .empty-watchlist-state,
+  .shortcuts-card::before {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .modal-backdrop-preview,
+  .modal-dialog,
+  .ep-card,
+  .cast-card,
+  .modal-pill-btn,
+  .server-btn,
+  .server-node-btn {
+    transform: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .modal-dialog,
+  .modal-pill-btn,
+  .server-btn,
+  .server-node-btn,
+  .ep-card,
+  .cast-card,
+  .side-info-card,
+  .shortcuts-card {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .tab-btn.active::after {
+    background: Highlight;
+    box-shadow: none;
+  }
+
+  .modal-overlay,
+  .drawer-overlay,
+  .shortcuts-modal {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .modal-pill-btn,
+  .server-btn,
+  .server-node-btn,
+  .ep-card,
+  .cast-card,
+  .badge-meta,
+  .genre-tag,
+  .side-info-card {
+    border-color: rgba(255,255,255,.28);
+  }
+
+  .modal-text-secondary,
+  .server-status-caption,
+  .ep-air {
+    text-shadow: none;
+  }
+}
+
+/* Keep generated media from creating horizontal overflow. */
+.modal-dialog *,
+.watchlist-drawer *,
+.shortcuts-card * {
+  max-width: 100%;
+}
+
+.modal-dialog img,
+.modal-dialog video,
+.modal-dialog iframe {
+  box-sizing: border-box;
+}
+
+@supports (content-visibility: auto) {
+  .cast-card,
+  .recommendations-grid > *,
+  .watchlist-items-container > * {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 96px;
+  }
+}
