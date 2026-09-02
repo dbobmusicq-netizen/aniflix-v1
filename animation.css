@@ -1,0 +1,411 @@
+/* ==========================================================================
+   ANIFLIX ULTRA - COMPREHENSIVE KINETIC ANIMATION & RESPONSIVE HUD ENGINE
+   File: animation.css
+   Version: 3.1.0
+   Architecture: GPU-Accelerated 60/120 FPS Composited Transforms & Mobile-Safe Toasts
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. EASING DESIGN SYSTEM & TIMING TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+  --anim-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --anim-spring-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --anim-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --anim-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --anim-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* --------------------------------------------------------------------------
+   1. AMBIENT ATMOSPHERE, AURORA & CHROMA PULSES
+   -------------------------------------------------------------------------- */
+@keyframes ambientBreathe {
+  0%, 100% {
+    opacity: 0.38;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.12) translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes auroraFlow {
+  0% {
+    filter: hue-rotate(0deg) blur(50px);
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    filter: hue-rotate(90deg) blur(65px);
+    transform: rotate(180deg) scale(1.15);
+  }
+  100% {
+    filter: hue-rotate(360deg) blur(50px);
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes neonRedGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(255, 8, 68, 0.35), inset 0 0 8px rgba(255, 8, 68, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255, 8, 68, 0.75), 0 0 45px rgba(255, 8, 68, 0.3), inset 0 0 15px rgba(255, 8, 68, 0.35);
+  }
+}
+
+@keyframes neonCyanGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.35), inset 0 0 8px rgba(0, 240, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(0, 240, 255, 0.75), 0 0 45px rgba(0, 240, 255, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.35);
+  }
+}
+
+.ambient-glow {
+  animation: ambientBreathe 7s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.aurora-effect {
+  animation: auroraFlow 22s linear infinite;
+}
+
+.glow-red {
+  animation: neonRedGlow 2.5s ease-in-out infinite;
+}
+
+.glow-cyan {
+  animation: neonCyanGlow 2.5s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   2. SHIMMER, SKELETON LOADERS & CYBER SHARDS
+   -------------------------------------------------------------------------- */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes borderLaserShine {
+  0% {
+    border-color: rgba(255, 8, 68, 0.3);
+    box-shadow: 0 0 0 transparent;
+  }
+  50% {
+    border-color: rgba(255, 8, 68, 1);
+    box-shadow: 0 0 20px rgba(255, 8, 68, 0.5);
+  }
+  100% {
+    border-color: rgba(255, 8, 68, 0.3);
+    box-shadow: 0 0 0 transparent;
+  }
+}
+
+.skeleton-loading {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.02) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite linear;
+}
+
+.border-laser {
+  animation: borderLaserShine 3s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   3. KINETIC ENTRANCES: MODALS, CARDS, DRAWERS & OVERLAYS
+   -------------------------------------------------------------------------- */
+@keyframes cardPopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalZoomSpring {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(26px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes drawerSlideRight {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes drawerSlideLeft {
+  0% {
+    transform: translate3d(100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes backdropGlassFade {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
+
+.anime-card,
+.top10-item,
+.search-item,
+.cast-card {
+  animation: cardPopIn 0.45s var(--anim-ease-out) backwards;
+}
+
+.modal-container.active .modal-dialog {
+  animation: modalZoomSpring 0.42s var(--anim-spring) forwards;
+  will-change: transform, opacity;
+}
+
+.mobile-nav-drawer.open {
+  animation: drawerSlideRight 0.38s var(--anim-ease-out) forwards;
+}
+
+.watchlist-drawer.open,
+.p2p-chat-sidebar.open {
+  animation: drawerSlideLeft 0.38s var(--anim-ease-out) forwards;
+}
+
+.modal-overlay.active,
+.drawer-overlay.active,
+.mobile-drawer-overlay.active {
+  animation: backdropGlassFade 0.3s var(--anim-ease-out) forwards;
+}
+
+/* --------------------------------------------------------------------------
+   4. STREAMING HUD, PILLS & TOAST ALERT ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, 28px, 0) scale(0.88);
+  }
+  75% {
+    transform: translate3d(-50%, -4px, 0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0) scale(1);
+  }
+}
+
+@keyframes pillBounceSnap {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.8);
+  }
+  65% {
+    transform: translateY(-5px) scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes attentionWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-8deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(5deg); }
+}
+
+.toast.visible {
+  animation: toastSlideIn 0.38s var(--anim-spring) forwards;
+}
+
+.aniskip-pill-btn,
+.sync-status-pill.syncing,
+.p2p-catchup-pill.visible {
+  animation: pillBounceSnap 0.42s var(--anim-spring-snappy) forwards;
+}
+
+.wiggle-alert {
+  animation: attentionWiggle 0.6s ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   5. HOVER CARD PHYSICS, 3D TILT & FLOATING BADGES
+   -------------------------------------------------------------------------- */
+.anime-card {
+  transition: transform 0.35s var(--anim-spring), box-shadow 0.35s var(--anim-ease-out);
+}
+
+.anime-card:hover {
+  transform: translateY(-9px) scale(1.035) translateZ(0);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 8, 68, 0.32);
+}
+
+@keyframes floatInfinite {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.floating-badge {
+  animation: floatInfinite 3.2s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   6. MICRO-INTERACTIONS: HEARTBEATS, RIPPLES & SPINNERS
+   -------------------------------------------------------------------------- */
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.36); }
+  50% { transform: scale(0.94); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.pulse-animated {
+  animation: heartPulse 0.5s var(--anim-spring);
+}
+
+@keyframes continuousSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fa-spin,
+.spin-loader {
+  animation: continuousSpin 0.85s linear infinite;
+}
+
+@keyframes liveBeaconRing {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.75);
+  }
+  70% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 10px rgba(0, 255, 136, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+  }
+}
+
+.server-dot.online,
+.p2p-status-dot.playing {
+  animation: liveBeaconRing 2s infinite cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+@keyframes bufferingRing {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 184, 0, 0.75);
+  }
+  70% {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 10px rgba(255, 184, 0, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 184, 0, 0);
+  }
+}
+
+.server-dot.slow,
+.p2p-status-dot.buffering {
+  animation: bufferingRing 1.4s infinite cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   7. CHAT MESSAGE ENTRANCE & TYPING BUBBLES
+   -------------------------------------------------------------------------- */
+@keyframes chatBubbleSlideIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.p2p-chat-bubble {
+  animation: chatBubbleSlideIn 0.28s var(--anim-spring) forwards;
+}
+
+@keyframes typingDots {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.typing-dot:nth-child(1) { animation: typingDots 1.4s infinite ease-in-out 0s; }
+.typing-dot:nth-child(2) { animation: typingDots 1.4s infinite ease-in-out 0.2s; }
+.typing-dot:nth-child(3) { animation: typingDots 1.4s infinite ease-in-out 0.4s; }
+
+/* --------------------------------------------------------------------------
+   8. MOBILE RESPONSIVE TOAST ALERTS & NOTIFICATIONS CENTERING FIX
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .toast-container {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 92% !important;
+    max-width: 380px !important;
+    align-items: center !important;
+    text-align: center;
+  }
+
+  .toast {
+    width: 100% !important;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. REDUCED MOTION PREFERENCE (ACCESSIBILITY COMPLIANT)
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

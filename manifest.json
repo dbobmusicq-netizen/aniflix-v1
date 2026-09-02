@@ -1,0 +1,79 @@
+{
+  "id": "/?source=pwa",
+  "name": "AniFlix Ultra - Multi-Device Streaming & Watch Party",
+  "short_name": "AniFlix Ultra",
+  "description": "Stream thousands of anime titles and live-action series in 4K Ultra HD with synchronized P2P Watch Parties, live VoIP, and multi-audio support.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#040406",
+  "theme_color": "#ff0844",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["entertainment", "video", "streaming", "social"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hindi Dubbed Hub",
+      "short_name": "Hindi Dubs",
+      "description": "Explore the latest premium Hindi dubbed anime and series collection",
+      "url": "/?mode=hindi",
+      "icons": [
+        {
+          "src": "/android-chrome-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Watch Party",
+      "short_name": "P2P Party",
+      "description": "Host or join a synchronized peer-to-peer watch party room",
+      "url": "/?modal=watchparty",
+      "icons": [
+        {
+          "src": "/android-chrome-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

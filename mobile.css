@@ -1,0 +1,475 @@
+/* ==========================================================================
+   ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
+   File: mobile.css
+   Version: 2.1.1
+   Architecture: Mobile-First Ergonomics, Thumb-Zone Optimized, 60fps GPU Accelerated
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* --------------------------------------------------------------------------
+     1. GLOBAL TOUCH ERGONOMICS & VIEWPORT SAFETY
+     -------------------------------------------------------------------------- */
+  /* Allow vertical scrolling on mobile and enable momentum scrolling */
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto; /* allow vertical scrolling */
+    -webkit-overflow-scrolling: touch; /* momentum scroll */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: auto; /* allow normal overscroll */
+    touch-action: pan-y; /* allow vertical pan by default */
+  }
+
+  /* Ensure main app containers can grow and scroll properly */
+  #__next, #app, main {
+    min-height: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  body {
+    padding-bottom: 85px; /* Clearance for fixed thumb-zone quick dock */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Universal minimum touch target sizing (Apple HIG & Material standard: 44px) */
+  button, a, input, select, .chip, .server-btn, .dock-btn {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Prevent automatic text-size zoom on iOS inputs */
+  input[type="text"], input[type="search"], select {
+    font-size: 16px !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     2. MOBILE HEADER & COMPACT BRANDING
+     -------------------------------------------------------------------------- */
+  .header {
+    height: 60px;
+    padding: 0 14px;
+    top: 0;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 1500; /* ensure header stays above the floating dock */
+  }
+
+  .brand-name {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .brand-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+
+  .nav-desktop {
+    display: none !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+    z-index: 1501;
+  }
+
+  .mobile-nav-toggle:active {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .header-right {
+    gap: 6px;
+  }
+
+  .search-wrapper.open {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    background: rgba(10, 11, 16, 0.98);
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    z-index: 1600;
+    animation: mobileSearchDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes mobileSearchDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --------------------------------------------------------------------------
+     3. FLOATING THUMB-ZONE QUICK DOCK (BOTTOM ACTION BAR)
+     -------------------------------------------------------------------------- */
+  .floating-quick-dock {
+    position: fixed;
+    bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: 390px;
+    background: rgba(14, 15, 22, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border-radius: 999px;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1200; /* keep below header but above content */
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    animation: dockFloatIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    touch-action: pan-y; /* allow vertical swipes on the dock to be interpreted as page scrolls when needed */
+  }
+
+  @keyframes dockFloatIn {
+    from { opacity: 0; transform: translate(-50%, 30px) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  }
+
+  .floating-quick-dock .dock-btn {
+    background: transparent;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--text-secondary);
+    font-size: 17px;
+    cursor: pointer;
+    position: relative;
+    padding: 6px 10px;
+    border-radius: 50%;
+    transition: transform 0.15s ease, color 0.2s ease;
+    z-index: 1201;
+  }
+
+  .floating-quick-dock .dock-btn:active {
+    transform: scale(0.85);
+  }
+
+  .floating-quick-dock .dock-tooltip {
+    display: none !important; /* Touch interfaces omit desktop tooltips */
+  }
+
+  /* --------------------------------------------------------------------------
+     4. MOBILE SIDE DRAWER (SLIDE-OUT PHYSICS & ANIMATION)
+     -------------------------------------------------------------------------- */
+  .mobile-nav-drawer {
+    width: 86vw;
+    max-width: 320px;
+    border-top-right-radius: 28px;
+    border-bottom-right-radius: 28px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(30px, env(safe-area-inset-bottom));
+    box-shadow: 25px 0 70px rgba(0, 0, 0, 0.95);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 16px;
+  }
+
+  .mobile-nav-link {
+    padding: 13px 16px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-secondary);
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  }
+
+  .mobile-nav-link:active {
+    transform: scale(0.97);
+  }
+
+  .mobile-nav-link.active {
+    background: linear-gradient(135deg, rgba(255, 8, 68, 0.2), rgba(255, 8, 68, 0.05));
+    border: 1px solid rgba(255, 8, 68, 0.35);
+    color: var(--text-primary);
+  }
+
+  /* --------------------------------------------------------------------------
+     5. IMMERSIVE MOBILE STREAMING MODAL & PLAYER SHEET
+     -------------------------------------------------------------------------- */
+  .modal-container.active {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-dialog {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw !important;
+    max-height: 100dvh !important;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    background: #040406;
+    padding-top: env(safe-area-inset-top);
+    animation: mobileSheetSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    z-index: 1400;
+  }
+
+  @keyframes mobileSheetSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-nav-strip {
+    padding: 12px 16px;
+    background: rgba(10, 11, 16, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 1401;
+  }
+
+  .modal-player-wrap {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 40vh;
+    flex-shrink: 0;
+    background: #000;
+  }
+
+  .player-action-strip {
+    padding: 10px 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    background: rgba(14, 15, 22, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .player-action-left {
+    display: none; /* Hide secondary duplicate header on mobile player toolbar */
+  }
+
+  .player-action-right {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .player-action-right::-webkit-scrollbar {
+    display: none;
+  }
+
+  .modal-pill-btn {
+    padding: 7px 14px;
+    font-size: 11.5px;
+    font-weight: 700;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .modal-pill-btn:active {
+    transform: scale(0.94);
+  }
+
+  /* Ensure modal body scrolls inside the full-screen modal */
+  .modal-body {
+    padding: 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    max-height: calc(100dvh - (40vh + 64px)); /* leave room for video + nav */
+  }
+
+  .modal-tabs {
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    white-space: nowrap;
+  }
+
+  .modal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    padding: 9px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    border-radius: 10px;
+  }
+
+  /* --------------------------------------------------------------------------
+     6. SCROLLABLE SERVERS, TABS & EPISODE GRIDS
+     -------------------------------------------------------------------------- */
+  .server-controls {
+    padding: 12px 16px;
+    background: rgba(10, 11, 16, 0.9);
+  }
+
+  /* Make server pill / category strip horizontally scrollable with momentum */
+  .server-pills-scroll,
+  .server-pills,
+  .filter-chips,
+  #filterChips,
+  .chip-row,
+  .chip-list {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 6px;
+    white-space: nowrap;
+  }
+
+  .server-pills-scroll::-webkit-scrollbar,
+  #filterChips::-webkit-scrollbar,
+  .modal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* make each chip align/start nicely when scrolling */
+  .server-btn,
+  .chip,
+  .tab-btn {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+
+  .server-pills-scroll {
+    scroll-snap-type: x proximity;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .server-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+    flex-shrink: 0;
+    border-radius: 10px;
+  }
+
+  .ep-grid {
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 8px;
+  }
+
+  .ep-card {
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* --------------------------------------------------------------------------
+     7. WATCHLIST, CHAT SIDEBARS & OVERLAYS
+     -------------------------------------------------------------------------- */
+  .watchlist-drawer,
+  .p2p-chat-sidebar {
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 0;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .p2p-reaction-bar {
+    bottom: calc(75px + env(safe-area-inset-bottom));
+    right: 12px;
+    padding: 4px 8px;
+    background: rgba(10, 11, 16, 0.85);
+    z-index: 1300;
+  }
+
+  .p2p-emote-btn {
+    font-size: 20px;
+    padding: 6px;
+  }
+
+  /* --------------------------------------------------------------------------
+     8. TOAST ALERTS & NOTIFICATIONS CENTER ALIGNMENT FIX
+     -------------------------------------------------------------------------- */
+  .toast-container {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 92% !important;
+    max-width: 380px !important;
+    align-items: center !important;
+    text-align: center;
+    z-index: 1700;
+  }
+
+  .toast {
+    width: 100% !important;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+
+  /* Quick action feedback states for touch devices */
+  button:active, .anime-card:active {
+    transform: scale(0.97);
+    transition: transform 0.08s ease-out;
+  }
+
+  /* Ensure hero filter chips (#filterChips) are visible and scrollable */
+  #filterChips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 6px;
+    white-space: nowrap;
+    z-index: 100; /* keep above hero overlay */
+  }
+
+  /* Small visual tweak to ensure chips don't get clipped by hero overlay */
+  #filterChips .chip {
+    flex: 0 0 auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Desktop / fallback for safety if viewport changes
+   -------------------------------------------------------------------------- */
+@media (min-width: 769px) {
+  #filterChips { overflow: visible; }
+}

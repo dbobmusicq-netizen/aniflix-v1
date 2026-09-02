@@ -1,0 +1,20 @@
+# AniFlix Ultra Robots.txt Directive
+User-agent: *
+Allow: /
+Allow: /?watch=*
+Allow: /?mode=*
+Allow: /?q=*
+Allow: /api/stream-provider
+Allow: /api/proxy
+
+# Disallow sensitive system paths, headless extraction endpoints, debug endpoints, and modal states
+Disallow: /api/extract
+Disallow: /private/
+Disallow: /debug/
+Disallow: /*?modal=*
+
+# Optimized Search Engine Crawling Speed & NxSha CDN Node Access
+Crawl-delay: 1
+
+# Sitemaps Declaration
+Sitemap: https://aniflix-sage.vercel.app/sitemap.xml

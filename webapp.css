@@ -1,0 +1,227 @@
+/* ==========================================================================
+   ANIFLIX ULTRA - PROGRESSIVE WEB APP EXCLUSIVE CAPABILITIES STYLESHEET
+   File: webapp.css
+   Version: 1.0.0
+   Architecture: Hardware-Accelerated, Notch & Safe-Area Aware, PWA Standalone
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. SAFE AREA INSETS & NOTCH INTEGRATION (STANDALONE ONLY)
+   -------------------------------------------------------------------------- */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body.pwa-standalone {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  body.pwa-standalone .header {
+    top: env(safe-area-inset-top);
+    padding-left: max(var(--page-padding), env(safe-area-inset-left));
+    padding-right: max(var(--page-padding), env(safe-area-inset-right));
+  }
+
+  body.pwa-standalone .floating-quick-dock {
+    bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px));
+  }
+
+  body.pwa-standalone .p2p-reaction-bar {
+    bottom: max(80px, calc(env(safe-area-inset-bottom) + 70px));
+    right: max(24px, env(safe-area-inset-right));
+  }
+
+  body.pwa-standalone .p2p-chat-sidebar {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. APP SHELL IMMERSION & TEXT-SELECTION SUPPRESSION
+   -------------------------------------------------------------------------- */
+body.pwa-standalone {
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior-y: none;
+  touch-action: pan-x pan-y;
+}
+
+body.pwa-standalone input,
+body.pwa-standalone textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* --------------------------------------------------------------------------
+   3. PWA STATUS BADGES & STANDALONE VISUAL INDICATORS
+   -------------------------------------------------------------------------- */
+.pwa-badge {
+  display: none;
+}
+
+body.pwa-standalone .pwa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 242, 254, 0.15);
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   4. TACTILE HAPTIC ACTIVE FEEDBACK (MICRO-BOUNCE PHYSICS)
+   -------------------------------------------------------------------------- */
+body.pwa-standalone .btn:active,
+body.pwa-standalone .dock-btn:active,
+body.pwa-standalone .p2p-emote-btn:active,
+body.pwa-standalone .modal-pill-btn:active,
+body.pwa-standalone .chip:active {
+  transform: scale(0.92) translateZ(0);
+  transition: transform 0.08s ease-out;
+}
+
+/* --------------------------------------------------------------------------
+   5. SCREEN WAKE LOCK HUD INDICATOR
+   -------------------------------------------------------------------------- */
+.wake-lock-indicator {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 10, 16, 0.85);
+  border: 1px solid rgba(70, 211, 105, 0.4);
+  color: var(--accent-emerald);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  z-index: 25;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.wake-lock-indicator.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.wake-lock-indicator::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 8px var(--accent-emerald);
+  animation: pwaPulse 1.8s infinite;
+}
+
+/* --------------------------------------------------------------------------
+   6. FLOATING MINI-PLAYER & PICTURE-IN-PICTURE (PIP) CONTROL BUTTON
+   -------------------------------------------------------------------------- */
+.pip-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 30px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.25s var(--ease-smooth);
+}
+
+.pip-trigger-btn:hover {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #000;
+  box-shadow: 0 0 16px var(--accent-cyan-glow);
+  transform: translateY(-1px);
+}
+
+.pip-trigger-btn i {
+  font-size: 12px;
+}
+
+/* Style overrides when PiP window is rendered detached */
+.pip-mode-active #modalPlayerWrap {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   7. OFFLINE BACKGROUND SYNC STATUS CHIP
+   -------------------------------------------------------------------------- */
+.sync-status-pill {
+  position: fixed;
+  bottom: 80px;
+  left: 20px;
+  background: rgba(14, 14, 22, 0.94);
+  border: 1px solid var(--accent-gold);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2000;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 15px var(--accent-gold-glow);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: all 0.3s var(--ease-elastic);
+}
+
+.sync-status-pill.syncing {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.sync-status-pill i {
+  color: var(--accent-gold);
+  animation: pwaSpin 1s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   8. KEYFRAME ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes pwaPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+@keyframes pwaSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
