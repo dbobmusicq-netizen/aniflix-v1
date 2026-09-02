@@ -2705,3 +2705,229 @@ body {
     contain-intrinsic-size: 1px 96px;
   }
 }
+
+
+/* ==========================================================================
+   ANIFLIX MODAL — MOBILE CLOSE BUTTON / VIEWPORT SAFETY PATCH
+   --------------------------------------------------------------------------
+   Purpose:
+   - Prevent the top-right close button from being clipped on narrow screens.
+   - Keep the navigation strip inside the visual viewport.
+   - Respect iOS/Android safe-area insets.
+   - Prevent flex children from forcing horizontal overflow.
+   - Preserve desktop/tablet behavior.
+   ========================================================================== */
+
+.modal-container,
+.modal-dialog,
+.modal-nav-strip,
+.modal-nav-left {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.modal-nav-strip {
+  width: 100%;
+  max-width: 100%;
+  min-height: 58px;
+  overflow: visible;
+}
+
+.modal-nav-left {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 50px);
+}
+
+.btn-close-modal {
+  flex: 0 0 38px;
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  margin-left: auto;
+  position: relative;
+  z-index: 100;
+  box-sizing: border-box;
+  align-self: center;
+  transform-origin: center;
+}
+
+.btn-close-modal:hover,
+.btn-close-modal:focus-visible {
+  transform: rotate(90deg) scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .modal-container {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    overflow-x: clip;
+  }
+
+  @supports not (overflow: clip) {
+    .modal-container {
+      overflow-x: hidden;
+    }
+  }
+
+  .modal-dialog {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    margin-right: 0;
+    overflow: visible !important;
+  }
+
+  .modal-nav-strip {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 58px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: 10px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    gap: 8px;
+    overflow: visible !important;
+  }
+
+  .modal-nav-left {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: calc(100% - 48px);
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .modal-brand-tag {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: min(155px, calc(100% - 48px));
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .modal-now-playing-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-close-modal {
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border-radius: 50%;
+    box-sizing: border-box;
+    transform: none;
+    transform-origin: center;
+  }
+
+  .btn-close-modal:hover,
+  .btn-close-modal:focus-visible {
+    transform: rotate(90deg) scale(1.04);
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-nav-strip {
+    min-height: 56px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-bottom: 8px;
+    padding-left: max(10px, env(safe-area-inset-left));
+    gap: 7px;
+  }
+
+  .modal-nav-left {
+    max-width: calc(100% - 46px);
+    gap: 7px;
+  }
+
+  .modal-brand-tag {
+    max-width: 142px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .modal-now-playing-text {
+    font-size: 12px;
+  }
+
+  .btn-close-modal {
+    flex-basis: 40px;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+  }
+}
+
+@media (max-width: 360px) {
+  .modal-nav-strip {
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-left: max(8px, env(safe-area-inset-left));
+    gap: 6px;
+  }
+
+  .modal-nav-left {
+    max-width: calc(100% - 44px);
+    gap: 6px;
+  }
+
+  .modal-brand-tag {
+    max-width: 124px;
+    font-size: 10px;
+    letter-spacing: .55px;
+  }
+
+  .modal-now-playing-text {
+    font-size: 11px;
+  }
+
+  .btn-close-modal {
+    flex-basis: 38px;
+    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
+    height: 38px;
+    min-height: 38px;
+    max-height: 38px;
+  }
+}
+
+/* Devices with a right-side safe-area inset: never let the button touch it. */
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .btn-close-modal {
+      margin-right: max(0px, env(safe-area-inset-right));
+    }
+  }
+}
+
+/* Final horizontal-overflow guard for the modal header. */
+.modal-nav-strip > * {
+  min-width: 0;
+}
+
+.modal-nav-strip > .btn-close-modal {
+  flex-shrink: 0;
+}
