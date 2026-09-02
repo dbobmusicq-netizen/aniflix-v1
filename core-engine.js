@@ -1,15 +1,14 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 23.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 24.0 Enterprise Master Architecture)
  * 
- * Core Enhancements:
- *  - Fixed Text Offset Bug: Replaced negative CSS bleed-through with strict `box-sizing: border-box`,
- *    explicit zero-margin bounds, and clean in-card gradient overlays.
- *  - Official TMDB v3 API Parameter Deduplicator: Prevents duplicate query parameters and HTTP 400 errors.
- *  - Live-Action Strict Isolation: Completely excludes Animation (without_genres=16) across TMDB discover queries.
- *  - Fluid Horizontal Rails: Standardized responsive flex tracks with smooth scrolling and card hover scaling.
- *  - Mode-Aware Dual-Universe Transformer: Synchronizes desktop/mobile navigation, chips, and modals.
- *  - 4-Tier Stream Server Matrix (NxSha, Filmu, VidCore, VidFast) with auto-failover and health checks.
+ * Core Enhancements & UI Restorations:
+ *  - Native Glassmorphic Floating Cards: Full-bleed poster cards with in-card bottom gradient vignettes.
+ *  - Zero Text-Clip Architecture: Strict box-sizing and boundary locks prevent text from shifting left or getting clipped.
+ *  - TMDB Deduplicating Query Engine: Eliminates duplicate query parameters to guarantee 0 HTTP 400 Bad Requests.
+ *  - Strict Live-Action Isolation: Filters out TMDB Animation (without_genres=16) in Netflix Mode.
+ *  - Dual-Universe Mode Transformer: Synchronizes desktop/mobile navigation, chips, and hero billboard across modes.
+ *  - 4-Tier Stream Server Matrix (NxSha, Filmu, VidCore, VidFast) with health check probes.
  */
 
 // ============================================================================
@@ -605,7 +604,7 @@ window.nextEpisode = function() {
 };
 
 // ============================================================================
-// 9. TMDB DISCOVER ENGINE & STREAMLINED CAROUSEL RAILS
+// 9. TMDB DISCOVER ENGINE & HORIZONTAL CAROUSEL RAILS
 // ============================================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
@@ -732,7 +731,10 @@ window.updateHeroBillboard = function(item) {
 };
 
 /**
- * Builds cards with strict CSS overrides preventing negative margin/left bleeds
+ * Clean Full-Bleed Card Architecture:
+ * - 100% card height coverage for the poster.
+ * - Inset bottom gradient vignette without gray block-footers.
+ * - Strict box-sizing & zero-margin offsets preventing left text clipping.
  */
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
@@ -743,27 +745,27 @@ window.generateRowHTML = function(title, items, rowIndex) {
 
     return `
       <div class="anime-card" 
-           style="flex: 0 0 170px !important; max-width: 170px !important; width: 170px !important; height: 255px !important; position: relative !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer !important; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important; user-select: none !important; background: #16161c !important; box-sizing: border-box !important;"
-           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.7)';"
+           style="flex: 0 0 176px !important; max-width: 176px !important; width: 176px !important; height: 265px !important; position: relative !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer !important; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important; user-select: none !important; background: #16161c !important; box-sizing: border-box !important;"
+           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 12px 28px rgba(0,0,0,0.75)';"
            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"
            onclick="if(typeof window.openModalById === 'function') window.openModalById(${item.id});">
         
         <img src="${poster}" 
              alt="${displayTitle}" 
              loading="lazy" 
-             style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important;" />
+             style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; border-radius: 12px !important;" />
              
         <!-- Top Format Pill Badge -->
         <div class="card-badge-top" 
-             style="position: absolute !important; top: 8px !important; right: 8px !important; background: rgba(0, 0, 0, 0.78) !important; backdrop-filter: blur(6px) !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 2 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+             style="position: absolute !important; top: 8px !important; right: 8px !important; background: rgba(0, 0, 0, 0.78) !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 3 !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;">
           ${format}
         </div>
         
-        <!-- Safe In-Card Bottom Vignette (Isolated against CSS Bleed) -->
+        <!-- Seamless Full-Bleed In-Card Bottom Vignette (Isolated against CSS Bleed) -->
         <div class="card-overlay" 
-             style="position: absolute !important; inset: auto 0 0 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; margin: 0 !important; padding: 36px 12px 10px 12px !important; box-sizing: border-box !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.96) 0%, rgba(4, 4, 6, 0.7) 65%, transparent 100%) !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; z-index: 2 !important; pointer-events: none !important;">
+             style="position: absolute !important; inset: auto 0 0 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; margin: 0 !important; padding: 42px 12px 10px 12px !important; box-sizing: border-box !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.7) 62%, transparent 100%) !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; z-index: 2 !important; pointer-events: none !important;">
           <div class="card-title" 
-               style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9) !important; width: 100% !important; text-align: left !important; margin: 0 !important; padding: 0 !important;">
+               style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95) !important; width: 100% !important; text-align: left !important; margin: 0 !important; padding: 0 !important; display: block !important;">
             ${displayTitle}
           </div>
           <div class="card-meta" 
