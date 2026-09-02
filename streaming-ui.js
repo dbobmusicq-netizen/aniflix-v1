@@ -1,17 +1,15 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized UI & API Integration Module
  * File: streaming-ui.js
- * Version: 21.0.0 Enterprise Hybrid Architecture
+ * Version: 22.0.0 Enterprise Hybrid Architecture
  * 
- * Performance & Rate-Limit Systems:
- *  - URL Parameter Deduplication Engine (Zero 400 Bad Request on TMDB proxy queries)
- *  - Strict Anti-Burst Throttle with Sequential Queue
- *  - 15-Minute Dual-Layer Caching (In-Memory Map + Dexie.js IndexedDB)
- *  - Dual-Universe Mode Aware: Pure Live-Action TMDB Discovery (without_genres=16) vs Anime Universe
- *  - Unified Navigation & Quick Chips (Movies, TV Shows, Action, Thriller, Romance, Hindi Live-Action)
- *  - Inlined Horizontal Flex Carousel Guarding (Prevents vertical poster stacking)
+ * Features & Fixes:
+ *  - Official TMDB v3 API Parameter Deduplication Engine (Zero status_code:5 / HTTP 400 errors)
+ *  - Dual-Universe Aware: Live-Action Isolation (without_genres=16) vs Anime Universe
+ *  - Mode-Synchronized Navigation & Quick Chips (Movies, TV Shows, Action, Thriller, Romance, Hindi Live-Action)
+ *  - Strict Flexbox Carousel Guarding: Prevents vertical poster stacking
  *  - 4 Authorized Mirror Drivers (NxSha, Filmu, VidCore, VidFast)
- *  - Clean Audio/Video Unmount Teardown Engine (Zero background audio leakage)
+ *  - Clean Audio/Video Unmount Teardown Engine
  */
 
 // ===============================================================
@@ -48,8 +46,33 @@ if (db) {
 window.db = db;
 
 // ===============================================================
-// 2. ANTI-BURST NETWORK ENGINE & INTELLIGENT RATE-LIMIT QUEUE
+// 2. NETWORK ENGINE & OFFICIAL TMDB PARAMETER DEDUPLICATOR
 // ===============================================================
+function cleanTMDBUrl(endpointPath, customParams = {}) {
+  const base = endpointPath.startsWith('http')
+    ? endpointPath
+    : `https://db.speedracelight.com/3${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;
+
+  const url = new URL(base);
+
+  // If calling discover, ensure live-action constraints are set once
+  if (url.pathname.includes('/discover/')) {
+    if (!url.searchParams.has('without_genres')) {
+      url.searchParams.set('without_genres', '16');
+    }
+    if (!url.searchParams.has('vote_count.gte')) {
+      url.searchParams.set('vote_count.gte', '15');
+    }
+  }
+
+  // Safely assign custom parameters without duplicates
+  for (const [key, value] of Object.entries(customParams)) {
+    url.searchParams.set(key, String(value));
+  }
+
+  return url.toString();
+}
+
 function enqueueGQL(taskFn) {
   gqlQueue = gqlQueue.then(async () => {
     const now = Date.now();
@@ -183,29 +206,6 @@ const GQL_DEEP = `
   }
 `;
 
-// Helper: Safely sets query params without duplication
-function buildSanitizedTMDBUrl(endpoint, extraParams = {}) {
-  const base = endpoint.startsWith('http') ? endpoint : `https://db.speedracelight.com/3${endpoint}`;
-  const url = new URL(base);
-  
-  // Set defaults for live-action discover endpoints
-  if (url.pathname.includes('/discover/')) {
-    if (!url.searchParams.has('without_genres')) {
-      url.searchParams.set('without_genres', '16');
-    }
-    if (!url.searchParams.has('vote_count.gte')) {
-      url.searchParams.set('vote_count.gte', '15');
-    }
-  }
-
-  // Apply extra params cleanly
-  Object.entries(extraParams).forEach(([k, v]) => {
-    url.searchParams.set(k, v);
-  });
-
-  return url.toString();
-}
-
 // ===============================================================
 // 3. TOP BAR & CHIP CATEGORY STATE SYNCHRONIZER
 // ===============================================================
@@ -244,7 +244,7 @@ window.renderHeroSpotlight = async function() {
 
   if (window.STATE.isNetflixMode) {
     try {
-      const url = buildSanitizedTMDBUrl('/discover/movie', {
+      const url = cleanTMDBUrl('/discover/movie', {
         sort_by: 'popularity.desc',
         'vote_count.gte': '100'
       });
@@ -371,7 +371,7 @@ window.renderHeroSpotlight = async function() {
 };
 
 // ===============================================================
-// 5. STAGGERED ANTI-429 CATALOG PIPELINE
+// 5. STAGGERED CATALOG PIPELINE
 // ===============================================================
 window.renderHomeRows = async function() {
   const content = document.getElementById('contentRows');
@@ -418,7 +418,7 @@ window.renderHindiDubRow = renderHindiDubRow;
 
 async function renderTMDBRow(title, endpoint, iconHtml = '<i class="fas fa-clapperboard"></i>', forceFormat = null) {
   try {
-    const sanitizedUrl = buildSanitizedTMDBUrl(endpoint);
+    const sanitizedUrl = cleanTMDBUrl(endpoint);
     const data = await fetchWithRetry(sanitizedUrl);
     if (data?.results?.length) {
       const cleanResults = data.results.filter(item => {
@@ -434,9 +434,6 @@ async function renderTMDBRow(title, endpoint, iconHtml = '<i class="fas fa-clapp
   }
 }
 
-/**
- * Renders TMDB live-action carousel tracks with strict horizontal flex styling
- */
 function buildTMDBCarouselDOM(title, items, iconHtml = '<i class="fas fa-clapperboard"></i>', forceFormat = null) {
   const container = document.getElementById('contentRows');
   if (!container) return;
@@ -759,7 +756,7 @@ window.playRandomAnime = async function() {
 
   if (window.STATE.isNetflixMode) {
     try {
-      const url = buildSanitizedTMDBUrl('/discover/movie', { sort_by: 'popularity.desc' });
+      const url = cleanTMDBUrl('/discover/movie', { sort_by: 'popularity.desc' });
       const data = await fetchWithRetry(url);
       const results = data?.results || [];
       if (results.length > 0) {
@@ -1356,7 +1353,8 @@ document.getElementById('searchInput')?.addEventListener('input', (e) => {
   window.STATE.searchDebounce = setTimeout(async () => {
     if (window.STATE.isNetflixMode) {
       try {
-        const data = await fetchWithRetry(`https://db.speedracelight.com/3/search/multi?query=${encodeURIComponent(q)}`);
+        const searchUrl = cleanTMDBUrl(`/search/multi?query=${encodeURIComponent(q)}`);
+        const data = await fetchWithRetry(searchUrl);
         drop.innerHTML = '';
         const results = (data?.results || []).filter(item => {
           const isMedia = item.media_type === 'movie' || item.media_type === 'tv';
