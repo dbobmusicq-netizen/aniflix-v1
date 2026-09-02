@@ -1075,23 +1075,67 @@
 }
 
 /* --------------------------------------------------------------------------
-   11. FLUID RESPONSIVE BREAKPOINT MATRIX
+   11. FLUID RESPONSIVE BREAKPOINT MATRIX & STICKY MOBILE PATCH
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+  /* Unified Mobile Scrolling Container */
   .modal-container {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
     padding: 0;
-    align-items: flex-end;
+    align-items: stretch;
+    display: flex;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    transform: none !important;
+  }
+
+  .modal-container.active {
+    transform: none !important;
   }
 
   .modal-dialog {
-    border-radius: 20px 20px 0 0;
+    width: 100%;
     max-width: 100%;
-    margin-bottom: 0;
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
-    max-height: 94vh;
-    overflow-y: auto;
+    min-width: 0;
+    min-height: 100%;
+    height: auto !important;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Pinned Sticky Video Viewport Anchor */
+  .modal-player-wrap {
+    position: sticky !important;
+    top: 0;
+    z-index: 50;
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    background: #000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95);
+    flex-shrink: 0;
+  }
+
+  /* Natural Flow for Lower Content */
+  .modal-body {
+    position: relative;
+    z-index: 10;
+    overflow-y: visible !important;
+    height: auto !important;
+    flex: none !important;
+    padding: 14px;
+    background: var(--modal-bg-surface);
   }
 
   .overview-grid {
@@ -1112,30 +1156,64 @@
 
   .player-action-right {
     width: 100%;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    overflow: visible;
   }
 
   .modal-pill-btn {
-    flex: 1 0 auto;
+    width: 100%;
+    min-height: 42px;
+    padding: 6px 4px;
+    font-size: 11px;
     justify-content: center;
   }
 
+  /* Anti-Collision Server Scroller */
   .server-controls {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .server-pills-scroll {
+  .server-info-col {
     width: 100%;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 4px;
+    margin-bottom: 4px;
   }
 
-  .server-btn {
-    flex-shrink: 0;
+  .server-pills-scroll,
+  #serverButtonsContainer,
+  #serverSelectionContainer {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 2px 8px 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  .server-pills-scroll::-webkit-scrollbar,
+  #serverButtonsContainer::-webkit-scrollbar,
+  #serverSelectionContainer::-webkit-scrollbar {
+    display: none;
+  }
+
+  .server-btn,
+  .server-node-btn {
+    flex: 0 0 auto;
+    min-width: 135px;
+    max-width: 190px;
+    scroll-snap-align: start;
+    padding: 7px 12px;
+    font-size: 11.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -1159,6 +1237,10 @@
   .recommendations-grid {
     grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
   }
+
+  .player-action-right {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1920px) {
@@ -1168,5 +1250,166 @@
   
   .modal-player-wrap {
     max-height: 720px;
+  }
+}
+
+/* Mobile overflow guardrails: children must shrink inside modal viewport */
+@media (max-width: 768px) {
+  .modal-dialog,
+  .modal-body,
+  .tab-content,
+  .overview-grid,
+  .overview-main-col,
+  .side-info-col,
+  .episodes-master-section,
+  .ep-grid,
+  .ep-card,
+  .ep-info {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .ep-grid {
+    overflow-x: hidden;
+  }
+}
+
+/* ==========================================================================
+   12. ANIFLIX ULTRA — MODAL STABILITY / MOBILE V6.1 PATCH
+   ========================================================================== */
+html,
+body {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.modal-overlay,
+.modal-container,
+.modal-dialog,
+.modal-body,
+.modal-player-wrap,
+.player-action-strip,
+.server-controls,
+.episodes-master-section {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.modal-container,
+.modal-dialog {
+  box-sizing: border-box;
+}
+
+.modal-container {
+  overscroll-behavior-x: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe Desktop Layout */
+@media (min-width: 769px) {
+  .modal-container {
+    width: 100%;
+    padding: clamp(18px, 3vw, 36px) clamp(14px, 2vw, 24px);
+  }
+
+  .modal-dialog {
+    width: min(100%, 1160px);
+    max-width: 1160px;
+    margin: 0 auto clamp(18px, 4vw, 60px);
+    overflow: hidden;
+  }
+
+  .modal-player-wrap {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    flex: 0 0 auto;
+  }
+}
+
+/* Mobile Player Container Safety */
+.modal-player-wrap,
+.modal-dialog .modal-player-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #020204;
+  overflow: hidden;
+  flex-shrink: 0;
+  contain: layout paint;
+}
+
+.modal-player-wrap iframe,
+.modal-player-wrap video,
+.modal-player-wrap #streamFrame,
+.modal-player-wrap #nativeStreamVideo {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  border: 0;
+}
+
+.modal-player-wrap.collapsed,
+.modal-player-wrap.minimized,
+.modal-player-wrap.scrolled,
+.modal-player-wrap.player-collapsed {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: 16 / 9;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  transform: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .btn-close-modal,
+  .modal-pill-btn,
+  .server-btn,
+  .server-node-btn,
+  .tab-btn,
+  .ep-card,
+  .drawer-close-btn {
+    min-height: 40px;
+  }
+
+  .btn-close-modal {
+    min-width: 40px;
+  }
+}
+
+.modal-pill-btn:focus-visible,
+.server-btn:focus-visible,
+.server-node-btn:focus-visible,
+.ep-card:focus-visible,
+.ep-select:focus-visible,
+.btn-close-modal:focus-visible,
+.tab-btn:focus-visible {
+  outline: 2px solid var(--modal-accent-cyan);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-container,
+  .modal-dialog,
+  .modal-overlay,
+  .modal-pill-btn,
+  .server-btn,
+  .server-node-btn,
+  .ep-card,
+  .ep-thumb-box img,
+  .btn-close-modal {
+    animation: none !important;
+    transition: none !important;
   }
 }
