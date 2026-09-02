@@ -1,16 +1,14 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 20.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 21.0 Enterprise Master Architecture)
  * 
- * Subsystems:
- *  - Native TMDB v3 API Discover Engine with Strict Live-Action Isolation (`without_genres=16`)
- *  - Official TMDB Genre Taxonomy Mapping (Action: 28/10759, Romance: 10749/10766, Sci-Fi: 878/10765, Thriller/Crime: 53/80)
- *  - Pure Live-Action Hindi Pipeline: Queries TMDB Indian cinema (`with_original_language=hi`) to block AniList anime leaks
- *  - Complete CSS Class Alignment for Netflix Rails & Cards (`carousel-container`, `carousel-rail`, `card`, `card-thumb`)
- *  - 4-Tier Validated Streaming Mirror Matrix (NxSha, Filmu, VidCore, VidFast)
- *  - Dexie.js High-Throughput IndexedDB Persistence Layer & Schema Migration
- *  - Bi-Directional URL Parameter Router & Modal History State Synchronization
- *  - Hardware-Accelerated Dynamic Canvas Chroma Extraction with Cache-Busting CORS Handshake
+ * Core Fixes & Features:
+ *  - Strict Horizontal Rails: Forces inline flexbox layouts with fixed-width card tracks to prevent vertical poster stacking.
+ *  - Complete Live-Action Isolation: Filters out TMDB Animation (without_genres=16) to eliminate anime leaks in Netflix Mode.
+ *  - Mode-Aware Navigation & Chips: Dynamic navigation bar, quick chips, and drawer items updated based on active mode.
+ *  - Native Live-Action Hindi Pipeline: Queries TMDB Indian cinema directly instead of AniList anime GraphQL endpoints.
+ *  - 4-Tier Stream Server Mirror Engine: NxSha Ultra, Filmu Native, VidCore, and VidFast with responsive fallback.
+ *  - Dexie.js IndexedDB History Sync, Bi-directional URL Router, and Physical Keyboard Binds.
  */
 
 // ============================================================================
@@ -29,7 +27,7 @@ const CONFIG = {
     ROMANCE: { movie: 10749, tv: 10766 },
     SCI_FI: { movie: 878, tv: 10765 },
     THRILLER_CRIME: { movie: 53, tv: 80 },
-    ANIMATION_EXCLUDE_ID: 16 // TMDB Animation genre ID to strictly eliminate anime
+    ANIMATION_EXCLUDE_ID: 16
   },
   STORAGE_KEYS: {
     WATCHLIST: 'aniflix_watchlist_v5',
@@ -161,7 +159,7 @@ class LocalStorageDatabase {
         });
         this.ready = true;
       } catch (err) {
-        console.warn('[DB Engine] Dexie fallback triggered:', err);
+        console.warn('[DB Engine] Dexie initialization fallback triggered:', err);
       }
     }
   }
@@ -195,7 +193,7 @@ class LocalStorageDatabase {
       try {
         await this.db.watchHistory.put(entry);
       } catch (e) {
-        console.error('[DB Engine] IndexedDB update failed:', e);
+        console.error('[DB Engine] IndexedDB update error:', e);
       }
     }
 
@@ -414,7 +412,6 @@ window.executeStream = function(seekTimestamp = 0) {
     Router.set({ srv: STATE.activeServer, ep: STATE.episode, s: STATE.season });
   }
 
-  // Pure Live-Action does not support AniSkip
   if (STATE.currentAnime.idMal && !STATE.isNetflixMode) {
     resolveAndPollAniSkip(STATE.currentAnime.idMal, STATE.episode);
   } else {
@@ -588,7 +585,7 @@ window.nextEpisode = function() {
 };
 
 // ============================================================================
-// 9. TMDB DISCOVER ENGINE (DEEP LIVE-ACTION DISCOVERY & STRICT ISOLATION)
+// 9. TMDB DISCOVER ENGINE & HORIZONTAL CAROUSEL RAILS
 // ============================================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
@@ -624,13 +621,13 @@ window.formatTmdbMediaItem = function(item, forceFormat = null) {
 };
 
 /**
- * Executes TMDB v3 API discover requests using `/discover/movie` and `/discover/tv`
- * with `without_genres=16` to strictly eliminate animated titles from live-action feeds.
+ * Queries TMDB v3 API discover endpoint using `without_genres=16`
+ * to strictly isolate live-action content and prevent anime leaks.
  */
 window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = null) {
   try {
     const glue = endpoint.includes('?') ? '&' : '?';
-    const sanitizedEndpoint = `${endpoint}${glue}without_genres=${CONFIG.TMDB_GENRES.ANIMATION_EXCLUDE_ID}&vote_count.gte=20`;
+    const sanitizedEndpoint = `${endpoint}${glue}without_genres=${CONFIG.TMDB_GENRES.ANIMATION_EXCLUDE_ID}&vote_count.gte=15`;
     const res = await fetch(`${CONFIG.APIS.TMDB_BASE}${sanitizedEndpoint}`);
     if (!res.ok) return null;
     const data = await res.json();
@@ -662,7 +659,6 @@ window.renderTmdbLiveActionHome = async function() {
   contentRows.innerHTML = '<div style="text-align:center; padding:60px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Initializing Netflix Live-Action Catalog...</div>';
 
   const G = CONFIG.TMDB_GENRES;
-  // All rows strictly use /discover/movie or /discover/tv to eliminate anime from live-action
   const rowPromises = [
     window.fetchTmdbLiveActionRail(`/discover/movie?sort_by=popularity.desc`, 'Trending Movies Worldwide', 'MOVIE'),
     window.fetchTmdbLiveActionRail(`/discover/tv?sort_by=popularity.desc`, 'Top Binge-Worthy TV Series', 'TV'),
@@ -679,7 +675,6 @@ window.renderTmdbLiveActionHome = async function() {
     return;
   }
 
-  // Update Hero Spotlight to top trending live-action entry
   if (rows[0] && rows[0].list && rows[0].list.length > 0) {
     const heroItem = rows[0].list[0];
     STATE.currentAnime = heroItem;
@@ -722,7 +717,8 @@ window.updateHeroBillboard = function(item) {
 };
 
 /**
- * Generates properly styled responsive card rows to prevent broken layouts
+ * Generates horizontal scrolling rails with embedded flexbox properties
+ * to prevent cards from stacking vertically.
  */
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
@@ -732,15 +728,22 @@ window.generateRowHTML = function(title, items, rowIndex) {
     const format = item.format || 'TV';
 
     return `
-      <div class="card" onclick="if(typeof window.openModalById === 'function') window.openModalById(${item.id});">
-        <div class="card-thumb">
-          <img src="${poster}" alt="${displayTitle}" loading="lazy" />
-          <div class="card-badge">${format}</div>
+      <div class="card anime-card" 
+           style="flex: 0 0 190px; max-width: 190px; width: 190px; cursor: pointer; transition: transform 0.25s ease; user-select: none;"
+           onmouseover="this.style.transform='scale(1.05)'"
+           onmouseout="this.style.transform='scale(1)'"
+           onclick="if(typeof window.openModalById === 'function') window.openModalById(${item.id});">
+        <div class="card-thumb" style="position: relative; width: 100%; height: 280px; border-radius: 8px; overflow: hidden; background: #16161c;">
+          <img src="${poster}" 
+               alt="${displayTitle}" 
+               loading="lazy" 
+               style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          <div class="card-badge" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px;">${format}</div>
         </div>
-        <div class="card-info">
-          <div class="card-title">${displayTitle}</div>
-          <div class="card-meta">
-            <span class="card-score"><i class="fas fa-star"></i> ${score}</span>
+        <div class="card-info" style="padding: 8px 2px;">
+          <div class="card-title" style="font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayTitle}</div>
+          <div class="card-meta" style="font-size: 12px; color: #a1a1aa; display: flex; gap: 8px; margin-top: 3px;">
+            <span class="card-score" style="color: #46d369;"><i class="fas fa-star" style="font-size: 10px;"></i> ${score}</span>
             <span class="card-year">${item.year || '2026'}</span>
           </div>
         </div>
@@ -749,12 +752,13 @@ window.generateRowHTML = function(title, items, rowIndex) {
   }).join('');
 
   return `
-    <section class="content-row">
-      <div class="row-header">
-        <h2 class="row-title">${title}</h2>
+    <section class="content-row" style="margin: 28px 0; padding: 0 4%;">
+      <div class="row-header" style="margin-bottom: 12px;">
+        <h2 class="row-title" style="font-size: 20px; font-weight: 700; color: #fff;">${title}</h2>
       </div>
-      <div class="carousel-container">
-        <div class="carousel-rail" id="rail-${rowIndex}">
+      <div class="carousel-container" style="position: relative; width: 100%; overflow: hidden;">
+        <div class="carousel-rail" id="rail-${rowIndex}" 
+             style="display: flex; gap: 16px; overflow-x: auto; scroll-behavior: smooth; padding: 10px 0 16px 0; -webkit-overflow-scrolling: touch; scrollbar-width: thin;">
           ${cardsHTML}
         </div>
       </div>
@@ -768,7 +772,7 @@ window.generateRowHTML = function(title, items, rowIndex) {
 window.applyQuickFilter = async function(filterKey, element) {
   const key = (filterKey || 'ALL').toUpperCase();
 
-  // Synchronize UI active chips
+  // Synchronize active chips UI
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   if (element) {
     element.classList.add('active');
@@ -802,7 +806,7 @@ window.applyQuickFilter = async function(filterKey, element) {
         window.fetchTmdbLiveActionRail('/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', 'All-Time Greatest TV Shows', 'TV')
       ];
     } else if (key === 'HINDI') {
-      // Pure Hindi Live-Action - strictly bypassing anime
+      // Pure Live-Action Hindi Queries (Strictly prevents anime routing)
       fetchPromises = [
         window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Blockbuster Movies', 'MOVIE'),
         window.fetchTmdbLiveActionRail('/discover/tv?with_original_language=hi&sort_by=popularity.desc', 'Hindi Web Series & Dramas', 'TV'),
@@ -1359,7 +1363,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
   initKeyboardShortcuts();
 
-  // Standalone PWA Verification Badge
   const isPwaInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   const pill = document.getElementById('appStatusPill');
   if (pill) {
