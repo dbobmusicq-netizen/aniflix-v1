@@ -1,14 +1,12 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 19.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 20.0 Enterprise Master Architecture)
  * 
- * Deep TMDB Live-Action Subsystems:
- *  - Native TMDB v3 API Discover Engine with Strict Live-Action Isolation (`without_genres=16` exclusion)
- *  - Official TMDB Genre Taxonomy Mapping: Action (Movie 28 / TV 10759), Sci-Fi (Movie 878 / TV 10765),
- *    Romance (Movie 10749 / TV 10766), Thriller (53), Crime (80)
- *  - Dual-Universe Mode Transformer: Dynamically purges anime-specific options (Simulcast Schedule,
- *    Trace.moe Screenshot Search, AniSkip HUD, Fantasy/Isekai category) in Netflix Live-Action Mode
- *  - Auto-Switching Live Search Engine: Switches between AniList GraphQL & TMDB Multi-Search
+ * Subsystems:
+ *  - Native TMDB v3 API Discover Engine with Strict Live-Action Isolation (`without_genres=16`)
+ *  - Official TMDB Genre Taxonomy Mapping (Action: 28/10759, Romance: 10749/10766, Sci-Fi: 878/10765, Thriller/Crime: 53/80)
+ *  - Pure Live-Action Hindi Pipeline: Queries TMDB Indian cinema (`with_original_language=hi`) to block AniList anime leaks
+ *  - Complete CSS Class Alignment for Netflix Rails & Cards (`carousel-container`, `carousel-rail`, `card`, `card-thumb`)
  *  - 4-Tier Validated Streaming Mirror Matrix (NxSha, Filmu, VidCore, VidFast)
  *  - Dexie.js High-Throughput IndexedDB Persistence Layer & Schema Migration
  *  - Bi-Directional URL Parameter Router & Modal History State Synchronization
@@ -26,13 +24,12 @@ const CONFIG = {
     ANISKIP: 'https://api.aniskip.com/v2/skip-times',
     TMDB_BASE: 'https://db.speedracelight.com/3'
   },
-  // Official TMDB Spec: IDs differ between Movies and TV series
   TMDB_GENRES: {
     ACTION: { movie: 28, tv: 10759 },
     ROMANCE: { movie: 10749, tv: 10766 },
     SCI_FI: { movie: 878, tv: 10765 },
     THRILLER_CRIME: { movie: 53, tv: 80 },
-    ANIMATION_EXCLUDE_ID: 16 // TMDB Animation genre ID
+    ANIMATION_EXCLUDE_ID: 16 // TMDB Animation genre ID to strictly eliminate anime
   },
   STORAGE_KEYS: {
     WATCHLIST: 'aniflix_watchlist_v5',
@@ -627,20 +624,18 @@ window.formatTmdbMediaItem = function(item, forceFormat = null) {
 };
 
 /**
- * Executes TMDB v3 API discover requests with strict animation exclusion (without_genres=16)
- * to ensure absolute live-action compliance in Netflix mode.
+ * Executes TMDB v3 API discover requests using `/discover/movie` and `/discover/tv`
+ * with `without_genres=16` to strictly eliminate animated titles from live-action feeds.
  */
 window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = null) {
   try {
     const glue = endpoint.includes('?') ? '&' : '?';
-    // Append without_genres=16 and vote threshold to guarantee pure live-action content
     const sanitizedEndpoint = `${endpoint}${glue}without_genres=${CONFIG.TMDB_GENRES.ANIMATION_EXCLUDE_ID}&vote_count.gte=20`;
     const res = await fetch(`${CONFIG.APIS.TMDB_BASE}${sanitizedEndpoint}`);
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.results || !data.results.length) return null;
 
-    // Filter out animation genre id 16
     const cleanResults = data.results.filter(item => {
       const genres = item.genre_ids || [];
       return !genres.includes(CONFIG.TMDB_GENRES.ANIMATION_EXCLUDE_ID);
@@ -667,9 +662,9 @@ window.renderTmdbLiveActionHome = async function() {
   contentRows.innerHTML = '<div style="text-align:center; padding:60px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Initializing Netflix Live-Action Catalog...</div>';
 
   const G = CONFIG.TMDB_GENRES;
+  // All rows strictly use /discover/movie or /discover/tv to eliminate anime from live-action
   const rowPromises = [
-    window.fetchTmdbLiveActionRail('/trending/all/day', 'Trending Now Worldwide'),
-    window.fetchTmdbLiveActionRail(`/discover/movie?sort_by=popularity.desc`, 'Blockbuster Movies', 'MOVIE'),
+    window.fetchTmdbLiveActionRail(`/discover/movie?sort_by=popularity.desc`, 'Trending Movies Worldwide', 'MOVIE'),
     window.fetchTmdbLiveActionRail(`/discover/tv?sort_by=popularity.desc`, 'Top Binge-Worthy TV Series', 'TV'),
     window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.ACTION.movie}&sort_by=popularity.desc`, 'Explosive Action & Thrillers', 'MOVIE'),
     window.fetchTmdbLiveActionRail(`/discover/tv?with_genres=${G.ACTION.tv}&sort_by=popularity.desc`, 'Action & Adventure Series', 'TV'),
@@ -726,6 +721,9 @@ window.updateHeroBillboard = function(item) {
   }
 };
 
+/**
+ * Generates properly styled responsive card rows to prevent broken layouts
+ */
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
     const displayTitle = item.title?.english || item.title?.romaji || 'Title';
@@ -770,7 +768,7 @@ window.generateRowHTML = function(title, items, rowIndex) {
 window.applyQuickFilter = async function(filterKey, element) {
   const key = (filterKey || 'ALL').toUpperCase();
 
-  // Synchronize active chips UI
+  // Synchronize UI active chips
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   if (element) {
     element.classList.add('active');
@@ -794,18 +792,17 @@ window.applyQuickFilter = async function(filterKey, element) {
       return;
     } else if (key === 'MOVIES') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail('/movie/popular', 'Trending Movies Worldwide', 'MOVIE'),
-        window.fetchTmdbLiveActionRail('/movie/top_rated', 'Critically Acclaimed Movies', 'MOVIE'),
-        window.fetchTmdbLiveActionRail('/movie/now_playing', 'Now Playing in Theaters & Streaming', 'MOVIE'),
+        window.fetchTmdbLiveActionRail('/discover/movie?sort_by=popularity.desc', 'Trending Movies Worldwide', 'MOVIE'),
+        window.fetchTmdbLiveActionRail('/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', 'Critically Acclaimed Movies', 'MOVIE'),
         window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Bollywood & Hindi Cinema', 'MOVIE')
       ];
     } else if (key === 'TOP_AIRING' || key === 'SHOWS' || key === 'TV') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail('/tv/popular', 'Top Binge Series', 'TV'),
-        window.fetchTmdbLiveActionRail('/tv/top_rated', 'All-Time Greatest TV Shows', 'TV'),
-        window.fetchTmdbLiveActionRail('/tv/on_the_air', 'Airing Live Now on TV', 'TV')
+        window.fetchTmdbLiveActionRail('/discover/tv?sort_by=popularity.desc', 'Top Binge Series', 'TV'),
+        window.fetchTmdbLiveActionRail('/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', 'All-Time Greatest TV Shows', 'TV')
       ];
     } else if (key === 'HINDI') {
+      // Pure Hindi Live-Action - strictly bypassing anime
       fetchPromises = [
         window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Blockbuster Movies', 'MOVIE'),
         window.fetchTmdbLiveActionRail('/discover/tv?with_original_language=hi&sort_by=popularity.desc', 'Hindi Web Series & Dramas', 'TV'),
@@ -902,6 +899,7 @@ window.navigateGenre = async function(genre, label) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+// Mode-aware Hindi route: In Netflix mode, it calls the TMDB Live-Action Hindi pipeline
 window.loadHindiDubbed = async function() {
   if (STATE.isNetflixMode) {
     await window.applyQuickFilter('HINDI');
@@ -944,7 +942,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
       animeButtons.forEach(b => b.style.display = 'none');
     }
 
-    // Dynamic Netflix Desktop Navigation: Replaces anime fantasy/isekai with Thrillers
+    // Dynamic Netflix Desktop Navigation
     if (desktopNav) {
       desktopNav.innerHTML = `
         <li><a class="nav-link active" id="navHome" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li>
@@ -957,7 +955,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
       `;
     }
 
-    // Dynamic Mobile Drawer: Purges TraceMoe & Airing Calendar, updates genre categories
+    // Dynamic Mobile Drawer
     if (mobileNav) {
       mobileNav.innerHTML = `
         <li><a class="mobile-nav-link active" onclick="window.toggleMobileNav(false); window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> Home</a></li>
@@ -972,7 +970,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
       `;
     }
 
-    // Dynamic Horizontal Filter Chips: Replaces Anime Isekai/Fantasy with Thriller & Crime
+    // Dynamic Horizontal Filter Chips
     if (filterChips) {
       filterChips.innerHTML = `
         <button class="chip active" type="button" data-filter="ALL" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
