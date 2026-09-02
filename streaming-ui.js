@@ -1,21 +1,17 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized UI & API Integration Module
  * File: streaming-ui.js
- * Version: 19.0.0 Enterprise Hybrid Architecture
+ * Version: 20.0.0 Enterprise Hybrid Architecture
  * 
  * Performance & Rate-Limit Systems:
  *  - Token-Bucket & Promise Sequential Queue (Strict anti-burst throttle, zero-429 design)
  *  - 15-Minute Dual-Layer Caching (Fast In-Memory Map + IndexedDB via Dexie.js)
  *  - Dynamic AniList/Cloudflare Retry-After Ingestion with Automatic Exponential Fallback
- *  - Staggered Carousel Dispatch Pipeline (Instant viewport render, delayed background queries)
- *  - 4 Authorized Mirror Drivers:
- *      * NxSha Ultra (https://nxsha.space - Hindi Audio default, Netflix UI Theme)
- *      * Filmu Native (https://embed.filmu.in - TMDB & AniList Universal Route)
- *      * VidCore 4K (https://vidcore.org - Fast Mirror, Autoplay)
- *      * VidFast Sync (https://vidfast.vc - AutoNext Queue Engine)
- *  - Bi-Directional Nav State Sync (Top Navbar <-> Mid Filter Chips)
- *  - Elevated Z-Index Interactive Modal Player (Zero DOM blocking on Click-to-Play)
- *  - Audio/Video Clean Unmount Teardown Engine (Zero background audio leakage)
+ *  - Dual-Universe Mode Aware: Pure Live-Action TMDB Discovery (Excluding Animation ID 16) vs Anime Universe
+ *  - Mode-Synchronized Navigation & Quick Chips (Movies, TV Shows, Action, Thriller, Romance, Hindi Live-Action)
+ *  - Horizontal Flex Carousel Guarding: Prevents vertical poster stacking
+ *  - 4 Authorized Mirror Drivers (NxSha, Filmu, VidCore, VidFast)
+ *  - Clean Audio/Video Unmount Teardown Engine (Zero background audio leakage)
  *  - Complete P2P WebRTC Multi-User Sync, Jikan Schedules & Trace.moe Scanning
  */
 
@@ -33,7 +29,7 @@ let gainNode = null;
 
 // Anti-429 Throttle & Queue Control State
 let lastGqlRequestTime = 0;
-const GQL_MIN_INTERVAL_MS = 380; // Caps outbound requests to ~2.6 req/s (Safe within AniList 90 req/min budget)
+const GQL_MIN_INTERVAL_MS = 380;
 let gqlQueue = Promise.resolve();
 
 // ===============================================================
@@ -75,11 +71,10 @@ async function fetchWithRetry(url, options = {}, retries = 2, delay = 2500) {
   try {
     const response = await fetch(url, options);
 
-    // Explicit 429 Interception (Cloudflare / AniList Rate Limit)
     if (response.status === 429) {
       const retryHeader = response.headers.get('Retry-After');
       const waitSeconds = retryHeader ? parseInt(retryHeader, 10) : (delay / 1000);
-      console.warn(`[AniList 429]: Rate limit threshold reached. Backing off for ${waitSeconds}s...`);
+      console.warn(`[API Rate Limit]: Backing off for ${waitSeconds}s...`);
       
       if (retries > 0) {
         await new Promise(res => setTimeout(res, Math.max(waitSeconds, 2) * 1000));
@@ -89,10 +84,7 @@ async function fetchWithRetry(url, options = {}, retries = 2, delay = 2500) {
     }
 
     if (!response.ok) {
-      if (response.status === 400 || response.status === 500) {
-        console.warn(`[API Network]: Non-retryable status ${response.status} from ${url}`);
-        return null;
-      }
+      if (response.status === 400 || response.status === 500) return null;
       if (retries > 0) {
         await new Promise(res => setTimeout(res, delay));
         return fetchWithRetry(url, options, retries - 1, delay * 2);
@@ -102,7 +94,7 @@ async function fetchWithRetry(url, options = {}, retries = 2, delay = 2500) {
 
     return await response.json();
   } catch (error) {
-    if (retries > 0 && !error.message?.includes('400') && !error.message?.includes('500')) {
+    if (retries > 0) {
       await new Promise(res => setTimeout(res, delay));
       return fetchWithRetry(url, options, retries - 1, delay * 2);
     }
@@ -114,12 +106,10 @@ window.fetchWithRetry = fetchWithRetry;
 async function fetchGQL(query, variables = {}) {
   const cacheKey = JSON.stringify({ query, variables });
 
-  // 1. Instant Cache Retrieval (Zero Network Round-Trip)
   if (queryCache.has(cacheKey)) {
     return queryCache.get(cacheKey);
   }
 
-  // 2. Persistent Storage Layer Retrieval (Survives Browser Reloads, 15-Minute Expiry)
   if (db && db.cachedQueries) {
     try {
       const cached = await db.cachedQueries.get(cacheKey);
@@ -130,7 +120,6 @@ async function fetchGQL(query, variables = {}) {
     } catch (e) {}
   }
 
-  // 3. Sequenced Outbound Dispatch
   return enqueueGQL(async () => {
     try {
       const json = await fetchWithRetry(window.CONFIG?.APIS?.ANILIST || 'https://graphql.anilist.co', {
@@ -147,22 +136,17 @@ async function fetchGQL(query, variables = {}) {
         if (db && db.cachedQueries) {
           db.cachedQueries.put({ key: cacheKey, data: json.data, timestamp: Date.now() }).catch(() => {});
         }
-        // Retain in dynamic runtime cache for 15 minutes
         setTimeout(() => queryCache.delete(cacheKey), 900000);
         return json.data;
-      } else if (json?.errors) {
-        console.error('[GraphQL Validation Error]:', json.errors);
       }
       return null;
     } catch (err) {
-      console.warn('[GraphQL Engine] Fetch exception:', err);
       return null;
     }
   });
 }
 window.fetchGQL = fetchGQL;
 
-// Fast Minimalist GraphQL Schemas (Reduced complexity preventing 400 Bad Requests)
 const GQL_BASIC = `
   query ($page: Int, $perPage: Int, $sort: [MediaSort], $genre: String, $search: String, $status: MediaStatus) {
     Page(page: $page, perPage: $perPage) {
@@ -198,7 +182,7 @@ const GQL_DEEP = `
 `;
 
 // ===============================================================
-// 3. SEAMLESS TOP BAR & MID-CHIP CATEGORY STATE SYNCHRONIZER
+// 3. TOP BAR & CHIP CATEGORY STATE SYNCHRONIZER
 // ===============================================================
 window.syncCategoryState = function(categoryKey) {
   const topLinks = document.querySelectorAll('.nav-desktop .nav-link, .mobile-nav-list .mobile-nav-link');
@@ -207,49 +191,26 @@ window.syncCategoryState = function(categoryKey) {
   topLinks.forEach(l => l.classList.remove('active'));
   chips.forEach(c => c.classList.remove('active'));
 
-  switch (categoryKey) {
-    case 'ALL':
-      document.getElementById('navHome')?.classList.add('active');
-      document.querySelectorAll('.mobile-nav-link').forEach(l => {
-        if (l.innerText.trim().includes('Home')) l.classList.add('active');
-      });
-      chips[0]?.classList.add('active');
-      break;
-    case 'HINDI':
-      document.getElementById('navHindi')?.classList.add('active');
-      document.querySelectorAll('.mobile-nav-link').forEach(l => {
-        if (l.innerText.trim().includes('Hindi Dubbed')) l.classList.add('active');
-      });
-      chips[1]?.classList.add('active');
-      break;
-    case 'TOP_AIRING':
-      chips[2]?.classList.add('active');
-      break;
-    case 'MOVIES':
-      chips[3]?.classList.add('active');
-      break;
-    case 'ACTION':
-      document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
-        if (l.innerText.trim().includes('Action')) l.classList.add('active');
-      });
-      document.getElementById('chipCategory1')?.classList.add('active');
-      break;
-    case 'FANTASY':
-      document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
-        if (l.innerText.trim().includes('Fantasy')) l.classList.add('active');
-      });
-      document.getElementById('chipCategory2')?.classList.add('active');
-      break;
-    case 'SCI_FI':
-      document.getElementById('chipCategory3')?.classList.add('active');
-      break;
-    case 'ROMANCE':
-      document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
-        if (l.innerText.trim().includes('Romance')) l.classList.add('active');
-      });
-      chips[7]?.classList.add('active');
-      break;
-  }
+  const normKey = (categoryKey || 'ALL').toUpperCase();
+
+  // Highlight corresponding chip
+  const targetChip = document.querySelector(`.chip[data-filter="${normKey}"]`) ||
+                     document.querySelector(`.chip[onclick*="'${normKey}'"]`) ||
+                     chips[0];
+  if (targetChip) targetChip.classList.add('active');
+
+  // Highlight corresponding nav link
+  topLinks.forEach(l => {
+    const text = l.innerText.toUpperCase();
+    if (normKey === 'ALL' && text.includes('HOME')) l.classList.add('active');
+    else if ((normKey === 'MOVIES' || normKey === 'MOVIE') && text.includes('MOVIES')) l.classList.add('active');
+    else if ((normKey === 'TOP_AIRING' || normKey === 'TV' || normKey === 'SHOWS') && (text.includes('TV') || text.includes('SHOWS'))) l.classList.add('active');
+    else if (normKey === 'HINDI' && text.includes('HINDI')) l.classList.add('active');
+    else if (normKey === 'ACTION' && text.includes('ACTION')) l.classList.add('active');
+    else if (normKey === 'THRILLER' && (text.includes('THRILLER') || text.includes('CRIME'))) l.classList.add('active');
+    else if (normKey === 'ROMANCE' && text.includes('ROMANCE')) l.classList.add('active');
+    else if (normKey === 'FANTASY' && text.includes('FANTASY')) l.classList.add('active');
+  });
 };
 
 // ===============================================================
@@ -260,7 +221,8 @@ window.renderHeroSpotlight = async function() {
 
   if (window.STATE.isNetflixMode) {
     try {
-      const data = await fetchWithRetry('https://db.speedracelight.com/3/trending/all/day');
+      // Exclude animation genre ID 16 from live-action spotlight
+      const data = await fetchWithRetry(`https://db.speedracelight.com/3/discover/movie?sort_by=popularity.desc&without_genres=16&vote_count.gte=100`);
       const item = data?.results?.[0];
       if (item) {
         const title = item.title || item.name || 'Featured Live-Action';
@@ -271,22 +233,25 @@ window.renderHeroSpotlight = async function() {
 
         const mockMediaObj = {
           id: item.id,
-          idMal: item.id,
-          title: { romaji: title, english: title },
-          description: item.overview || 'Exclusive streaming title.',
+          idMal: null,
+          tmdbId: item.id,
+          title: { romaji: title, english: title, native: item.original_title || title },
+          description: item.overview || 'Exclusive live-action blockbuster stream.',
           bannerImage: poster,
           coverImage: { extraLarge: poster, large: poster },
-          episodes: isMovie ? 1 : (item.number_of_episodes || 12),
-          duration: item.runtime || 50,
+          episodes: isMovie ? 1 : 16,
+          duration: item.runtime || 115,
           format: isMovie ? 'MOVIE' : 'TV',
           status: 'RELEASED',
-          genres: ['Drama', 'Action', 'Series'],
-          averageScore: Math.round((item.vote_average || 8.5) * 10),
+          genres: ['Live-Action', 'Blockbuster'],
+          averageScore: Math.round((item.vote_average || 8.2) * 10),
           seasonYear: (item.release_date || item.first_air_date || '2026').split('-')[0],
-          studios: { nodes: [{ name: 'Netflix Studio' }] }
+          isLiveAction: true
         };
 
         window.animeCache.set(mockMediaObj.id, mockMediaObj);
+        window.STATE.currentAnime = mockMediaObj;
+        window.STATE.currentTMDBId = mockMediaObj.id;
 
         const heroBg = document.getElementById('heroBg');
         if (heroBg) {
@@ -302,12 +267,14 @@ window.renderHeroSpotlight = async function() {
         const heroFormat = document.getElementById('heroFormat');
         const heroStatus = document.getElementById('heroStatus');
         const heroDesc = document.getElementById('heroDesc');
+        const heroFormatBadge = document.getElementById('heroFormatBadge');
 
         if (heroTitle) heroTitle.innerText = title;
-        if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> ${mockMediaObj.averageScore}% Rating`;
+        if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> ${mockMediaObj.averageScore}% Match`;
         if (heroYear) heroYear.innerText = mockMediaObj.seasonYear;
         if (heroFormat) heroFormat.innerText = mockMediaObj.format;
-        if (heroStatus) heroStatus.innerText = 'NETFLIX STREAM';
+        if (heroStatus) heroStatus.innerText = 'NETFLIX LIVE';
+        if (heroFormatBadge) heroFormatBadge.innerHTML = `<i class="fas fa-play"></i> NETFLIX LIVE SPOTLIGHT`;
         
         if (heroDubBadge) {
           heroDubBadge.innerHTML = `<i class="fas fa-film"></i> 4K ULTRA HD / MULTI AUDIO`;
@@ -329,10 +296,9 @@ window.renderHeroSpotlight = async function() {
     }
   }
 
-  // Anime Spotlight Query (Instant Cache Priority)
+  // Anime Spotlight Query
   const data = await fetchGQL(GQL_BASIC, { page: 1, perPage: 1, sort: ['TRENDING_DESC'] });
   const anime = data?.Page?.media?.[0];
-
   if (!anime) return;
 
   window.animeCache.set(anime.id, anime);
@@ -354,12 +320,14 @@ window.renderHeroSpotlight = async function() {
   const heroFormat = document.getElementById('heroFormat');
   const heroStatus = document.getElementById('heroStatus');
   const heroDesc = document.getElementById('heroDesc');
+  const heroFormatBadge = document.getElementById('heroFormatBadge');
 
   if (heroTitle) heroTitle.innerText = title;
   if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> ${anime.averageScore || 95}% Rating`;
   if (heroYear) heroYear.innerText = anime.seasonYear || '2026';
   if (heroFormat) heroFormat.innerText = anime.format || 'TV SERIES';
   if (heroStatus) heroStatus.innerText = anime.status || 'AIRING';
+  if (heroFormatBadge) heroFormatBadge.innerHTML = `<i class="fas fa-play"></i> FEATURED SPOTLIGHT`;
 
   if (heroDubBadge) {
     heroDubBadge.innerHTML = `<i class="fas fa-microphone"></i> HINDI / SUB / DUB`;
@@ -385,15 +353,17 @@ window.renderHomeRows = async function() {
 
   if (window.STATE.isNetflixMode) {
     if (typeof window.showToast === 'function') window.showToast('Loading Netflix Universe...');
-    await renderTMDBRow('Trending Movies', 'https://db.speedracelight.com/3/trending/movie/day', '<i class="fas fa-film"></i>');
-    await renderTMDBRow('Trending TV Shows', 'https://db.speedracelight.com/3/trending/tv/day', '<i class="fas fa-tv"></i>');
-    await renderTMDBRow('Korean TV Shows & K-Dramas', 'https://db.speedracelight.com/3/discover/tv?with_original_language=ko&sort_by=popularity.desc', '<i class="fas fa-heart"></i>');
-    await renderTMDBRow('Indian TV Shows & Hindi Web Series', 'https://db.speedracelight.com/3/discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-om"></i>');
-    await renderTMDBRow('Action Blockbusters', 'https://db.speedracelight.com/3/discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>');
+    // Pure live-action endpoints with strict animation exclusion (without_genres=16)
+    await renderTMDBRow('Trending Movies Worldwide', 'https://db.speedracelight.com/3/discover/movie?sort_by=popularity.desc&without_genres=16&vote_count.gte=30', '<i class="fas fa-film"></i>', 'MOVIE');
+    await renderTMDBRow('Trending TV Series', 'https://db.speedracelight.com/3/discover/tv?sort_by=popularity.desc&without_genres=16&vote_count.gte=30', '<i class="fas fa-tv"></i>', 'TV');
+    await renderTMDBRow('Bollywood & Hindi Cinema', 'https://db.speedracelight.com/3/discover/movie?with_original_language=hi&sort_by=popularity.desc&without_genres=16', '<i class="fas fa-language"></i>', 'MOVIE');
+    await renderTMDBRow('Action Blockbusters & Adrenaline', 'https://db.speedracelight.com/3/discover/movie?with_genres=28&sort_by=popularity.desc&without_genres=16', '<i class="fas fa-bolt"></i>', 'MOVIE');
+    await renderTMDBRow('Gripping Crime & Mystery Thrillers', 'https://db.speedracelight.com/3/discover/movie?with_genres=53&sort_by=popularity.desc&without_genres=16', '<i class="fas fa-mask"></i>', 'MOVIE');
+    await renderTMDBRow('Romance & Heartwarming Dramas', 'https://db.speedracelight.com/3/discover/movie?with_genres=10749&sort_by=popularity.desc&without_genres=16', '<i class="fas fa-heart"></i>', 'MOVIE');
     return;
   }
 
-  // Sequenced Pipeline: Progressively renders rows as they resolve while respecting the rate queue
+  // Anime catalog
   await renderRow('Trending Masterpieces', { page: 1, perPage: 12, sort: ['TRENDING_DESC'] }, false);
   await renderRow('Top 10 Global Anime Today', { page: 1, perPage: 10, sort: ['POPULARITY_DESC'] }, true);
   await renderHindiDubRow();
@@ -421,66 +391,92 @@ async function renderHindiDubRow() {
 }
 window.renderHindiDubRow = renderHindiDubRow;
 
-async function renderTMDBRow(title, endpoint, iconHtml = '<i class="fas fa-clapperboard"></i>') {
+async function renderTMDBRow(title, endpoint, iconHtml = '<i class="fas fa-clapperboard"></i>', forceFormat = null) {
   try {
-    const data = await fetchWithRetry(endpoint);
+    const glue = endpoint.includes('?') ? '&' : '?';
+    const sanitizedUrl = `${endpoint}${glue}without_genres=16&vote_count.gte=15`;
+    const data = await fetchWithRetry(sanitizedUrl);
     if (data?.results?.length) {
-      buildTMDBCarouselDOM(title, data.results, iconHtml);
+      const cleanResults = data.results.filter(item => {
+        const genres = item.genre_ids || [];
+        return !genres.includes(16);
+      });
+      if (cleanResults.length) {
+        buildTMDBCarouselDOM(title, cleanResults, iconHtml, forceFormat);
+      }
     }
   } catch (e) {
     console.warn(`[TMDB Row Error]: ${title}`, e);
   }
 }
 
-function buildTMDBCarouselDOM(title, items, iconHtml = '<i class="fas fa-clapperboard"></i>') {
+/**
+ * Renders TMDB live-action carousel tracks with strict horizontal flex styling
+ */
+function buildTMDBCarouselDOM(title, items, iconHtml = '<i class="fas fa-clapperboard"></i>', forceFormat = null) {
   const container = document.getElementById('contentRows');
   if (!container) return;
   const section = document.createElement('section');
-  section.className = 'row-section';
+  section.className = 'row-section content-row';
+  section.style.cssText = 'margin: 28px 0; padding: 0 4%;';
+
   section.innerHTML = `
-    <h2 class="row-header" style="display:flex; align-items:center; gap:10px;">
+    <h2 class="row-header" style="display:flex; align-items:center; gap:10px; font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">
       <span style="color:var(--accent-red);">${iconHtml}</span> 
       <span>${title}</span>
     </h2>
-    <div class="row-container">
-      <div class="carousel-track"></div>
+    <div class="row-container carousel-container" style="position:relative; width:100%; overflow:hidden;">
+      <div class="carousel-track carousel-rail" style="display:flex; gap:16px; overflow-x:auto; scroll-behavior:smooth; padding:10px 0 16px 0; -webkit-overflow-scrolling:touch; scrollbar-width:thin;"></div>
     </div>
   `;
   const track = section.querySelector('.carousel-track');
 
   items.forEach((item) => {
     if (!item || (!item.poster_path && !item.backdrop_path)) return;
-    const dispTitle = item.title || item.name || 'Movie / Series';
+    const dispTitle = item.title || item.name || 'Title';
     const posterPath = item.poster_path || item.backdrop_path;
     const poster = `https://image.tmdb.org/t/p/w500${posterPath}`;
-    const isMovie = item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
+    const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
 
     const mockMediaObj = {
       id: item.id,
-      idMal: item.id,
-      title: { romaji: dispTitle, english: dispTitle },
-      description: item.overview || 'No description available for this title.',
+      idMal: null,
+      tmdbId: item.id,
+      title: { romaji: dispTitle, english: dispTitle, native: item.original_title || dispTitle },
+      description: item.overview || 'Synopsis not available for this title.',
       bannerImage: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : poster,
       coverImage: { extraLarge: poster, large: poster },
-      episodes: isMovie ? 1 : (item.number_of_episodes || 12),
+      episodes: isMovie ? 1 : (item.number_of_episodes || 16),
       duration: item.runtime || 45,
       format: isMovie ? 'MOVIE' : 'TV',
       status: 'RELEASED',
-      genres: ['Series', 'Blockbuster'],
+      genres: ['Live-Action'],
       averageScore: Math.round((item.vote_average || 8) * 10),
       seasonYear: (item.release_date || item.first_air_date || '2026').split('-')[0],
-      studios: { nodes: [{ name: 'Netflix / TMDB' }] }
+      isLiveAction: true
     };
 
     window.animeCache.set(item.id, mockMediaObj);
 
     const card = document.createElement('div');
-    card.className = 'anime-card';
+    card.className = 'anime-card card';
+    card.style.cssText = 'flex:0 0 190px; max-width:190px; width:190px; cursor:pointer; transition:transform 0.25s ease; user-select:none;';
+    card.onmouseover = () => card.style.transform = 'scale(1.05)';
+    card.onmouseout = () => card.style.transform = 'scale(1)';
     card.onclick = () => window.openModal(mockMediaObj);
+
     card.innerHTML = `
-      <img src="${poster}" alt="${dispTitle}" loading="lazy"/>
-      <div class="card-overlay"><div class="card-title">${dispTitle}</div></div>
-      <div class="card-badge-top">${mockMediaObj.format}</div>
+      <div class="card-thumb" style="position:relative; width:100%; height:280px; border-radius:8px; overflow:hidden; background:#16161c;">
+        <img src="${poster}" alt="${dispTitle}" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;" />
+        <div class="card-badge" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.8); color:#fff; font-size:11px; font-weight:700; padding:2px 7px; border-radius:4px;">${mockMediaObj.format}</div>
+      </div>
+      <div class="card-info" style="padding:8px 2px;">
+        <div class="card-title" style="font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${dispTitle}</div>
+        <div class="card-meta" style="font-size:12px; color:#a1a1aa; display:flex; gap:8px; margin-top:3px;">
+          <span class="card-score" style="color:#46d369;"><i class="fas fa-star" style="font-size:10px;"></i> ${mockMediaObj.averageScore}%</span>
+          <span class="card-year">${mockMediaObj.seasonYear}</span>
+        </div>
+      </div>
     `;
     track.appendChild(card);
   });
@@ -493,11 +489,13 @@ function buildCarouselDOM(title, items, isTop10, isHindi = false) {
   const container = document.getElementById('contentRows');
   if (!container) return;
   const section = document.createElement('section');
-  section.className = 'row-section';
+  section.className = 'row-section content-row';
+  section.style.cssText = 'margin: 28px 0; padding: 0 4%;';
+
   section.innerHTML = `
-    <h2 class="row-header">${title}</h2>
-    <div class="row-container">
-      <div class="carousel-track"></div>
+    <h2 class="row-header" style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">${title}</h2>
+    <div class="row-container carousel-container" style="position:relative; width:100%; overflow:hidden;">
+      <div class="carousel-track carousel-rail" style="display:flex; gap:16px; overflow-x:auto; scroll-behavior:smooth; padding:10px 0 16px 0; -webkit-overflow-scrolling:touch; scrollbar-width:thin;"></div>
     </div>
   `;
   const track = section.querySelector('.carousel-track');
@@ -511,22 +509,29 @@ function buildCarouselDOM(title, items, isTop10, isHindi = false) {
 
     const card = document.createElement('div');
     if (isTop10) {
-      card.className = 'top10-item';
+      card.className = 'top10-item anime-card';
+      card.style.cssText = 'flex:0 0 210px; max-width:210px; cursor:pointer; position:relative;';
+      card.onclick = () => handleAnimeClick(anime.id);
       card.innerHTML = `
-        <div class="top10-rank">${idx + 1}</div>
-        <div class="anime-card" onclick="handleAnimeClick(${anime.id})">
-          <img src="${poster}" alt="" loading="lazy"/>
-          <div class="card-overlay"><div class="card-title">${dispTitle}</div></div>
-          <div class="card-badge-top">${anime.format || 'TV'}</div>
+        <div class="top10-rank" style="font-size:3.5rem; font-weight:900; position:absolute; left:-10px; bottom:20px; z-index:2; color:rgba(255,255,255,0.85);">${idx + 1}</div>
+        <div class="card-thumb" style="width:100%; height:280px; border-radius:8px; overflow:hidden; background:#16161c; margin-left:25px;">
+          <img src="${poster}" alt="" loading="lazy" style="width:100%; height:100%; object-fit:cover;" />
         </div>
       `;
     } else {
-      card.className = 'anime-card';
+      card.className = 'anime-card card';
+      card.style.cssText = 'flex:0 0 190px; max-width:190px; width:190px; cursor:pointer; transition:transform 0.25s ease;';
+      card.onmouseover = () => card.style.transform = 'scale(1.05)';
+      card.onmouseout = () => card.style.transform = 'scale(1)';
       card.onclick = () => handleAnimeClick(anime.id);
       card.innerHTML = `
-        <img src="${poster}" alt="" loading="lazy"/>
-        <div class="card-overlay"><div class="card-title">${dispTitle}</div></div>
-        ${isHindi ? '<div class="card-badge-hindi">HINDI DUB</div>' : `<div class="card-badge-top">${anime.episodes ? anime.episodes + ' EP' : 'ONGOING'}</div>`}
+        <div class="card-thumb" style="position:relative; width:100%; height:280px; border-radius:8px; overflow:hidden; background:#16161c;">
+          <img src="${poster}" alt="" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;" />
+          ${isHindi ? '<div class="card-badge" style="position:absolute; top:8px; right:8px; background:#e50914; color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px;">HINDI DUB</div>' : `<div class="card-badge" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.8); color:#fff; font-size:11px; font-weight:700; padding:2px 7px; border-radius:4px;">${anime.episodes ? anime.episodes + ' EP' : 'ONGOING'}</div>`}
+        </div>
+        <div class="card-info" style="padding:8px 2px;">
+          <div class="card-title" style="font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${dispTitle}</div>
+        </div>
       `;
     }
     track.appendChild(card);
@@ -581,10 +586,29 @@ window.navigateGenre = async function(genre, title) {
   }
 
   if (typeof window.showToast === 'function') window.showToast(`Loading ${title}...`);
+
+  // Netflix Live-Action Mode
   if (window.STATE.isNetflixMode) {
-    await renderTMDBRow(`${title} Movies`, `https://db.speedracelight.com/3/discover/movie?with_genres=${genre === 'Action' ? '28' : '10749'}`, '<i class="fas fa-film"></i>');
-    await renderTMDBRow(`${title} TV Series`, `https://db.speedracelight.com/3/discover/tv?with_genres=${genre === 'Action' ? '10759' : '10749'}`, '<i class="fas fa-tv"></i>');
+    if (genre === 'Movies' || genre === 'Movie') {
+      await renderTMDBRow('Trending Feature Films', 'https://db.speedracelight.com/3/discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+      await renderTMDBRow('Top Rated Blockbusters', 'https://db.speedracelight.com/3/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE');
+    } else if (genre === 'TV' || genre === 'TV Shows') {
+      await renderTMDBRow('Top Binge TV Series', 'https://db.speedracelight.com/3/discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('Critically Acclaimed Series', 'https://db.speedracelight.com/3/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV');
+    } else if (genre === 'Action') {
+      await renderTMDBRow('Action Movies & Thrillers', 'https://db.speedracelight.com/3/discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+      await renderTMDBRow('Action & Adventure Series', 'https://db.speedracelight.com/3/discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+    } else if (genre === 'Thriller' || genre === 'Thriller & Crime') {
+      await renderTMDBRow('Gripping Crime & Mystery Films', 'https://db.speedracelight.com/3/discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
+      await renderTMDBRow('Psychological Thriller Series', 'https://db.speedracelight.com/3/discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV');
+    } else if (genre === 'Romance') {
+      await renderTMDBRow('Romantic Comedies & Dramas', 'https://db.speedracelight.com/3/discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
+      await renderTMDBRow('Romantic TV Series', 'https://db.speedracelight.com/3/discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+    } else if (genre === 'Hindi') {
+      await window.loadHindiDubbed();
+    }
   } else {
+    // Anime Universe
     await renderRow(title, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
     await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
   }
@@ -599,72 +623,85 @@ window.loadHindiDubbed = async function() {
   const contentRows = document.getElementById('contentRows');
   if (contentRows) contentRows.innerHTML = '';
 
-  if (typeof window.showToast === 'function') window.showToast('Loading Hindi Dubbed Series...');
-  await renderHindiDubRow();
-  await renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
-  await renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['POPULARITY_DESC'] }, false);
+  if (typeof window.showToast === 'function') window.showToast('Loading Hindi Releases...');
+
+  // Mode-Aware: In Netflix Mode, fetch pure Bollywood & Indian live-action titles
+  if (window.STATE.isNetflixMode) {
+    await renderTMDBRow('Hindi Blockbuster Movies', 'https://db.speedracelight.com/3/discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+    await renderTMDBRow('Hindi Web Series & Dramas', 'https://db.speedracelight.com/3/discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+    await renderTMDBRow('Critically Acclaimed Hindi Cinema', 'https://db.speedracelight.com/3/discover/movie?with_original_language=hi&sort_by=vote_average.desc&vote_count.gte=50', '<i class="fas fa-star"></i>', 'MOVIE');
+  } else {
+    // Anime Universe
+    await renderHindiDubRow();
+    await renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
+    await renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['POPULARITY_DESC'] }, false);
+  }
 
   window.scrollTo({ top: 350, behavior: 'smooth' });
-};
-
-window.playRandomAnime = async function() {
-  if (typeof window.toggleMobileNav === 'function') window.toggleMobileNav(false);
-  if (typeof window.showToast === 'function') window.showToast('Rolling for a random title...');
-
-  if (window.STATE.isNetflixMode) {
-    try {
-      const data = await fetchWithRetry('https://db.speedracelight.com/3/trending/all/day');
-      const results = data?.results || [];
-      if (results.length > 0) {
-        const item = results[Math.floor(Math.random() * results.length)];
-        const poster = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
-        const isMovie = item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
-        const mockMediaObj = {
-          id: item.id,
-          idMal: item.id,
-          title: { romaji: item.title || item.name, english: item.title || item.name },
-          description: item.overview,
-          bannerImage: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : poster,
-          coverImage: { extraLarge: poster, large: poster },
-          format: isMovie ? 'MOVIE' : 'TV',
-          episodes: isMovie ? 1 : 12,
-          averageScore: Math.round((item.vote_average || 8) * 10)
-        };
-        window.animeCache.set(mockMediaObj.id, mockMediaObj);
-        window.openModal(mockMediaObj, 1, 1, false);
-        return;
-      }
-    } catch (e) {}
-  }
-
-  const randomPage = Math.floor(Math.random() * 20) + 1;
-  const data = await fetchGQL(GQL_BASIC, { page: randomPage, perPage: 10, sort: ['POPULARITY_DESC'] });
-  const list = data?.Page?.media || [];
-
-  if (list.length > 0) {
-    const selected = list[Math.floor(Math.random() * list.length)];
-    window.animeCache.set(selected.id, selected);
-    window.openModal(selected, 1, 1, false);
-    if (typeof window.showToast === 'function') {
-      window.showToast(`Selected: ${selected.title?.english || selected.title?.romaji}`);
-    }
-  } else {
-    if (typeof window.showToast === 'function') window.showToast('Failed to fetch a random title.');
-  }
 };
 
 window.applyQuickFilter = async function(type, chipBtn) {
   const contentRows = document.getElementById('contentRows');
   if (contentRows) contentRows.innerHTML = '';
 
-  switch (type) {
+  const normType = (type || 'ALL').toUpperCase();
+
+  // Mode-Aware: Netflix Live-Action Filter Handling
+  if (window.STATE.isNetflixMode) {
+    switch (normType) {
+      case 'ALL':
+        window.syncCategoryState('ALL');
+        await window.renderHomeRows();
+        break;
+      case 'MOVIES':
+        window.syncCategoryState('MOVIES');
+        await renderTMDBRow('Trending Movies Worldwide', 'https://db.speedracelight.com/3/discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+        await renderTMDBRow('Critically Acclaimed Feature Films', 'https://db.speedracelight.com/3/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE');
+        break;
+      case 'TOP_AIRING':
+      case 'SHOWS':
+      case 'TV':
+        window.syncCategoryState('TOP_AIRING');
+        await renderTMDBRow('Top Binge TV Series', 'https://db.speedracelight.com/3/discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        await renderTMDBRow('All-Time Greatest TV Shows', 'https://db.speedracelight.com/3/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV');
+        break;
+      case 'HINDI':
+        await window.loadHindiDubbed();
+        break;
+      case 'ACTION':
+        window.syncCategoryState('ACTION');
+        await renderTMDBRow('Action Movies & Adrenaline', 'https://db.speedracelight.com/3/discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+        await renderTMDBRow('Action & Adventure Series', 'https://db.speedracelight.com/3/discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        break;
+      case 'THRILLER':
+      case 'CRIME':
+        window.syncCategoryState('THRILLER');
+        await renderTMDBRow('Crime & Mystery Thrillers', 'https://db.speedracelight.com/3/discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
+        await renderTMDBRow('Psychological Drama Series', 'https://db.speedracelight.com/3/discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV');
+        break;
+      case 'SCI_FI':
+        window.syncCategoryState('SCI_FI');
+        await renderTMDBRow('Sci-Fi Explorations & Cyberpunk', 'https://db.speedracelight.com/3/discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE');
+        await renderTMDBRow('Sci-Fi & Futuristic TV Shows', 'https://db.speedracelight.com/3/discover/tv?with_genres=10765&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        break;
+      case 'ROMANCE':
+        window.syncCategoryState('ROMANCE');
+        await renderTMDBRow('Romantic Comedies & Dramas', 'https://db.speedracelight.com/3/discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
+        await renderTMDBRow('Romantic Drama Series', 'https://db.speedracelight.com/3/discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        break;
+    }
+    window.scrollTo({ top: 350, behavior: 'smooth' });
+    return;
+  }
+
+  // Anime Universe Filter Handling
+  switch (normType) {
     case 'ALL':
       window.syncCategoryState('ALL');
       await window.renderHomeRows();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       break;
     case 'HINDI':
-      window.syncCategoryState('HINDI');
       await window.loadHindiDubbed();
       break;
     case 'TOP_AIRING':
@@ -692,6 +729,54 @@ window.applyQuickFilter = async function(type, chipBtn) {
       await renderRow('Romance & Slice of Life', { page: 1, perPage: 24, genre: 'Romance', sort: ['POPULARITY_DESC'] }, false);
       break;
   }
+  window.scrollTo({ top: 350, behavior: 'smooth' });
+};
+
+window.playRandomAnime = async function() {
+  if (typeof window.toggleMobileNav === 'function') window.toggleMobileNav(false);
+  if (typeof window.showToast === 'function') window.showToast('Rolling for a random title...');
+
+  if (window.STATE.isNetflixMode) {
+    try {
+      const data = await fetchWithRetry('https://db.speedracelight.com/3/discover/movie?sort_by=popularity.desc&without_genres=16');
+      const results = data?.results || [];
+      if (results.length > 0) {
+        const item = results[Math.floor(Math.random() * results.length)];
+        const poster = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+        const mockMediaObj = {
+          id: item.id,
+          idMal: null,
+          tmdbId: item.id,
+          title: { romaji: item.title || item.name, english: item.title || item.name },
+          description: item.overview,
+          bannerImage: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : poster,
+          coverImage: { extraLarge: poster, large: poster },
+          format: 'MOVIE',
+          episodes: 1,
+          averageScore: Math.round((item.vote_average || 8) * 10),
+          isLiveAction: true
+        };
+        window.animeCache.set(mockMediaObj.id, mockMediaObj);
+        window.openModal(mockMediaObj, 1, 1, false);
+        return;
+      }
+    } catch (e) {}
+  }
+
+  const randomPage = Math.floor(Math.random() * 20) + 1;
+  const data = await fetchGQL(GQL_BASIC, { page: randomPage, perPage: 10, sort: ['POPULARITY_DESC'] });
+  const list = data?.Page?.media || [];
+
+  if (list.length > 0) {
+    const selected = list[Math.floor(Math.random() * list.length)];
+    window.animeCache.set(selected.id, selected);
+    window.openModal(selected, 1, 1, false);
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Selected: ${selected.title?.english || selected.title?.romaji}`);
+    }
+  } else {
+    if (typeof window.showToast === 'function') window.showToast('Failed to fetch a random title.');
+  }
 };
 
 // ===============================================================
@@ -700,8 +785,15 @@ window.applyQuickFilter = async function(type, chipBtn) {
 window.openModalById = async function(id, episode = 1, season = 1) {
   let anime = window.animeCache.get(id);
   if (!anime) {
-    const data = await fetchGQL(GQL_DEEP, { id: id });
-    anime = data?.Media;
+    if (window.STATE.isNetflixMode) {
+      try {
+        const item = await fetchWithRetry(`https://db.speedracelight.com/3/movie/${id}`);
+        if (item) anime = window.formatTmdbMediaItem?.(item, 'MOVIE');
+      } catch (e) {}
+    } else {
+      const data = await fetchGQL(GQL_DEEP, { id: id });
+      anime = data?.Media;
+    }
   }
   if (anime) {
     await window.openModal(anime, season, episode, true, true);
@@ -713,9 +805,9 @@ window.openModal = async function(anime, season = 1, episode = 1, autoStart = fa
   window.STATE.currentAnime = anime;
 
   const isMovie = anime.format === 'MOVIE';
-  const seasonInfo = window.extractSeasonInfo(anime);
-  window.STATE.season = isMovie ? 1 : seasonInfo.season;
-  window.STATE.episode = episode;
+  const seasonInfo = window.extractSeasonInfo ? window.extractSeasonInfo(anime) : { season: 1, cleanTitle: anime.title?.english || '' };
+  window.STATE.season = isMovie ? 1 : (season || seasonInfo.season);
+  window.STATE.episode = isMovie ? 1 : (episode || 1);
 
   const overlay = document.getElementById('modalOverlay');
   const container = document.getElementById('modalContainer');
@@ -767,17 +859,16 @@ window.openModal = async function(anime, season = 1, episode = 1, autoStart = fa
   const durationEl = document.getElementById('modalDuration');
 
   if (scoreEl) scoreEl.innerHTML = `<i class="fas fa-star"></i> ${anime.averageScore || 90}% Score`;
-  if (yearEl) yearEl.innerText = anime.seasonYear || '2026';
+  if (yearEl) yearEl.innerText = anime.seasonYear || anime.year || '2026';
   if (formatEl) formatEl.innerText = anime.format || (isMovie ? 'MOVIE' : 'TV');
   if (epCountEl) epCountEl.innerText = isMovie ? 'Feature Film' : `${anime.episodes || '?'} Episodes`;
-  if (descEl) descEl.innerText = window.cleanHTML(anime.description);
+  if (descEl) descEl.innerText = window.cleanHTML ? window.cleanHTML(anime.description) : (anime.description || '');
   if (nativeEl) nativeEl.innerText = anime.title?.native || 'N/A';
   if (statusEl) statusEl.innerText = anime.status || 'FINISHED';
   if (genresEl) genresEl.innerText = (anime.genres || []).join(', ');
-  if (studioEl) studioEl.innerText = anime.studios?.nodes?.[0]?.name || 'Studio Animation';
-  if (durationEl) durationEl.innerText = `${anime.duration || 45} mins`;
+  if (studioEl) studioEl.innerText = anime.studios?.nodes?.[0]?.name || (anime.isLiveAction ? 'Netflix Production' : 'Studio Animation');
+  if (durationEl) durationEl.innerText = `${anime.duration || (isMovie ? 110 : 24)} mins`;
 
-  // Elevated Z-Index (15) to guarantee interactive touch/clicks over backdrop filters
   const wrap = document.getElementById('modalPlayerWrap');
   if (wrap) {
     wrap.innerHTML = `
@@ -795,13 +886,13 @@ window.openModal = async function(anime, season = 1, episode = 1, autoStart = fa
     `;
   }
 
-  await Promise.all([
-    window.resolveTMDBId(seasonInfo.cleanTitle, isMovie),
-    fetchAndPopulateDeepData(anime)
-  ]);
+  if (typeof window.resolveTMDBId === 'function') {
+    await window.resolveTMDBId(seasonInfo.cleanTitle, isMovie);
+  }
+  await fetchAndPopulateDeepData(anime);
 
   if (!isMovie && typeof window.renderEpisodeGrid === 'function') window.renderEpisodeGrid();
-  if (anime.idMal) resolveAndPollAniSkip(anime.idMal, window.STATE.episode);
+  if (anime.idMal && !window.STATE.isNetflixMode) resolveAndPollAniSkip(anime.idMal, window.STATE.episode);
   if (typeof window.renderServerSwitcherGrid === 'function') window.renderServerSwitcherGrid();
   checkAllServersHealth();
 
@@ -826,7 +917,6 @@ window.closeModal = function(skipUrlSync = false) {
   if (modalOverlay) modalOverlay.classList.remove('active');
   modalContainer.classList.remove('active');
 
-  // Hard Audio/Video Teardown (Prevents ghost audio leakage)
   const wrap = document.getElementById('modalPlayerWrap');
   if (wrap) {
     const activeIframe = wrap.querySelector('iframe');
@@ -889,7 +979,6 @@ window.executeStream = async function(retryCount = 0) {
     window.streamEngine = null;
   }
 
-  // Exact Endpoint Parameter Mapping
   const streamUrl = activeServerConfig.endpoint(tId, s, e, isMovie, window.STATE.currentAnime.id);
 
   wrap.innerHTML = `
@@ -949,7 +1038,6 @@ function handleAutoFailover(currentRetry) {
   window.executeStream(currentRetry + 1);
 }
 
-// Probes only the 4 authorized mirrors
 async function checkAllServersHealth() {
   const tId = window.STATE.currentTMDBId || window.CONFIG?.DEFAULT_TMDB_FALLBACK;
   const s = window.STATE.season;
@@ -1039,8 +1127,11 @@ async function fetchAndPopulateDeepData(anime) {
           }
         }
         if (tmdbData.recommendations?.results?.length) {
-          renderRecommendationsFromTMDB(tmdbData.recommendations.results);
-          recommendationsLoaded = true;
+          const cleanRecs = tmdbData.recommendations.results.filter(r => !(r.genre_ids || []).includes(16));
+          if (cleanRecs.length) {
+            renderRecommendationsFromTMDB(cleanRecs);
+            recommendationsLoaded = true;
+          }
         }
       }
     } catch (e) {}
@@ -1138,8 +1229,8 @@ function renderRecommendationsFromAniList(nodes) {
     const cover = rec.coverImage?.extraLarge || rec.coverImage?.large || '';
 
     moreGrid.innerHTML += `
-      <div class="anime-card" onclick="handleAnimeClick(${rec.id})">
-        <img src="${cover}" loading="lazy" />
+      <div class="anime-card card" style="cursor:pointer;" onclick="handleAnimeClick(${rec.id})">
+        <img src="${cover}" loading="lazy" style="border-radius:8px;" />
         <div class="card-overlay"><div class="card-title">${title}</div></div>
         <div class="card-badge-top">${rec.format || 'TV'}</div>
       </div>
@@ -1159,17 +1250,19 @@ function renderRecommendationsFromTMDB(results) {
     const isMovie = item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
     const mockAnime = {
       id: item.id,
+      tmdbId: item.id,
       title: { romaji: title, english: title },
       coverImage: { extraLarge: img, large: img },
       format: isMovie ? 'MOVIE' : 'TV',
-      episodes: isMovie ? 1 : 12,
-      averageScore: Math.round((item.vote_average || 8) * 10)
+      episodes: isMovie ? 1 : 16,
+      averageScore: Math.round((item.vote_average || 8) * 10),
+      isLiveAction: true
     };
     window.animeCache.set(item.id, mockAnime);
 
     moreGrid.innerHTML += `
-      <div class="anime-card" onclick="handleAnimeClick(${item.id})">
-        <img src="${img}" loading="lazy" />
+      <div class="anime-card card" style="cursor:pointer;" onclick="handleAnimeClick(${item.id})">
+        <img src="${img}" loading="lazy" style="border-radius:8px;" />
         <div class="card-overlay"><div class="card-title">${title}</div></div>
         <div class="card-badge-top">TMDB</div>
       </div>
@@ -1239,14 +1332,19 @@ document.getElementById('searchInput')?.addEventListener('input', (e) => {
   }
 
   window.STATE.searchDebounce = setTimeout(async () => {
+    // Mode-Aware: In Netflix Mode, query TMDB Multi-Search and filter out animation (ID 16)
     if (window.STATE.isNetflixMode) {
       try {
         const data = await fetchWithRetry(`https://db.speedracelight.com/3/search/multi?query=${encodeURIComponent(q)}`);
         drop.innerHTML = '';
-        const results = (data?.results || []).filter(item => item.media_type === 'movie' || item.media_type === 'tv').slice(0, 6);
+        const results = (data?.results || []).filter(item => {
+          const isMedia = item.media_type === 'movie' || item.media_type === 'tv';
+          const notAnime = !(item.genre_ids || []).includes(16);
+          return isMedia && notAnime;
+        }).slice(0, 6);
 
         if (!results.length) {
-          drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No results found for "${q}"</div>`;
+          drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No live-action titles found for "${q}"</div>`;
           drop.classList.add('visible');
           return;
         }
@@ -1257,11 +1355,13 @@ document.getElementById('searchInput')?.addEventListener('input', (e) => {
           const isMovie = item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
           const mockMediaObj = {
             id: item.id,
+            tmdbId: item.id,
             title: { romaji: title, english: title },
             coverImage: { extraLarge: img, large: img },
             format: isMovie ? 'MOVIE' : 'TV',
-            episodes: isMovie ? 1 : 12,
-            averageScore: Math.round((item.vote_average || 8) * 10)
+            episodes: isMovie ? 1 : 16,
+            averageScore: Math.round((item.vote_average || 8) * 10),
+            isLiveAction: true
           };
           window.animeCache.set(item.id, mockMediaObj);
 
@@ -1289,6 +1389,7 @@ document.getElementById('searchInput')?.addEventListener('input', (e) => {
       } catch (e) {}
     }
 
+    // Anime Search Query
     const data = await fetchGQL(GQL_BASIC, { search: q, perPage: 6 });
     if (!drop) return;
     drop.innerHTML = '';
@@ -1597,7 +1698,7 @@ window.triggerAniSkipJump = function() {
 };
 
 // ===============================================================
-// 13. WEB AUDIO API SOUND GAIN BOOSTER (UP TO 250%)
+// 13. WEB AUDIO API SOUND GAIN BOOSTER
 // ===============================================================
 window.toggleAudioVolumeBooster = function() {
   const levels = [1.0, 1.5, 2.0, 2.5];
@@ -1655,7 +1756,6 @@ window.shareDeepLinkEpisode = function() {
   }
 };
 
-// Embed real-time postMessage event listener
 window.addEventListener('message', ({ data }) => {
   if (data && data.type === 'PLAYER_EVENT') {
     const ev = data.data;
