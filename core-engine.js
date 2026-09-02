@@ -1,18 +1,15 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Complete Production-Grade JavaScript Controller (Version 18.0 Enterprise Master Architecture)
+ * Complete Production-Grade JavaScript Controller (Version 18.2 Enterprise Master Architecture)
  * 
  * Subsystems:
- *  - 4-Tier Validated Streaming Mirror Matrix:
- *      * Server 1: NxSha Ultra (https://nxsha.space - Hindi Default Audio, Netflix Theme)
- *      * Server 2: Filmu Native (https://embed.filmu.in - TMDB & AniList Multi-Route)
- *      * Server 3: VidCore 4K (https://vidcore.org - Custom Theme, Autoplay)
- *      * Server 4: VidFast Sync (https://vidfast.vc - AutoNext Synchronized Pipeline)
+ *  - 4-Tier Validated Streaming Mirror Matrix (NxSha, Filmu, VidCore, VidFast)
  *  - Dexie.js High-Throughput IndexedDB Persistence Layer & Schema Migration
  *  - Bi-Directional URL Parameter Router & Modal History State Synchronization
  *  - Hardware-Accelerated Dynamic Canvas Chroma Extraction with Cache-Busting CORS Handshake
  *  - Dual-Universe Mode Transformer (Anime Universe vs. Netflix Live-Action Engine)
- *  - Comprehensive Modal, Drawer, & Scroll-Lock Lifecycle Management
+ *  - Universal QuickFilter & Genre Navigation Event Bus with Fallback Execution
+ *  - Modal, Drawer, & Scroll-Lock Lifecycle Management
  *  - AniSkip v2 Telemetry Engine (OP/ED Chapter Ingestion & Skip Dispatches)
  *  - Universal Episode Batch Navigation, Season Parsing & TMDB ID Resolution
  *  - Power-User Physical Keyboard Hotkeys & Hardware Remote Bindings
@@ -324,7 +321,6 @@ window.extractChromaAmbilight = function(imageUrl) {
   const img = new Image();
 
   img.crossOrigin = 'Anonymous';
-  // Isolate canvas request cache to prevent browser tainted canvas security exceptions
   img.src = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 'chroma_isolation=1';
 
   img.onload = () => {
@@ -384,6 +380,9 @@ window.executeStream = function(seekTimestamp = 0) {
   const streamUrl = window.resolveActiveStreamUrl();
   const title = STATE.currentAnime.title?.english || STATE.currentAnime.title?.romaji || 'Stream Master';
 
+  const loaderOverlay = document.getElementById('playerLoadingOverlay');
+  if (loaderOverlay) loaderOverlay.style.display = 'flex';
+
   wrap.innerHTML = `
     <div class="stream-frame-container" id="streamContainer" style="position:relative; width:100%; height:100%; background:#000;">
       <iframe 
@@ -393,7 +392,8 @@ window.executeStream = function(seekTimestamp = 0) {
         frameborder="0" 
         allowfullscreen 
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        style="position:absolute; top:0; left:0; width:100%; height:100%; border:0; z-index:5;">
+        style="position:absolute; top:0; left:0; width:100%; height:100%; border:0; z-index:5;"
+        onload="const l=document.getElementById('playerLoadingOverlay'); if(l) l.style.display='none';">
       </iframe>
       <div id="playerBufferingLoader" class="player-buffering-indicator">
         <div class="spinner-ring"></div>
@@ -415,7 +415,6 @@ window.executeStream = function(seekTimestamp = 0) {
     resolveAndPollAniSkip(STATE.currentAnime.idMal, STATE.episode);
   }
 
-  // Synchronize stream with P2P Watch Party Room
   if (window.p2pParty && window.p2pParty.isHost) {
     window.p2pParty.broadcastTitleChange(STATE.currentAnime, STATE.season, STATE.episode, STATE.activeServer);
   }
@@ -577,7 +576,78 @@ window.nextEpisode = function() {
 };
 
 // ============================================================================
-// 9. DUAL-UNIVERSE TRANSFORMER (NETFLIX & ANIME MODES)
+// 9. UNIFIED FILTERING & NAVIGATION RESILIENCE PIPELINE
+// ============================================================================
+// Ensure robust fallbacks for category/genre/hindi filters across modes
+if (typeof window.applyQuickFilter !== 'function') {
+  window.applyQuickFilter = function(filterKey, element) {
+    const key = (filterKey || 'ALL').toUpperCase();
+    
+    // Update active state across chips
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    if (element) {
+      element.classList.add('active');
+    } else {
+      const match = document.querySelector(`.chip[data-filter="${key}"]`) || 
+                    document.querySelector(`.chip[onclick*="'${filterKey}'"]`);
+      if (match) match.classList.add('active');
+    }
+
+    // Delegate to webapp or trigger row-based filtering
+    if (window.webApp && typeof window.webApp.applyFilter === 'function') {
+      window.webApp.applyFilter(key);
+      return;
+    }
+    
+    // Fallback genre routing for direct categories
+    if (key === 'ALL') {
+      if (typeof window.navigateGenre === 'function') window.navigateGenre(null, 'Home');
+    } else if (key === 'HINDI') {
+      if (typeof window.loadHindiDubbed === 'function') window.loadHindiDubbed();
+    } else if (key === 'MOVIES') {
+      if (typeof window.navigateGenre === 'function') window.navigateGenre('Movie', 'Top Movies');
+    } else if (key === 'TOP_AIRING' || key === 'TOP_RATED') {
+      if (typeof window.navigateGenre === 'function') window.navigateGenre('Top', 'Top Airing Blockbusters');
+    } else if (key === 'ACTION') {
+      if (typeof window.navigateGenre === 'function') window.navigateGenre('Action', 'Action Blockbusters');
+    } else if (key === 'ROMANCE') {
+      if (typeof window.navigateGenre === 'function') window.navigateGenre('Romance', 'Romance & Drama');
+    } else if (key === 'SCI_FI') {
+      if (typeof window.navigateGenre === 'function') window.navigateGenre('Sci-Fi', 'Sci-Fi & Cyberpunk');
+    } else if (key === 'SECONDARY' || key === 'FANTASY') {
+      if (typeof window.navigateGenre === 'function') window.navigateGenre('Fantasy', 'Isekai & Fantasy');
+    }
+  };
+}
+
+if (typeof window.navigateGenre !== 'function') {
+  window.navigateGenre = function(genre, label) {
+    document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+      const match = link.innerText.toLowerCase().includes((label || '').toLowerCase());
+      link.classList.toggle('active', Boolean(match));
+    });
+
+    if (window.webApp && typeof window.webApp.loadGenreView === 'function') {
+      window.webApp.loadGenreView(genre, label);
+    } else if (typeof window.renderHomeRows === 'function') {
+      window.renderHomeRows(genre);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+}
+
+if (typeof window.loadHindiDubbed !== 'function') {
+  window.loadHindiDubbed = function() {
+    if (window.webApp && typeof window.webApp.loadHindiContent === 'function') {
+      window.webApp.loadHindiContent();
+    } else if (typeof window.navigateGenre === 'function') {
+      window.navigateGenre('Hindi', 'Hindi Dubbed Releases');
+    }
+  };
+}
+
+// ============================================================================
+// 10. DUAL-UNIVERSE TRANSFORMER (NETFLIX & ANIME MODES)
 // ============================================================================
 window.toggleNetflixMode = async function(skipUrlSync = false) {
   STATE.isNetflixMode = !STATE.isNetflixMode;
@@ -594,17 +664,20 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
   const filterChips = document.getElementById('filterChips');
 
   if (STATE.isNetflixMode) {
+    document.body.classList.add('netflix-theme-active');
     if (btn) btn.classList.add('netflix-mode-active');
     if (brandText) brandText.innerHTML = 'NETFLIX<small class="brand-badge" style="background:#ff0844; color:#fff;">LIVE</small>';
     if (searchInput) searchInput.placeholder = "Search movies, TV series, dramas...";
 
+    // Standardized desktop nav with verified functions
     if (desktopNav) {
       desktopNav.innerHTML = `
         <li><a class="nav-link active" id="navHome" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li>
         <li><a class="nav-link" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> <span>Movies</span></a></li>
-        <li><a class="nav-link" onclick="window.applyQuickFilter('SHOWS', this)"><i class="fas fa-tv"></i> <span>TV Shows</span></a></li>
+        <li><a class="nav-link" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tv"></i> <span>TV Shows</span></a></li>
         <li><a class="nav-link" onclick="window.navigateGenre('Action', 'Action Blockbusters')"><span>Action</span></a></li>
         <li><a class="nav-link" onclick="window.navigateGenre('Romance', 'Romance & Drama')"><span>Romance</span></a></li>
+        <li><a class="nav-link" onclick="window.loadHindiDubbed()"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>
       `;
     }
 
@@ -612,8 +685,8 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
       mobileNav.innerHTML = `
         <li><a class="mobile-nav-link active" onclick="window.toggleMobileNav(false); window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> Home</a></li>
         <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.applyQuickFilter('MOVIES')"><i class="fas fa-film"></i> Movies</a></li>
-        <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.applyQuickFilter('SHOWS')"><i class="fas fa-tv"></i> TV Shows</a></li>
-        <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.openWatchPartyModal()"><i class="fas fa-users-viewfinder"></i> Watch Party</a></li>
+        <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.applyQuickFilter('TOP_AIRING')"><i class="fas fa-tv"></i> TV Shows</a></li>
+        <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.loadHindiDubbed()"><i class="fas fa-language"></i> Hindi Dubbed</a></li>
         <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Action', 'Action Blockbusters')"><i class="fas fa-bolt"></i> Action</a></li>
         <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Romance', 'Romance & Drama')"><i class="fas fa-heart"></i> Romance</a></li>
         <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.openWatchlistModal()"><i class="fas fa-bookmark"></i> My List (<span id="mobileWatchlistCount">${STATE.watchlist.length}</span>)</a></li>
@@ -621,20 +694,23 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
       `;
     }
 
+    // Fixed: Chip filters now use exact system identifiers (TOP_AIRING instead of SHOWS / TOP_RATED)
     if (filterChips) {
       filterChips.innerHTML = `
-        <button class="chip active" type="button" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('SHOWS', this)"><i class="fas fa-tv"></i> TV Shows</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('TOP_RATED', this)"><i class="fas fa-star"></i> Top Rated</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('ROMANCE', this)"><i class="fas fa-heart"></i> Romance</button>
+        <button class="chip active" type="button" data-filter="ALL" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
+        <button class="chip" type="button" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button>
+        <button class="chip" type="button" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button>
+        <button class="chip" type="button" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tv"></i> TV Shows</button>
+        <button class="chip" id="chipCategory1" type="button" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button>
+        <button class="chip" id="chipCategory2" type="button" data-filter="SECONDARY" onclick="window.applyQuickFilter('SECONDARY', this)"><i class="fas fa-dungeon"></i> Fantasy</button>
+        <button class="chip" id="chipCategory3" type="button" data-filter="SCI_FI" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>
+        <button class="chip" type="button" data-filter="ROMANCE" onclick="window.applyQuickFilter('ROMANCE', this)"><i class="fas fa-heart"></i> Romance</button>
       `;
     }
 
     if (typeof window.showToast === 'function') window.showToast('Switched to Netflix Live-Action Mode');
   } else {
+    document.body.classList.remove('netflix-theme-active');
     if (btn) btn.classList.remove('netflix-mode-active');
     if (brandText) brandText.innerHTML = 'ANIFLIX<small class="brand-badge">ULTRA</small>';
     if (searchInput) searchInput.placeholder = "Search anime, movies, series...";
@@ -666,27 +742,33 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
 
     if (filterChips) {
       filterChips.innerHTML = `
-        <button class="chip active" type="button" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tower-broadcast"></i> Airing</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button>
-        <button class="chip" id="chipCategory1" type="button" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button>
-        <button class="chip" id="chipCategory2" type="button" onclick="window.applyQuickFilter('SECONDARY', this)"><i class="fas fa-dungeon"></i> Fantasy</button>
-        <button class="chip" id="chipCategory3" type="button" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>
-        <button class="chip" type="button" onclick="window.applyQuickFilter('ROMANCE', this)"><i class="fas fa-heart"></i> Romance</button>
+        <button class="chip active" type="button" data-filter="ALL" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
+        <button class="chip" type="button" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button>
+        <button class="chip" type="button" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tower-broadcast"></i> Airing</button>
+        <button class="chip" type="button" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button>
+        <button class="chip" id="chipCategory1" type="button" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button>
+        <button class="chip" id="chipCategory2" type="button" data-filter="SECONDARY" onclick="window.applyQuickFilter('SECONDARY', this)"><i class="fas fa-dungeon"></i> Fantasy</button>
+        <button class="chip" id="chipCategory3" type="button" data-filter="SCI_FI" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>
+        <button class="chip" type="button" data-filter="ROMANCE" onclick="window.applyQuickFilter('ROMANCE', this)"><i class="fas fa-heart"></i> Romance</button>
       `;
     }
 
     if (typeof window.showToast === 'function') window.showToast('Switched to Anime Universe');
   }
 
-  if (typeof window.renderHeroSpotlight === 'function') await window.renderHeroSpotlight();
-  if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
+  // Trigger app layout refresh
+  if (window.webApp && typeof window.webApp.renderUniverse === 'function') {
+    await window.webApp.renderUniverse(STATE.isNetflixMode);
+  } else {
+    if (typeof window.renderHeroSpotlight === 'function') await window.renderHeroSpotlight();
+    if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
+  }
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // ============================================================================
-// 10. MODAL, DRAWER & WATCHLIST CONTROLLERS
+// 11. MODAL, DRAWER & WATCHLIST CONTROLLERS
 // ============================================================================
 window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
   const drawer = document.getElementById('mobileNavDrawer');
@@ -819,7 +901,7 @@ window.updateWatchlistBadge = function() {
 };
 
 // ============================================================================
-// 11. POWER-USER PHYSICAL KEYBOARD ENGINE
+// 12. POWER-USER PHYSICAL KEYBOARD ENGINE
 // ============================================================================
 function initKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
@@ -925,7 +1007,7 @@ window.toggleShortcutsModal = function(forceState, skipUrlSync = false) {
 };
 
 // ============================================================================
-// 12. AUXILIARY UTILITIES & APP LIFECYCLE INITIALIZER
+// 13. AUXILIARY UTILITIES & APP LIFECYCLE INITIALIZER
 // ============================================================================
 window.showToast = function(msg) {
   const container = document.getElementById('toastContainer');
@@ -1006,7 +1088,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     pill.style.display = isPwaInstalled ? 'inline-flex' : 'none';
   }
 
-  // Safe Rendering Pipeline (Keeps original hero title intact on latency)
   if (typeof window.renderHeroSpotlight === 'function') {
     await window.renderHeroSpotlight();
   }
