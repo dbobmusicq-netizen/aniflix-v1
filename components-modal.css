@@ -159,7 +159,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. VIDEO PLAYER ENGINE & CINEMATIC COVER VIEWPORT
+   3. VIDEO PLAYER ENGINE & CINEMATIC COVER VIEWPORT + ACTION DECK
    -------------------------------------------------------------------------- */
 .modal-player-wrap {
   position: relative;
@@ -170,6 +170,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .modal-player-wrap iframe {
@@ -230,10 +231,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 12px;
   padding: 12px var(--modal-pad);
-  background: rgba(16, 16, 24, 0.98);
+  background: linear-gradient(180deg, rgba(16, 16, 24, 0.98) 0%, rgba(10, 10, 16, 0.99) 100%);
   border-bottom: 1px solid var(--modal-border-subtle);
   position: relative;
   z-index: 10;
@@ -244,7 +244,7 @@
   align-items: center;
   gap: 10px;
   flex: 1;
-  min-width: 220px;
+  min-width: 0;
 }
 
 .player-current-ep-title {
@@ -256,17 +256,29 @@
   text-overflow: ellipsis;
 }
 
+/* Horizontal Scrollable Sleek Deck for Features */
 .player-action-right {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  max-width: 100%;
+  padding: 4px 2px;
+  scroll-snap-type: x proximity;
+}
+
+.player-action-right::-webkit-scrollbar {
+  display: none;
 }
 
 .modal-pill-btn {
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--modal-border-subtle);
-  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #c3c7db;
   padding: 8px 16px;
   border-radius: 9999px;
   font-size: clamp(11.5px, 1.05vw, 13px);
@@ -274,23 +286,49 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  transition: all 0.25s var(--modal-ease);
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  white-space: nowrap;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   user-select: none;
-  white-space: nowrap;
+  font-family: inherit;
+  outline: none;
 }
 
 .modal-pill-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-color: var(--modal-border-glow);
-  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
 .modal-pill-btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.96);
 }
+
+/* Feature Icon Color Accents */
+.modal-pill-btn i, 
+.modal-pill-btn svg {
+  font-size: 13px;
+  transition: transform 0.2s ease;
+}
+
+.modal-pill-btn:hover i {
+  transform: scale(1.12);
+}
+
+.modal-pill-btn[onclick*="MiniPlayer"] i { color: var(--modal-accent-cyan, #00f2fe); filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.5)); }
+.modal-pill-btn[onclick*="PartyChat"] i { color: var(--modal-accent-emerald, #00f5a0); filter: drop-shadow(0 0 8px rgba(0, 245, 160, 0.5)); }
+.modal-pill-btn[onclick*="Volume"] i { color: var(--modal-accent-gold, #ffb703); filter: drop-shadow(0 0 8px rgba(255, 183, 3, 0.5)); }
+.modal-pill-btn[onclick*="Theater"] i { color: #c77dff; filter: drop-shadow(0 0 8px rgba(199, 125, 255, 0.5)); }
+.modal-pill-btn[onclick*="Dim"] i { color: #e9ecef; }
+.modal-pill-btn[onclick*="share"] i { color: #48cae4; }
+.modal-pill-btn[onclick*="Watchlist"] i { color: var(--modal-accent-emerald, #00f5a0); }
 
 .modal-pill-btn.primary-action {
   background: var(--modal-accent-red);
@@ -304,16 +342,18 @@
 }
 
 .modal-pill-btn.next-ep-btn {
-  background: linear-gradient(135deg, rgba(255, 8, 68, 0.25), rgba(0, 242, 254, 0.2));
-  border-color: rgba(255, 255, 255, 0.24);
+  background: linear-gradient(135deg, rgba(255, 8, 68, 0.3), rgba(0, 242, 254, 0.2));
+  border-color: rgba(255, 8, 68, 0.5);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(255, 8, 68, 0.3);
 }
 
 .modal-pill-btn.next-ep-btn:hover {
-  background: linear-gradient(135deg, rgba(255, 8, 68, 0.4), rgba(0, 242, 254, 0.35));
-  border-color: #fff;
-  box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+  background: linear-gradient(135deg, var(--modal-accent-red, #ff0844), #b7094c);
+  border-color: var(--modal-accent-red, #ff0844);
+  box-shadow: 0 0 25px var(--modal-accent-glow);
 }
-
 /* --------------------------------------------------------------------------
    4. STREAM ROUTING & SERVER CONTROL ENGINE
    -------------------------------------------------------------------------- */
@@ -673,7 +713,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   7. INTERACTIVE EPISODE BROWSER
+   7. INTERACTIVE EPISODE BROWSER (KINETIC GLOW & REFINED CARD DESIGN)
    -------------------------------------------------------------------------- */
 .episodes-master-section {
   margin-top: clamp(24px, 3.5vw, 40px);
@@ -700,15 +740,18 @@
   font-size: clamp(1.2rem, 1.8vw, 1.45rem);
   font-weight: 800;
   margin: 0;
+  color: #fff;
+  letter-spacing: -0.2px;
 }
 
 .episodes-total-pill {
   background: rgba(255, 255, 255, 0.06);
   color: var(--modal-text-secondary);
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
   font-size: 11.5px;
   font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .ep-header-controls {
@@ -729,21 +772,23 @@
   font-weight: 700;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .ep-select:focus {
   border-color: var(--modal-accent-red);
+  box-shadow: 0 0 14px var(--modal-accent-glow);
 }
 
 .ep-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 520px;
+  max-height: 540px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-right: 8px;
+  scrollbar-gutter: stable;
 }
 
 .ep-grid::-webkit-scrollbar {
@@ -758,58 +803,81 @@
 .ep-grid::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.12);
   border-radius: 8px;
+  transition: background 0.2s ease;
 }
 
 .ep-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.28);
 }
 
+/* Modern Holographic Episode Card Design & Spring Physics */
 .ep-card {
   display: flex;
   align-items: center;
   gap: clamp(12px, 2vw, 20px);
   padding: clamp(10px, 1.4vw, 14px);
   background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   cursor: pointer;
-  transition: all 0.25s var(--modal-ease);
   position: relative;
   overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              background 0.25s ease, 
+              border-color 0.25s ease, 
+              box-shadow 0.25s ease;
+}
+
+.ep-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 8, 68, 0.06) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .ep-card:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: var(--modal-border-glow);
-  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.065);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-2px) translateX(4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+}
+
+.ep-card:hover::before {
+  opacity: 1;
+}
+
+.ep-card:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .ep-card.playing {
-  background: rgba(255, 8, 68, 0.09);
-  border-color: var(--modal-accent-red);
-  box-shadow: 0 0 25px rgba(255, 8, 68, 0.22);
+  background: rgba(255, 8, 68, 0.12) !important;
+  border-color: var(--modal-accent-red) !important;
+  box-shadow: 0 0 28px rgba(255, 8, 68, 0.32) !important;
 }
 
-.ep-card.playing::before {
-  content: "";
+.ep-card.playing::after {
+  content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   width: 4px;
   background: var(--modal-accent-red);
-  box-shadow: 0 0 12px var(--modal-accent-red);
+  box-shadow: 0 0 14px var(--modal-accent-red);
 }
 
 .ep-num {
   font-size: clamp(16px, 2.2vw, 22px);
   font-weight: 900;
-  color: #3b3b50;
+  color: #4a4a62;
   width: clamp(28px, 3.5vw, 40px);
   text-align: center;
   font-family: var(--modal-font-mono);
   flex-shrink: 0;
-  transition: color 0.25s ease;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
 }
 
 .ep-card:hover .ep-num {
@@ -823,29 +891,33 @@
 
 .ep-thumb-box {
   position: relative;
-  width: clamp(100px, 20vw, 145px);
+  width: clamp(110px, 20vw, 150px);
   aspect-ratio: 16 / 9;
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
   background: #020204;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .ep-thumb-box img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
 }
 
 .ep-card:hover .ep-thumb-box img {
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
 .ep-play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -855,14 +927,21 @@
 
 .ep-play-overlay svg,
 .ep-play-overlay i {
-  font-size: 22px;
+  font-size: 24px;
   color: #fff;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.9));
+  transform: scale(0.85);
+  transition: transform 0.25s var(--modal-spring);
 }
 
 .ep-card:hover .ep-play-overlay,
 .ep-card.playing .ep-play-overlay {
   opacity: 1;
+}
+
+.ep-card:hover .ep-play-overlay i,
+.ep-card.playing .ep-play-overlay i {
+  transform: scale(1);
 }
 
 .ep-info {
@@ -873,11 +952,12 @@
 .ep-title {
   font-size: clamp(13px, 1.25vw, 15px);
   font-weight: 700;
-  margin: 0 0 5px 0;
+  margin: 0 0 6px 0;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px;
 }
 
 .ep-air {
@@ -887,8 +967,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  text-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
 }
-
 /* --------------------------------------------------------------------------
    8. CAST MATRICES & MEDIA RECOMMENDATIONS
    -------------------------------------------------------------------------- */
@@ -1212,20 +1292,34 @@
     gap: 12px;
   }
 
+  /* FORCE HORIZONTAL SCROLL DECK FOR PLAYER FEATURES (FIXES VERTICAL STACK) */
   .player-action-right {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    overflow: visible;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 4px 2px !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  .player-action-right::-webkit-scrollbar {
+    display: none !important;
   }
 
   .modal-pill-btn {
-    width: 100%;
-    min-height: 42px;
-    padding: 6px 4px;
-    font-size: 11px;
-    justify-content: center;
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    min-height: 40px !important;
+    padding: 7px 14px !important;
+    font-size: 11.5px !important;
+    scroll-snap-align: start !important;
+    white-space: nowrap !important;
   }
 
   /* Anti-Collision Server Scroller */
@@ -1294,10 +1388,6 @@
 
   .recommendations-grid {
     grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
-  }
-
-  .player-action-right {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
