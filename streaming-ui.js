@@ -1,15 +1,14 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized UI & API Integration Module
  * File: streaming-ui.js
- * Version: 22.1.0 Enterprise Hybrid Architecture
+ * Version: 23.0.0 Enterprise Hybrid Architecture
  * 
- * Features & Fixes:
- *  - Official TMDB v3 API Parameter Deduplication Engine (Zero status_code:5 / HTTP 400 errors)
- *  - Resolved UI Card Bug: Stiffened flex bounds & prevented horizontal rail breakage
- *  - Dual-Universe Aware: Live-Action Isolation (without_genres=16) vs Anime Universe
- *  - Mode-Synchronized Navigation & Quick Chips
- *  - Robust 4-Server Failover Dispatch Pipeline
- *  - Clean Audio/Video Unmount Teardown Engine
+ * Card UI Overhaul Fix:
+ *  - Unified Clean Card Architecture: Completely removed detached footer blocks (.card-info), 
+ *    replacing them with an integrated full-height poster and sleek inner gradient overlay.
+ *  - Fixed Text Offset & Clipping: Ensured text sits completely inside card bounds with absolute zero clipping.
+ *  - Official TMDB v3 API Parameter Deduplication Engine (Zero status_code:5 / HTTP 400 errors).
+ *  - Dual-Universe Aware: Live-Action Isolation (without_genres=16) vs Anime Universe.
  */
 
 // ===============================================================
@@ -29,7 +28,6 @@ let lastGqlRequestTime = 0;
 const GQL_MIN_INTERVAL_MS = 380;
 let gqlQueue = Promise.resolve();
 
-// Fallback Poster SVG
 const FALLBACK_POSTER = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22200%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%2316161c%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20fill%3D%22%23666%22%20font-size%3D%2214%22%20text-anchor%3D%22middle%22%20alignment-baseline%3D%22middle%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
 
 // ===============================================================
@@ -372,7 +370,7 @@ window.renderHeroSpotlight = async function() {
 };
 
 // ===============================================================
-// 5. STAGGERED CATALOG PIPELINE & RIGID CARD BUILDERS
+// 5. STAGGERED CATALOG PIPELINE & UNIFIED CARD ARCHITECTURE
 // ===============================================================
 window.renderHomeRows = async function() {
   const content = document.getElementById('contentRows');
@@ -402,7 +400,7 @@ async function renderRow(title, vars, isTop10 = false) {
   try {
     const data = await fetchGQL(GQL_BASIC, vars);
     if (!data?.Page?.media?.length) return;
-    buildCarouselDOM(title, data.Page.media, isTop10);
+    buildUnifiedCarouselDOM(title, data.Page.media, isTop10, false);
   } catch (e) {
     console.warn(`[Catalog Row Error]: Failed rendering ${title}`);
   }
@@ -412,7 +410,7 @@ window.renderRow = renderRow;
 async function renderHindiDubRow() {
   const data = await fetchGQL(GQL_BASIC, { page: 1, perPage: 14, sort: ['FAVOURITES_DESC'] });
   if (data?.Page?.media?.length) {
-    buildCarouselDOM('<i class="fas fa-language" style="color:var(--accent-red,#e50914);"></i> Premium Hindi Dubbed Series', data.Page.media, false, true);
+    buildUnifiedCarouselDOM('<i class="fas fa-language" style="color:var(--accent-red,#e50914);"></i> Premium Hindi Dubbed Series', data.Page.media, false, true);
   }
 }
 window.renderHindiDubRow = renderHindiDubRow;
@@ -427,7 +425,7 @@ async function renderTMDBRow(title, endpoint, iconHtml = '<i class="fas fa-clapp
         return !genres.includes(16);
       });
       if (cleanResults.length) {
-        buildTMDBCarouselDOM(title, cleanResults, iconHtml, forceFormat);
+        buildUnifiedTMDBRowDOM(title, cleanResults, iconHtml, forceFormat);
       }
     }
   } catch (e) {
@@ -435,7 +433,13 @@ async function renderTMDBRow(title, endpoint, iconHtml = '<i class="fas fa-clapp
   }
 }
 
-function buildTMDBCarouselDOM(title, items, iconHtml = '<i class="fas fa-clapperboard"></i>', forceFormat = null) {
+/**
+ * UNIFIED CARD ARCHITECTURE:
+ * Solves all UI bugs across both Anime & Netflix modes. 
+ * Replaces broken external flex columns with an in-card bottom gradient vignette,
+ * fixing text clipping, misaligned paddings, and vertical stacking.
+ */
+function buildUnifiedCarouselDOM(title, items, isTop10 = false, isHindi = false) {
   const container = document.getElementById('contentRows');
   if (!container) return;
   const section = document.createElement('section');
@@ -443,84 +447,9 @@ function buildTMDBCarouselDOM(title, items, iconHtml = '<i class="fas fa-clapper
   section.style.cssText = 'margin: 28px 0; padding: 0 4%; position: relative; width: 100%; box-sizing: border-box;';
 
   section.innerHTML = `
-    <h2 class="row-header" style="display:flex; align-items:center; gap:10px; font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">
-      <span style="color:var(--accent-red, #e50914);">${iconHtml}</span> 
-      <span>${title}</span>
-    </h2>
-    <div class="row-container carousel-container" style="position:relative; width:100%; overflow:hidden;">
-      <div class="carousel-track carousel-rail" style="display:flex; flex-wrap:nowrap; align-items:stretch; gap:16px; overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; padding:10px 4px 16px 4px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;"></div>
-    </div>
-  `;
-  const track = section.querySelector('.carousel-track');
-
-  items.forEach((item) => {
-    if (!item || (!item.poster_path && !item.backdrop_path)) return;
-    const dispTitle = item.title || item.name || 'Title';
-    const posterPath = item.poster_path || item.backdrop_path;
-    const poster = posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : FALLBACK_POSTER;
-    const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
-
-    const mockMediaObj = {
-      id: item.id,
-      idMal: null,
-      tmdbId: item.id,
-      title: { romaji: dispTitle, english: dispTitle, native: item.original_title || dispTitle },
-      description: item.overview || 'Synopsis not available for this title.',
-      bannerImage: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : poster,
-      coverImage: { extraLarge: poster, large: poster },
-      episodes: isMovie ? 1 : (item.number_of_episodes || 16),
-      duration: item.runtime || 45,
-      format: isMovie ? 'MOVIE' : 'TV',
-      status: 'RELEASED',
-      genres: ['Live-Action'],
-      averageScore: Math.round((item.vote_average || 8) * 10),
-      seasonYear: (item.release_date || item.first_air_date || '2026').split('-')[0],
-      isLiveAction: true
-    };
-
-    window.animeCache.set(item.id, mockMediaObj);
-
-    const card = document.createElement('div');
-    card.className = 'anime-card card ui-card-locked';
-    card.style.cssText = 'flex:0 0 190px; min-width:190px; max-width:190px; cursor:pointer; transition:transform 0.25s ease, box-shadow 0.25s ease; user-select:none; display:flex; flex-direction:column; box-sizing:border-box;';
-    card.onmouseenter = () => { card.style.transform = 'translateY(-4px) scale(1.02)'; };
-    card.onmouseleave = () => { card.style.transform = 'translateY(0) scale(1)'; };
-    card.onclick = (e) => {
-      if (track.dataset.isDragging === 'true') return;
-      window.openModal(mockMediaObj);
-    };
-
-    card.innerHTML = `
-      <div class="card-thumb" style="position:relative; width:100%; aspect-ratio:2/3; height:280px; border-radius:8px; overflow:hidden; background:#16161c; flex-shrink:0;">
-        <img src="${poster}" alt="${dispTitle}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="width:100%; height:100%; object-fit:cover; display:block;" />
-        <div class="card-badge" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); color:#fff; font-size:11px; font-weight:700; padding:2px 7px; border-radius:4px; z-index:2;">${mockMediaObj.format}</div>
-      </div>
-      <div class="card-info" style="padding:10px 2px 4px 2px; flex-grow:1; display:flex; flex-direction:column; justify-content:space-between;">
-        <div class="card-title" title="${dispTitle}" style="font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${dispTitle}</div>
-        <div class="card-meta" style="font-size:12px; color:#a1a1aa; display:flex; gap:8px; margin-top:4px;">
-          <span class="card-score" style="color:#46d369;"><i class="fas fa-star" style="font-size:10px;"></i> ${mockMediaObj.averageScore}%</span>
-          <span class="card-year">${mockMediaObj.seasonYear}</span>
-        </div>
-      </div>
-    `;
-    track.appendChild(card);
-  });
-
-  enableCarouselDrag(track);
-  container.appendChild(section);
-}
-
-function buildCarouselDOM(title, items, isTop10, isHindi = false) {
-  const container = document.getElementById('contentRows');
-  if (!container) return;
-  const section = document.createElement('section');
-  section.className = 'row-section content-row';
-  section.style.cssText = 'margin: 28px 0; padding: 0 4%; position: relative; width: 100%; box-sizing: border-box;';
-
-  section.innerHTML = `
-    <h2 class="row-header" style="font-size:20px; font-weight:700; color:#fff; margin-bottom:12px;">${title}</h2>
-    <div class="row-container carousel-container" style="position:relative; width:100%; overflow:hidden;">
-      <div class="carousel-track carousel-rail" style="display:flex; flex-wrap:nowrap; align-items:stretch; gap:16px; overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; padding:10px 4px 16px 4px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;"></div>
+    <h2 class="row-header" style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: 0.3px;">${title}</h2>
+    <div class="row-container carousel-container" style="position: relative; width: 100%; overflow: hidden;">
+      <div class="carousel-track carousel-rail" style="display: flex; flex-wrap: nowrap; align-items: stretch; gap: 16px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; padding: 10px 4px 16px 4px; -webkit-overflow-scrolling: touch; scrollbar-width: thin;"></div>
     </div>
   `;
   const track = section.querySelector('.carousel-track');
@@ -531,47 +460,46 @@ function buildCarouselDOM(title, items, isTop10, isHindi = false) {
 
     const dispTitle = anime.title?.english || anime.title?.romaji || 'Anime';
     const poster = anime.coverImage?.extraLarge || anime.coverImage?.large || FALLBACK_POSTER;
+    const score = anime.averageScore ? `${anime.averageScore}%` : '85%';
+    const year = anime.seasonYear || '2026';
+    const format = anime.format || 'TV';
 
     const card = document.createElement('div');
+    card.className = 'anime-card card ui-card-locked';
+    card.style.cssText = 'flex: 0 0 185px !important; min-width: 185px !important; max-width: 185px !important; height: 275px !important; position: relative !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer !important; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important; user-select: none !important; background: #16161c !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important;';
+    
+    card.onmouseenter = () => { card.style.transform = 'translateY(-4px) scale(1.03)'; card.style.boxShadow = '0 14px 28px rgba(0,0,0,0.8)'; };
+    card.onmouseleave = () => { card.style.transform = 'translateY(0) scale(1)'; card.style.boxShadow = 'none'; };
+    card.onclick = () => {
+      if (track.dataset.isDragging === 'true') return;
+      handleAnimeClick(anime.id);
+    };
+
+    let rankHTML = '';
     if (isTop10) {
-      card.className = 'top10-item anime-card ui-card-locked';
-      card.style.cssText = 'flex:0 0 210px; min-width:210px; max-width:210px; cursor:pointer; position:relative; user-select:none; display:flex;';
-      card.onclick = () => {
-        if (track.dataset.isDragging === 'true') return;
-        handleAnimeClick(anime.id);
-      };
-      card.innerHTML = `
-        <div class="top10-rank" style="font-size:3.8rem; font-weight:900; position:absolute; left:-6px; bottom:12px; z-index:2; color:rgba(255,255,255,0.9); -webkit-text-stroke: 1px rgba(0,0,0,0.5);">${idx + 1}</div>
-        <div class="card-thumb" style="width:100%; aspect-ratio:2/3; height:280px; border-radius:8px; overflow:hidden; background:#16161c; margin-left:26px;">
-          <img src="${poster}" alt="${dispTitle}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="width:100%; height:100%; object-fit:cover; display:block;" />
-        </div>
-      `;
-    } else {
-      card.className = 'anime-card card ui-card-locked';
-      card.style.cssText = 'flex:0 0 190px; min-width:190px; max-width:190px; cursor:pointer; transition:transform 0.25s ease, box-shadow 0.25s ease; user-select:none; display:flex; flex-direction:column; box-sizing:border-box;';
-      card.onmouseenter = () => { card.style.transform = 'translateY(-4px) scale(1.02)'; };
-      card.onmouseleave = () => { card.style.transform = 'translateY(0) scale(1)'; };
-      card.onclick = () => {
-        if (track.dataset.isDragging === 'true') return;
-        handleAnimeClick(anime.id);
-      };
-      card.innerHTML = `
-        <div class="card-thumb" style="position:relative; width:100%; aspect-ratio:2/3; height:280px; border-radius:8px; overflow:hidden; background:#16161c; flex-shrink:0;">
-          <img src="${poster}" alt="${dispTitle}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="width:100%; height:100%; object-fit:cover; display:block;" />
-          ${isHindi 
-            ? '<div class="card-badge" style="position:absolute; top:8px; right:8px; background:#e50914; color:#fff; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; z-index:2;">HINDI DUB</div>' 
-            : `<div class="card-badge" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); color:#fff; font-size:11px; font-weight:700; padding:2px 7px; border-radius:4px; z-index:2;">${anime.episodes ? anime.episodes + ' EP' : 'ONGOING'}</div>`
-          }
-        </div>
-        <div class="card-info" style="padding:10px 2px 4px 2px; flex-grow:1; display:flex; flex-direction:column; justify-content:space-between;">
-          <div class="card-title" title="${dispTitle}" style="font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${dispTitle}</div>
-          <div class="card-meta" style="font-size:12px; color:#a1a1aa; display:flex; gap:8px; margin-top:4px;">
-            <span class="card-score" style="color:#46d369;"><i class="fas fa-star" style="font-size:10px;"></i> ${anime.averageScore || 85}%</span>
-            <span class="card-year">${anime.seasonYear || '2026'}</span>
-          </div>
-        </div>
-      `;
+      rankHTML = `<div class="top10-rank" style="font-size: 3.8rem; font-weight: 900; position: absolute; left: -2px; bottom: 12px; z-index: 3; color: rgba(255,255,255,0.95); -webkit-text-stroke: 1px rgba(0,0,0,0.7);">${idx + 1}</div>`;
     }
+
+    card.innerHTML = `
+      ${rankHTML}
+      <img src="${poster}" alt="${dispTitle}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; border-radius: 12px !important;" />
+      
+      <!-- Top Badge -->
+      <div class="card-badge" style="position: absolute !important; top: 8px !important; right: 8px !important; background: ${isHindi ? '#e50914' : 'rgba(0,0,0,0.78)'} !important; backdrop-filter: blur(6px) !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 3 !important; border: 1px solid rgba(255,255,255,0.12) !important;">
+        ${isHindi ? 'HINDI DUB' : format}
+      </div>
+
+      <!-- In-Card Bottom Vignette (Guarantees zero text offset or clipping) -->
+      <div class="card-overlay" style="position: absolute !important; inset: auto 0 0 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; margin: 0 !important; padding: 42px 12px 10px 12px !important; box-sizing: border-box !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.72) 60%, transparent 100%) !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; z-index: 2 !important; pointer-events: none !important;">
+        <div class="card-title" title="${dispTitle}" style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-shadow: 0 2px 4px rgba(0,0,0,0.95) !important; width: 100% !important; text-align: left !important; margin: 0 !important; padding: 0 !important; display: block !important;">
+          ${dispTitle}
+        </div>
+        <div class="card-meta" style="font-size: 11px !important; color: #a1a1aa !important; display: flex !important; gap: 8px !important; align-items: center !important; margin-top: 4px !important; width: 100% !important; text-align: left !important;">
+          <span class="card-score" style="color: #46d369 !important; font-weight: 700 !important; display: inline-flex !important; align-items: center !important; gap: 3px !important;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span>
+          <span class="card-year" style="color: #a1a1aa !important;">${year}</span>
+        </div>
+      </div>
+    `;
     track.appendChild(card);
   });
 
@@ -579,15 +507,33 @@ function buildCarouselDOM(title, items, isTop10, isHindi = false) {
   container.appendChild(section);
 }
 
+function buildUnifiedTMDBRowDOM(title, items, iconHtml = '<i class="fas fa-clapperboard"></i>', forceFormat = null) {
+  const formattedItems = items.map(item => {
+    const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
+    const dispTitle = item.title || item.name || 'Title';
+    const posterPath = item.poster_path || item.backdrop_path;
+    const poster = posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : FALLBACK_POSTER;
+    return {
+      id: item.id,
+      title: { english: dispTitle, romaji: dispTitle },
+      coverImage: { extraLarge: poster, large: poster },
+      format: isMovie ? 'MOVIE' : 'TV',
+      averageScore: Math.round((item.vote_average || 8) * 10),
+      seasonYear: (item.release_date || item.first_air_date || '2026').split('-')[0],
+      isLiveAction: true
+    };
+  });
+
+  buildUnifiedCarouselDOM(`<span style="color:var(--accent-red,#e50914); margin-right:8px;">${iconHtml}</span>${title}`, formattedItems, false, false);
+}
+
 function enableCarouselDrag(slider) {
   if (!slider) return;
   let isDown = false;
   let startX, scrollLeft;
-  let dragThreshold = false;
 
   slider.addEventListener('mousedown', (e) => {
     isDown = true;
-    dragThreshold = false;
     slider.dataset.isDragging = 'false';
     startX = e.pageX - slider.offsetLeft;
     scrollLeft = slider.scrollLeft;
@@ -611,7 +557,6 @@ function enableCarouselDrag(slider) {
     const x = e.pageX - slider.offsetLeft;
     const walk = (x - startX) * 1.5;
     if (Math.abs(walk) > 6) {
-      dragThreshold = true;
       slider.dataset.isDragging = 'true';
     }
     slider.scrollLeft = scrollLeft - walk;
@@ -644,7 +589,6 @@ window.navigateGenre = async function(genre, title) {
 
   if (typeof window.showToast === 'function') window.showToast(`Loading ${title}...`);
 
-  // Netflix Live-Action Mode
   if (window.STATE.isNetflixMode) {
     if (genre === 'Movies' || genre === 'Movie') {
       await renderTMDBRow('Trending Feature Films', '/discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
@@ -665,7 +609,6 @@ window.navigateGenre = async function(genre, title) {
       await window.loadHindiDubbed();
     }
   } else {
-    // Anime Universe
     await renderRow(title, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
     await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
   }
@@ -1157,7 +1100,7 @@ async function fetchAndPopulateDeepData(anime) {
   if (moreGrid) moreGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading recommendations...</div>';
 
   const trailersGrid = document.getElementById('trailersGrid');
-  if (trailersGrid) trailersGrid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Fetching trailers...</div>';
+  if (trailersGrid) trailersGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Fetching trailers...</div>';
 
   let charactersLoaded = false;
   let recommendationsLoaded = false;
