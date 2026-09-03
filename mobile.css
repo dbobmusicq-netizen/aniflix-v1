@@ -1,8 +1,8 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
    File: mobile.css
-   Version: 3.1.0
-   Fixes: Hero Blend Masking, Button Shrinkage, Card Proportions & Chip Scroll
+   Version: 4.0.0 (Pure CSS — Zero JavaScript Dependency)
+   Fixes: Hero Smudge Mask, Button Sizing, Miniaturized Cards & Scroll Physics
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -49,7 +49,7 @@
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(4, 4, 6, 0.75) !important;
+    background: rgba(4, 4, 6, 0.78) !important;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -144,7 +144,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     3. HERO BILLBOARD & ADVANCED CANVAS SMUDGE MASK
+     3. HERO BILLBOARD & ADVANCED CANVAS SMUDGE MASK (NO HARD CUTOFF)
      -------------------------------------------------------------------------- */
   .hero {
     position: relative;
@@ -155,25 +155,34 @@
     display: flex;
     align-items: flex-end;
     overflow: hidden;
-    background-size: cover;
-    background-position: center top;
   }
 
-  /* Multi-stop alpha blending gradient that smoothly smudges into the dark background */
-  .hero::after {
-    content: '';
+  .hero-bg-wrapper {
     position: absolute;
     inset: 0;
+    z-index: 0;
+  }
+
+  .hero-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  /* Multi-stop alpha blending gradient: smudges artwork seamlessly into #040406 */
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
     background: linear-gradient(
       180deg,
-      rgba(4, 4, 6, 0.2) 0%,
-      rgba(4, 4, 6, 0.4) 35%,
-      rgba(4, 4, 6, 0.75) 65%,
-      rgba(4, 4, 6, 0.95) 88%,
+      rgba(4, 4, 6, 0.15) 0%,
+      rgba(4, 4, 6, 0.4) 30%,
+      rgba(4, 4, 6, 0.75) 60%,
+      rgba(4, 4, 6, 0.94) 84%,
       #040406 100%
-    );
-    pointer-events: none;
-    z-index: 1;
+    ) !important;
   }
 
   .hero-content {
@@ -246,73 +255,73 @@
     overflow: hidden;
   }
 
-  /* HERO ACTION BUTTONS FIX (Prevents shrinking / squishing) */
+  /* HERO ACTION BUTTONS: PREVENT SHRINKING & PRESERVE TOUCH TARGETS */
   .hero-btns {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    flex-wrap: nowrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
   }
 
-  .hero-btns .btn-primary,
   .hero-btns .btn-play {
-    flex: 1 1 auto;
-    min-width: 110px;
-    height: 40px;
-    padding: 0 14px;
-    font-size: 13px;
-    font-weight: 700;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: #fff;
-    color: #000;
-    white-space: nowrap;
-    border: none;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    flex: 1 1 auto !important;
+    min-width: 110px !important;
+    height: 40px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    background: #fff !important;
+    color: #000 !important;
+    white-space: nowrap !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2) !important;
+    flex-shrink: 0 !important;
   }
 
-  .hero-btns .btn-secondary,
-  .hero-btns .btn-details {
-    flex: 1 1 auto;
-    min-width: 100px;
-    height: 40px;
-    padding: 0 12px;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    background: rgba(255, 255, 255, 0.12);
+  .hero-btns .btn-info {
+    flex: 1 1 auto !important;
+    min-width: 100px !important;
+    height: 40px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #fff;
-    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    color: #fff !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 
-  .hero-btns .btn-icon-round,
-  .hero-btns .btn-action-icon {
-    flex: 0 0 40px;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: #fff;
+  .hero-btns .btn-icon-round {
+    flex: 0 0 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    color: #fff !important;
+    flex-shrink: 0 !important;
   }
 
   /* --------------------------------------------------------------------------
-     4. HORIZONTAL FILTER CHIPS RAIL (FIX HORIZONTAL OVERFLOW & COMPRESSION)
+     4. HORIZONTAL FILTER CHIPS RAIL (FIX SQUISHED/CUT OFF BUTTONS)
      -------------------------------------------------------------------------- */
   .quick-chips-rail {
     position: relative;
@@ -374,7 +383,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     5. COMPACT ANIME & MOVIE CARDS (MINIMIZED DENSITY & ASPECT FIX)
+     5. COMPACT ANIME & MOVIE CARDS (MINIMIZED DENSITY & CORRECT ASPECT RATIO)
      -------------------------------------------------------------------------- */
   .content-rows {
     padding-top: 6px;
@@ -414,7 +423,7 @@
     display: none !important;
   }
 
-  /* Miniaturized High-Density Mobile Card Structure */
+  /* Compact Card Footprint for Mobile Screens */
   .anime-card,
   .card.ui-card-locked {
     position: relative !important;
@@ -441,7 +450,6 @@
     display: block;
   }
 
-  /* Miniaturized Floating Type/Rating Badges */
   .card-badge,
   .card-badge-top {
     position: absolute;
@@ -472,7 +480,6 @@
     line-height: 1;
   }
 
-  /* Bottom Poster Vignette Gradient */
   .card-overlay {
     position: absolute;
     inset: 0;
@@ -526,7 +533,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     6. ULTRA-SLEEK MICRO DOCK
+     6. ULTRA-SLEEK COMPACT MICRO DOCK
      -------------------------------------------------------------------------- */
   .floating-quick-dock {
     position: fixed;
@@ -626,6 +633,44 @@
     background: #07070a;
   }
 
+  .player-action-strip {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    background: rgba(12, 13, 20, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .player-action-left {
+    display: none;
+  }
+
+  .player-action-right {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .player-action-right::-webkit-scrollbar {
+    display: none;
+  }
+
+  .modal-pill-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    flex: 0 0 auto;
+    border-radius: 9999px;
+  }
+
   .server-pills-scroll,
   #serverButtonsContainer {
     display: flex;
@@ -650,7 +695,111 @@
     border-radius: 9999px;
   }
 
-  /* Universal active feedback */
+  .ep-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .ep-card {
+    padding: 8px;
+    border-radius: 12px;
+    gap: 10px;
+  }
+
+  .ep-thumb-box {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .ep-title {
+    font-size: 12.5px;
+  }
+
+  .ep-overview {
+    display: none;
+  }
+
+  /* --------------------------------------------------------------------------
+     8. TOAST NOTIFICATIONS ELEVATION (SOLVES HIDDEN ALERT ON SHARE)
+     -------------------------------------------------------------------------- */
+  .toast-container {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate3d(-50%, 0, 0) !important;
+    width: 90% !important;
+    max-width: 360px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .toast {
+    width: 100% !important;
+    padding: 12px 18px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    border-radius: 14px !important;
+    background: rgba(14, 15, 24, 0.94) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 8, 68, 0.25) !important;
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    color: #fff !important;
+    will-change: transform, opacity !important;
+    transform: translate3d(0, 24px, 0) scale(0.92) !important;
+    opacity: 0 !important;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease !important;
+  }
+
+  .toast.visible {
+    transform: translate3d(0, 0, 0) scale(1) !important;
+    opacity: 1 !important;
+  }
+
+  .toast i,
+  .toast svg {
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .toast-info i { color: var(--modal-accent-cyan, #00f2fe) !important; }
+  .toast-success i { color: var(--modal-accent-emerald, #00f5a0) !important; }
+  .toast-error i { color: var(--modal-accent-red, #ff0844) !important; }
+
+  .mobile-nav-drawer {
+    width: 84vw;
+    max-width: 310px;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .watchlist-drawer,
+  .p2p-chat-sidebar {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    z-index: 100000 !important;
+  }
+
   button:active, 
   .anime-card:active {
     transform: scale(0.96) !important;
