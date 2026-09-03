@@ -1,8 +1,8 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
    File: mobile.css
-   Version: 2.2.0
-   Architecture: Mobile-First Ergonomics, Unified Fluid Scrolling, 60fps GPU Accelerated
+   Version: 3.0.0
+   Architecture: Ultra-Sleek Micro Dock, Optimized Card Density, Zero-Jitter Touch
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -27,14 +27,13 @@
   }
 
   body {
-    padding-bottom: 85px; /* Clearance for fixed thumb-zone quick dock */
+    /* Generous clearance so the bottom row of anime cards never gets covered */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Universal minimum touch target sizing (Apple HIG & Material standard: 44px) */
+  /* Accessible touch targets with manipulation behavior */
   button, a, input, select, .chip, .server-btn, .dock-btn {
-    min-height: 44px;
-    min-width: 44px;
     touch-action: manipulation;
   }
 
@@ -46,22 +45,36 @@
      2. MOBILE HEADER & COMPACT BRANDING
      -------------------------------------------------------------------------- */
   .header {
-    height: 60px;
-    padding: 0 14px;
+    height: 56px;
+    padding: 0 12px;
     top: 0;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     z-index: 1500;
   }
 
+  .header-left {
+    gap: 8px;
+  }
+
   .brand-name {
-    font-size: 16px;
-    letter-spacing: 0.5px;
+    font-size: 15px;
+    letter-spacing: 0.4px;
+  }
+
+  .brand-icon-wrapper {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .brand-icon-wrapper i {
+    font-size: 13px;
   }
 
   .brand-badge {
-    font-size: 9px;
-    padding: 1px 5px;
+    font-size: 8px;
+    padding: 1px 4px;
   }
 
   .nav-desktop {
@@ -74,30 +87,37 @@
     justify-content: center;
     background: transparent;
     border: none;
-    color: var(--text-primary);
-    font-size: 20px;
+    color: var(--text-primary, #fff);
+    font-size: 18px;
     cursor: pointer;
-    padding: 8px;
+    padding: 6px;
     border-radius: 50%;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, transform 0.15s ease;
     z-index: 1501;
   }
 
   .mobile-nav-toggle:active {
     background: rgba(255, 255, 255, 0.08);
+    transform: scale(0.92);
   }
 
   .header-right {
     gap: 6px;
   }
 
+  .icon-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 13px;
+  }
+
   .search-wrapper.open {
     position: fixed;
-    top: 60px;
+    top: 56px;
     left: 0;
     right: 0;
     width: 100vw;
-    background: rgba(10, 11, 16, 0.98);
+    background: rgba(8, 8, 14, 0.98);
     padding: 10px 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(24px);
@@ -111,55 +131,67 @@
   }
 
   /* --------------------------------------------------------------------------
-     3. FLOATING THUMB-ZONE QUICK DOCK (BOTTOM ACTION BAR)
+     3. ULTRA-SLEEK COMPACT MICRO DOCK (SOLVES CARD OVERLAP & BLOCKED TITLES)
      -------------------------------------------------------------------------- */
   .floating-quick-dock {
     position: fixed;
-    bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
+    bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) + 6px));
     left: 50%;
-    transform: translateX(-50%);
-    width: 92%;
-    max-width: 390px;
-    background: rgba(14, 15, 22, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(28px) saturate(190%);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border-radius: 999px;
-    padding: 8px 16px;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+    transform: translate3d(-50%, 0, 0);
+    width: auto !important;
+    min-width: 180px;
+    max-width: 250px;
+    height: 40px;
+    background: rgba(10, 10, 16, 0.72) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border-radius: 9999px !important;
+    padding: 3px 8px !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
     z-index: 1200;
-    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    animation: dockFloatIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    touch-action: pan-y;
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+    animation: microDockFloatIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    pointer-events: auto;
   }
 
-  @keyframes dockFloatIn {
-    from { opacity: 0; transform: translate(-50%, 30px) scale(0.9); }
-    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  @keyframes microDockFloatIn {
+    from { opacity: 0; transform: translate3d(-50%, 20px, 0) scale(0.92); }
+    to { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
   }
 
   .floating-quick-dock .dock-btn {
-    background: transparent;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    color: var(--text-secondary);
-    font-size: 17px;
+    background: transparent !important;
+    border: none !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
     cursor: pointer;
-    position: relative;
-    padding: 6px 10px;
-    border-radius: 50%;
-    transition: transform 0.15s ease, color 0.2s ease;
-    z-index: 1201;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .floating-quick-dock .dock-btn i,
+  .floating-quick-dock .dock-btn svg {
+    font-size: 13.5px !important;
+    transition: transform 0.2s ease;
+  }
+
+  .floating-quick-dock .dock-btn:hover i {
+    transform: scale(1.15);
   }
 
   .floating-quick-dock .dock-btn:active {
-    transform: scale(0.85);
+    transform: scale(0.82) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
   }
 
   .floating-quick-dock .dock-tooltip {
@@ -167,16 +199,182 @@
   }
 
   /* --------------------------------------------------------------------------
-     4. MOBILE SIDE DRAWER (SLIDE-OUT PHYSICS & ANIMATION)
+     4. COMPACT & BALANCED CARDS FOR ANIME, MOVIES & SERIES
+     -------------------------------------------------------------------------- */
+  .content-rows {
+    padding-top: 14px;
+    gap: 20px;
+    padding-bottom: 24px;
+  }
+
+  .row-section {
+    margin: 16px 0 !important;
+    padding: 0 12px !important;
+  }
+
+  .row-header {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    margin-bottom: 8px !important;
+    gap: 6px;
+  }
+
+  .carousel-track {
+    gap: 10px !important;
+    padding: 4px 2px 10px 2px !important;
+  }
+
+  /* Optimized card dimensions: smaller footprint, crisp artwork, zero clipping */
+  .anime-card,
+  .card.ui-card-locked {
+    flex: 0 0 118px !important;
+    min-width: 118px !important;
+    max-width: 118px !important;
+    height: 178px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7) !important;
+  }
+
+  .anime-card img {
+    border-radius: 10px !important;
+  }
+
+  /* Scaled down in-card badge */
+  .card-badge,
+  .card-badge-top {
+    top: 5px !important;
+    right: 5px !important;
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .card-badge-hindi {
+    top: 5px !important;
+    left: 5px !important;
+    font-size: 7.5px !important;
+    padding: 2px 5px !important;
+  }
+
+  /* Proportional bottom vignette overlay */
+  .card-overlay {
+    padding: 28px 8px 7px 8px !important;
+    border-radius: 0 0 10px 10px !important;
+  }
+
+  .card-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.22 !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
+  }
+
+  .card-meta {
+    font-size: 9.5px !important;
+    margin-top: 3px !important;
+    gap: 6px !important;
+  }
+
+  .card-score i {
+    font-size: 8px !important;
+  }
+
+  /* Top 10 rank styling adjustment */
+  .top10-rank {
+    font-size: 2.8rem !important;
+    left: 0px !important;
+    bottom: 6px !important;
+    -webkit-text-stroke: 1.2px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     5. HERO BILLBOARD & CHIPS FOR MOBILE
+     -------------------------------------------------------------------------- */
+  .hero {
+    min-height: 400px;
+    height: 68vh;
+    padding: 0 14px;
+    align-items: flex-end;
+    padding-bottom: 20px;
+  }
+
+  .hero-content {
+    margin-top: 0;
+    max-width: 100%;
+  }
+
+  .hero-network-badge {
+    font-size: 9.5px;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-size: clamp(1.6rem, 6.5vw, 2.2rem);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .hero-tags {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .tag-match, .tag-box, .tag-hindi {
+    font-size: 10px;
+    padding: 2px 7px;
+  }
+
+  .hero-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    -webkit-line-clamp: 2;
+  }
+
+  .hero-btns {
+    gap: 7px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .btn-icon-round {
+    width: 36px;
+    height: 36px;
+  }
+
+  .quick-chips-rail {
+    padding: 0 12px;
+    margin-top: -18px;
+  }
+
+  .chips-container {
+    gap: 6px;
+    padding: 6px 0;
+  }
+
+  .chip {
+    padding: 6px 12px;
+    font-size: 11.5px;
+    border-radius: 20px;
+  }
+
+  /* --------------------------------------------------------------------------
+     6. MOBILE SIDE DRAWER
      -------------------------------------------------------------------------- */
   .mobile-nav-drawer {
-    width: 86vw;
-    max-width: 320px;
-    border-top-right-radius: 28px;
-    border-bottom-right-radius: 28px;
-    padding-top: max(20px, env(safe-area-inset-top));
-    padding-bottom: max(30px, env(safe-area-inset-bottom));
-    box-shadow: 25px 0 70px rgba(0, 0, 0, 0.95);
+    width: 84vw;
+    max-width: 310px;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    box-shadow: 20px 0 60px rgba(0, 0, 0, 0.95);
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     height: 100dvh;
     overflow-y: auto;
@@ -186,60 +384,47 @@
   .mobile-nav-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 10px 16px;
+    gap: 5px;
+    padding: 8px 12px;
   }
 
   .mobile-nav-link {
-    padding: 13px 16px;
-    border-radius: 14px;
-    font-size: 15px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 14px;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: rgba(255, 255, 255, 0.02);
-    color: var(--text-secondary);
-    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    gap: 12px;
   }
 
   .mobile-nav-link:active {
     transform: scale(0.97);
   }
 
-  .mobile-nav-link.active {
-    background: linear-gradient(135deg, rgba(255, 8, 68, 0.2), rgba(255, 8, 68, 0.05));
-    border: 1px solid rgba(255, 8, 68, 0.35);
-    color: var(--text-primary);
-  }
-
   /* --------------------------------------------------------------------------
-     5. UNIFIED FLUID-SCROLLING MOBILE STREAMING MODAL & SHEET
+     7. UNIFIED MOBILE STREAMING MODAL & SHEET
      -------------------------------------------------------------------------- */
   .modal-container.active {
     padding: 0;
     align-items: stretch;
-    overflow-y: auto !important; /* Unified container scroll */
+    overflow-y: auto !important;
   }
 
   .modal-dialog {
     position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
     width: 100vw;
     min-height: 100dvh;
     height: auto !important;
     max-width: 100vw !important;
     max-height: none !important;
     border-radius: 0;
+    border: none;
     display: flex;
     flex-direction: column;
     background: #040406;
-    padding-top: env(safe-area-inset-top);
+    padding-top: env(safe-area-inset-top, 0px);
     animation: mobileSheetSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     z-index: 1400;
-    overflow: visible !important; /* Allows natural document flow and unified scrolling */
+    overflow: visible !important;
   }
 
   @keyframes mobileSheetSlideUp {
@@ -248,27 +433,37 @@
   }
 
   .modal-nav-strip {
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: rgba(10, 11, 16, 0.96);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     z-index: 1401;
   }
 
-  /* Optional smooth sticky video header or natural scrolling */
   .modal-player-wrap {
-    width: 100%;
-    aspect-ratio: 16 / 9;
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
     flex-shrink: 0;
     background: #000;
-    position: relative; /* Scrolls naturally with the page so both pink and green sections move together */
+    position: sticky !important;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95);
+  }
+
+  .modal-body {
+    padding: 12px;
+    overflow-y: visible !important;
+    height: auto !important;
+    flex: none !important;
+    background: #07070a;
   }
 
   .player-action-strip {
-    padding: 10px 14px;
+    padding: 10px 12px;
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
-    background: rgba(14, 15, 22, 0.98);
+    background: rgba(12, 13, 20, 0.98);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 
@@ -277,12 +472,16 @@
   }
 
   .player-action-right {
+    width: 100%;
     display: flex;
+    flex-wrap: nowrap;
     gap: 6px;
     overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: 4px;
     justify-content: flex-start;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 
   .player-action-right::-webkit-scrollbar {
@@ -290,32 +489,22 @@
   }
 
   .modal-pill-btn {
-    padding: 7px 14px;
-    font-size: 11.5px;
+    padding: 6px 12px;
+    font-size: 11px;
     font-weight: 700;
-    flex-shrink: 0;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    flex: 0 0 auto;
+    border-radius: 9999px;
   }
 
   .modal-pill-btn:active {
     transform: scale(0.94);
   }
 
-  /* Modal body flows naturally now, eliminating the locked inner scroll trap */
-  .modal-body {
-    padding: 14px;
-    overflow-y: visible !important;
-    height: auto !important;
-    flex: none !important;
-  }
-
   .modal-tabs {
     gap: 6px;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 6px;
+    padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
     display: flex;
     white-space: nowrap;
@@ -326,142 +515,113 @@
   }
 
   .tab-btn {
-    padding: 9px 16px;
+    padding: 7px 13px;
     font-size: 12px;
     font-weight: 700;
     flex-shrink: 0;
-    border-radius: 10px;
   }
 
   /* --------------------------------------------------------------------------
-     6. SCROLLABLE SERVERS, TABS & EPISODE GRIDS
+     8. SERVER SCROLLER & EPISODE BROWSER
      -------------------------------------------------------------------------- */
   .server-controls {
-    padding: 12px 16px;
+    padding: 10px 12px;
     background: rgba(10, 11, 16, 0.9);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .server-pills-scroll,
-  .server-pills,
-  .filter-chips,
-  #filterChips,
-  .chip-row,
-  .chip-list {
+  #serverButtonsContainer {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-    padding-bottom: 6px;
+    padding: 2px 2px 6px 2px;
     white-space: nowrap;
+    width: 100%;
+    scroll-snap-type: x proximity;
   }
 
   .server-pills-scroll::-webkit-scrollbar,
-  #filterChips::-webkit-scrollbar,
-  .modal-tabs::-webkit-scrollbar {
+  #serverButtonsContainer::-webkit-scrollbar {
     display: none;
   }
 
   .server-btn,
-  .chip,
-  .tab-btn {
+  .server-node-btn {
     scroll-snap-align: start;
     flex: 0 0 auto;
-  }
-
-  .server-pills-scroll {
-    scroll-snap-type: x proximity;
-    padding-left: 6px;
-    padding-right: 6px;
-  }
-
-  .server-btn {
-    padding: 7px 14px;
-    font-size: 12px;
-    flex-shrink: 0;
-    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    border-radius: 9999px;
   }
 
   .ep-grid {
-    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 8px;
+    max-height: none;
+    overflow: visible;
   }
 
   .ep-card {
     padding: 8px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    gap: 10px;
+  }
+
+  .ep-thumb-box {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .ep-title {
+    font-size: 12.5px;
+  }
+
+  .ep-overview {
+    display: none;
   }
 
   /* --------------------------------------------------------------------------
-     7. WATCHLIST, CHAT SIDEBARS & OVERLAYS
-     -------------------------------------------------------------------------- */
-  .watchlist-drawer,
-  .p2p-chat-sidebar {
-    width: 100vw;
-    max-width: 100vw;
-    border-radius: 0;
-    padding-top: max(16px, env(safe-area-inset-top));
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
-    height: 100dvh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .p2p-reaction-bar {
-    bottom: calc(75px + env(safe-area-inset-bottom));
-    right: 12px;
-    padding: 4px 8px;
-    background: rgba(10, 11, 16, 0.85);
-    z-index: 1300;
-  }
-
-  .p2p-emote-btn {
-    font-size: 20px;
-    padding: 6px;
-  }
-
-  /* --------------------------------------------------------------------------
-     8. TOAST ALERTS & NOTIFICATIONS CENTER ALIGNMENT FIX
+     9. TOAST & OVERLAY ADJUSTMENTS
      -------------------------------------------------------------------------- */
   .toast-container {
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
-    width: 92% !important;
-    max-width: 380px !important;
-    align-items: center !important;
-    text-align: center;
+    width: 90% !important;
+    max-width: 360px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 58px) !important;
     z-index: 1700;
   }
 
   .toast {
     width: 100% !important;
-    box-sizing: border-box;
-    margin: 0 auto;
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .watchlist-drawer,
+  .p2p-chat-sidebar {
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 0;
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   button:active, .anime-card:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
     transition: transform 0.08s ease-out;
-  }
-
-  #filterChips {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 8px 6px;
-    white-space: nowrap;
-    z-index: 100;
-  }
-
-  #filterChips .chip {
-    flex: 0 0 auto;
   }
 }
 
+/* Desktop viewport fallback */
 @media (min-width: 769px) {
   #filterChips { overflow: visible; }
 }
