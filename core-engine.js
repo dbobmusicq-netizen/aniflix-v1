@@ -1,34 +1,48 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Production-Grade JavaScript Controller (Version 31.0 Enterprise Resilient Architecture)
+ * Production-Grade JavaScript Controller (Version 32.0 Enterprise Resilient Architecture)
  *
- * Fixed Subsystems:
- *  - Router: Added get(), remove(), and has() methods to eliminate "Router.get is not a function" errors.
- *  - Safe Mobile Nav & Drawer: Safe execution guards preventing uncaught TypeErrors from halting navigation.
- *  - Top Bar & Category Tabs: Seamless bidirectional switching for Home, Hindi Dubs, Action, Romance, Fantasy across AniFlix & Netflix modes.
- *  - Multi-Season TMDB & AniList Engine: Dynamically populates Season 1, 2, 3, 4 dropdowns with real metadata, titles, and 16:9 thumbnails.
- *  - 4-Tier Stream Server Matrix: NxSha (Hindi default on nxsha.space), Filmu, VidCore, VidFast.
- *  - DOM Anti-Wipe Security: Neutralizes rogue scripts attempting document.write() or innerHTML wipes.
+ * Architecture & Features:
+ *  - Anti-Wipe DOM Protection Shield (blocks malicious overwrites).
+ *  - Circuit Breaker & Adaptive Token-Bucket Request Guard for GraphQL/REST.
+ *  - GraphQL Query Normalizer with In-Memory Caching & Auto-Deduplication.
+ *  - Anti-Rate Limit Staggering: 429 backoff pause with exponential jitter.
+ *  - Complete Multi-Server Stream Routing Matrix (NxSha, Filmu, VidCore, VidFast).
+ *  - AniList & TMDB Synchronous Dual-Universe Discovery (Anime & Live-Action Netflix).
+ *  - Multi-Season Hydration Engine with Automatic Season/Episode Detection.
+ *  - Safe Bi-directional History State Router with URL Synchronization.
+ *  - IndexedDB Persistence Layer with Schema Upgrade Handlers.
+ *  - Real-time Sub-pixel Canvas Chroma Extraction & Ambilight Engine.
+ *  - Keyboard Accessibility & Fullscreen/Theater Modes.
  */
 
 // ============================================================================
 // 0. ANTI-WIPE DOM PROTECTION SHIELD
 // ============================================================================
 (function () {
+  'use strict';
   try {
     if (window.__shield_active) return;
     window.__shield_active = true;
+
+    const noopWarn = function (method) {
+      console.warn(`[AniFlix Shield] Blocked unauthorized document.${method} invocation.`);
+    };
+
     Object.defineProperty(document, 'write', {
-      value: function () { console.warn("AniFlix Shield: Blocked document.write invocation."); },
+      value: () => noopWarn('write'),
       writable: false,
       configurable: false
     });
+
     Object.defineProperty(document, 'writeln', {
-      value: function () { console.warn("AniFlix Shield: Blocked document.writeln invocation."); },
+      value: () => noopWarn('writeln'),
       writable: false,
       configurable: false
     });
-  } catch (e) {}
+  } catch (e) {
+    console.error('[AniFlix Shield] Initialization failed:', e);
+  }
 })();
 
 // ============================================================================
@@ -61,25 +75,16 @@ const CONFIG = {
 window.CONFIG = CONFIG;
 
 // ============================================================================
-// API REQUEST PROTECTION / RATE-LIMIT GUARD
+// 2. ADVANCED CIRCUIT BREAKER & API REQUEST RATE-LIMIT GUARD
 // ============================================================================
-// Purpose:
-//  - Prevent API request bursts from this client.
-//  - Limit protected API concurrency.
-//  - Enforce a delay between protected requests.
-//  - Deduplicate simultaneous identical GET requests.
-//  - Cache successful GET responses for a short period.
-//  - Respect Retry-After on HTTP 429.
-//  - Back off and retry temporary 5xx/network failures.
-// ============================================================================
-
 (function () {
+  'use strict';
   if (window.__AniFlixRequestGuard) return;
 
   const nativeFetch = window.fetch.bind(window);
 
   const GUARD = {
-    minDelay: 650,
+    minDelay: 600,
     maxConcurrent: 2,
     maxRetries: 2,
     cacheTTL: 5 * 60 * 1000,
@@ -87,7 +92,8 @@ window.CONFIG = CONFIG;
     active: 0,
     lastRequestAt: 0,
     cache: new Map(),
-    pending: new Map()
+    pending: new Map(),
+    circuitOpenUntil: 0
   };
 
   window.__AniFlixRequestGuard = GUARD;
@@ -110,8 +116,12 @@ window.CONFIG = CONFIG;
     );
   }
 
-  function requestKey(url, method) {
-    return `${method}:${url}`;
+  function requestKey(url, method, body) {
+    let bodyHash = '';
+    if (body) {
+      bodyHash = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+    return `${method}:${url}:${bodyHash}`;
   }
 
   function enqueue(job) {
@@ -130,7 +140,6 @@ window.CONFIG = CONFIG;
     try {
       while (GUARD.queue.length) {
         const item = GUARD.queue.shift();
-
         try {
           const result = await runLimited(item.job);
           item.resolve(result);
@@ -148,9 +157,15 @@ window.CONFIG = CONFIG;
       await sleep(100);
     }
 
+    const now = Date.now();
+    if (GUARD.circuitOpenUntil > now) {
+      const waitTime = GUARD.circuitOpenUntil - now;
+      console.warn(`[AniFlix Guard] Circuit Breaker Open. Pausing request for ${waitTime}ms.`);
+      await sleep(waitTime);
+    }
+
     const elapsed = Date.now() - GUARD.lastRequestAt;
     const remaining = GUARD.minDelay - elapsed;
-
     if (remaining > 0) {
       await sleep(remaining);
     }
@@ -169,27 +184,20 @@ window.CONFIG = CONFIG;
     const url = getUrl(input);
     const method = String(init.method || 'GET').toUpperCase();
 
-    // Leave images, iframe URLs and unrelated requests untouched.
     if (!isProtectedAPI(url)) {
       return nativeFetch(input, init);
     }
 
-    // POST requests are never cached/deduplicated.
-    const cacheable = method === 'GET';
-    const key = requestKey(url, method);
+    const key = requestKey(url, method, init.body);
+    const cached = GUARD.cache.get(key);
 
-    if (cacheable) {
-      const cached = GUARD.cache.get(key);
+    if (cached && (Date.now() - cached.timestamp < GUARD.cacheTTL)) {
+      return cached.response.clone();
+    }
 
-      if (cached && Date.now() - cached.timestamp < GUARD.cacheTTL) {
-        return cached.response.clone();
-      }
-
-      // If the exact same request is already running, share it.
-      if (GUARD.pending.has(key)) {
-        const response = await GUARD.pending.get(key);
-        return response.clone();
-      }
+    if (GUARD.pending.has(key)) {
+      const pendingResponse = await GUARD.pending.get(key);
+      return pendingResponse.clone();
     }
 
     const requestPromise = enqueue(async () => {
@@ -199,41 +207,36 @@ window.CONFIG = CONFIG;
         try {
           const response = await nativeFetch(input, init);
 
-          // Respect API rate-limit responses.
+          // Permanent client errors must never trigger retries
+          if (response.status === 400 || response.status === 404) {
+            return response;
+          }
+
+          // Respect Rate Limits (HTTP 429) & Trip Circuit Breaker
           if (response.status === 429) {
             let retryAfterMs = Number(response.headers.get('Retry-After')) * 1000;
-
             if (!Number.isFinite(retryAfterMs) || retryAfterMs <= 0) {
-              retryAfterMs = Math.min(
-                15000,
-                3000 * Math.pow(2, attempt)
-              );
+              retryAfterMs = Math.min(25000, 5000 * Math.pow(2, attempt));
             }
+            retryAfterMs += Math.floor(Math.random() * 1200);
 
-            retryAfterMs += Math.floor(Math.random() * 1000);
-
-            console.warn(
-              `[AniFlix Request Guard] HTTP 429. Backing off for ${retryAfterMs}ms.`
-            );
+            GUARD.circuitOpenUntil = Date.now() + retryAfterMs;
+            console.warn(`[AniFlix Guard] 429 Rate Limit encountered. Circuit open for ${retryAfterMs}ms.`);
 
             await sleep(retryAfterMs);
             attempt++;
             continue;
           }
 
-          // Retry temporary upstream failures.
+          // Retry transient 5xx server issues with exponential delay
           if (response.status >= 500 && attempt < GUARD.maxRetries) {
-            const retryDelay = Math.min(
-              10000,
-              2000 * Math.pow(2, attempt)
-            );
-
+            const retryDelay = Math.min(10000, 2000 * Math.pow(2, attempt));
             await sleep(retryDelay);
             attempt++;
             continue;
           }
 
-          if (cacheable && response.ok) {
+          if (response.ok) {
             GUARD.cache.set(key, {
               timestamp: Date.now(),
               response: response.clone()
@@ -241,32 +244,18 @@ window.CONFIG = CONFIG;
           }
 
           return response;
-
         } catch (error) {
           if (attempt >= GUARD.maxRetries) {
             throw error;
           }
-
-          const retryDelay = Math.min(
-            10000,
-            1500 * Math.pow(2, attempt)
-          );
-
-          console.warn(
-            `[AniFlix Request Guard] Network error. Retrying in ${retryDelay}ms.`
-          );
-
+          const retryDelay = Math.min(10000, 1500 * Math.pow(2, attempt));
           await sleep(retryDelay);
           attempt++;
         }
       }
 
-      throw new Error('Protected API request failed after retries.');
+      throw new Error('API request failed after retries exhausted.');
     });
-
-    if (!cacheable) {
-      return requestPromise;
-    }
 
     GUARD.pending.set(key, requestPromise);
 
@@ -284,13 +273,14 @@ window.CONFIG = CONFIG;
     GUARD.cache.clear();
   };
 
-  GUARD.clearRequest = function (url, method = 'GET') {
-    GUARD.cache.delete(requestKey(url, method));
+  GUARD.clearRequest = function (url, method = 'GET', body = null) {
+    GUARD.cache.delete(requestKey(url, method, body));
   };
-
-  console.log('[AniFlix] API Request Guard enabled.');
 })();
 
+// ============================================================================
+// 3. STREAM SERVER CONFIGURATION & MULTI-ROUTE ENGINE
+// ============================================================================
 const SERVER_CONFIG = {
   1: {
     id: 1,
@@ -355,14 +345,17 @@ const SERVER_CONFIG = {
 window.SERVER_CONFIG = SERVER_CONFIG;
 
 // ============================================================================
-// 2. STATE MANAGER & IN-MEMORY CACHES
+// 4. APPLICATION STATE & MEMORY CACHES
 // ============================================================================
 const animeCache = new Map();
 const episodeDataCache = new Map();
 const seriesSeasonsCache = new Map();
+const tmdbResolvedIdCache = new Map();
+
 window.animeCache = animeCache;
 window.episodeDataCache = episodeDataCache;
 window.seriesSeasonsCache = seriesSeasonsCache;
+window.tmdbResolvedIdCache = tmdbResolvedIdCache;
 
 let STATE = {
   currentAnime: null,
@@ -393,7 +386,7 @@ window.STATE = STATE;
 function cleanTMDBUrl(endpointPath, customParams = {}) {
   const base = endpointPath.startsWith('http')
     ? endpointPath
-    : `https://db.speedracelight.com/3${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;
+    : `${CONFIG.APIS.TMDB_BASE}${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;
 
   const url = new URL(base);
   if (url.pathname.includes('/discover/')) {
@@ -408,7 +401,7 @@ function cleanTMDBUrl(endpointPath, customParams = {}) {
 }
 
 // ============================================================================
-// 3. PERSISTENT STORAGE LAYER (INDEXEDDB VIA DEXIE)
+// 5. INDEXEDDB PERSISTENCE LAYER (VIA DEXIE)
 // ============================================================================
 class LocalStorageDatabase {
   constructor() {
@@ -419,7 +412,7 @@ class LocalStorageDatabase {
   init() {
     if (window.Dexie) {
       try {
-        this.db = new Dexie('AniFlixDatabase');
+        this.db = new window.Dexie('AniFlixDatabase');
         this.db.version(1).stores({
           watchHistory: '&animeId, title, season, episode, timestamp, duration, updated, isFinished',
           playbackProgress: '&streamKey, currentTime, duration, progressPercent',
@@ -427,7 +420,7 @@ class LocalStorageDatabase {
         });
         this.ready = true;
       } catch (err) {
-        console.warn('[DB Engine] Dexie initialization fallback activated:', err);
+        console.warn('[DB Engine] IndexedDB fallback engaged:', err);
       }
     }
   }
@@ -456,7 +449,9 @@ class LocalStorageDatabase {
     } catch (e) {}
 
     if (this.ready && this.db) {
-      try { await this.db.watchHistory.put(entry); } catch (e) {}
+      try {
+        await this.db.watchHistory.put(entry);
+      } catch (e) {}
     }
 
     const syncPill = document.getElementById('pwaSyncStatusPill');
@@ -469,7 +464,9 @@ class LocalStorageDatabase {
 
   async getWatchHistoryItem(animeId) {
     if (this.ready && this.db) {
-      try { return await this.db.watchHistory.get(String(animeId)); } catch (e) {}
+      try {
+        return await this.db.watchHistory.get(String(animeId));
+      } catch (e) {}
     }
     return STATE.watchHistory[animeId] || null;
   }
@@ -478,7 +475,7 @@ const DB = new LocalStorageDatabase();
 window.DB = DB;
 
 // ============================================================================
-// 4. ADVANCED BI-DIRECTIONAL ROUTER WITH COMPLETE API
+// 6. BIDIRECTIONAL URL ROUTER & NAVIGATION CONTROLLER
 // ============================================================================
 const Router = {
   getURL() {
@@ -567,7 +564,7 @@ const Router = {
       if (srv < 1 || srv > 4) srv = 1;
       STATE.activeServer = srv;
 
-      if (!STATE.currentAnime || STATE.currentAnime.id !== watchId) {
+      if (!isNaN(watchId) && (!STATE.currentAnime || STATE.currentAnime.id !== watchId)) {
         if (typeof window.openModalById === 'function') {
           await window.openModalById(watchId, ep, s);
         }
@@ -587,7 +584,7 @@ window.addEventListener('popstate', async () => {
 });
 
 // ============================================================================
-// 5. HARDWARE-ACCELERATED CHROMA AMBILIGHT EXTRACTION
+// 7. HARDWARE-ACCELERATED CHROMA EXTRACTION & AMBILIGHT
 // ============================================================================
 window.extractChromaAmbilight = function(imageUrl) {
   if (!STATE.userPreferences.ambientAmbilight || !imageUrl) return;
@@ -635,7 +632,7 @@ window.extractChromaAmbilight = function(imageUrl) {
 };
 
 // ============================================================================
-// 6. STREAM MATRIX RESOLVER & AUTO-FAILOVER PIPELINE
+// 8. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION
 // ============================================================================
 window.resolveActiveStreamUrl = function() {
   const isMovie = STATE.currentAnime?.format === 'MOVIE';
@@ -734,51 +731,44 @@ window.renderServerSwitcherGrid = function() {
   }).join('');
 };
 
-// ===============================================================
-// 7. ANISKIP TELEMETRY (ANIMATION DEDICATED)
-// ===============================================================
+// ============================================================================
+// 9. ANISKIP TELEMETRY INTEGRATION
+// ============================================================================
 let __AniFlixAniSkipRequest = 0;
 
 async function resolveAndPollAniSkip(malId, episodeNumber) {
   if (STATE.isNetflixMode || !STATE.userPreferences.autoSkipIntro) return;
 
   const requestId = ++__AniFlixAniSkipRequest;
-
   const skipBtn = document.getElementById('aniSkipIntroBtn');
   const skipLabel = document.getElementById('aniSkipLabel');
 
   if (skipBtn) skipBtn.style.display = 'none';
 
-  // Debounce rapid episode changes.
-  await new Promise(resolve => setTimeout(resolve, 450));
-
+  await new Promise(resolve => setTimeout(resolve, 400));
   if (requestId !== __AniFlixAniSkipRequest) return;
 
   try {
     const url =
       `${CONFIG.APIS.ANISKIP}?` +
       `malId=${encodeURIComponent(malId)}` +
-      `episodeNumber=${encodeURIComponent(episodeNumber)}` +
-      `types[]=op&types[]=ed&episodeLength=0`;
+      `&episodeNumber=${encodeURIComponent(episodeNumber)}` +
+      `&types[]=op&types[]=ed&episodeLength=0`;
 
     const res = await fetch(url);
-
     if (!res.ok) return;
     const data = await res.json();
 
-    // Ignore a response belonging to an old episode.
     if (requestId !== __AniFlixAniSkipRequest) return;
 
     if (data.found && data.results?.length > 0) {
       STATE.activeAniSkipData = data.results;
-
       const opResult = data.results.find(x => x.skipType === 'op');
 
       if (opResult && skipBtn && skipLabel) {
         skipLabel.innerText =
           `Skip Opening (${Math.round(opResult.interval.startTime)}s - ` +
           `${Math.round(opResult.interval.endTime)}s)`;
-
         skipBtn.style.display = 'inline-flex';
       }
     }
@@ -813,18 +803,30 @@ window.triggerAniSkipJump = function() {
 };
 
 // ============================================================================
-// 8. MULTI-SEASON QUERY & REAL-TIME EPISODE HYDRATION ENGINE
+// 10. MULTI-SEASON QUERY & REAL-TIME EPISODE HYDRATION ENGINE
 // ============================================================================
 window.resolveTMDBId = async function(rawTitle, isMovie = false) {
   if (STATE.isNetflixMode && STATE.currentAnime?.tmdbId) {
     STATE.currentTMDBId = STATE.currentAnime.tmdbId;
     return;
   }
+  if (!rawTitle) {
+    STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
+    return;
+  }
+
+  const cacheKey = `${isMovie ? 'movie' : 'tv'}_${rawTitle}`;
+  if (tmdbResolvedIdCache.has(cacheKey)) {
+    STATE.currentTMDBId = tmdbResolvedIdCache.get(cacheKey);
+    return;
+  }
+
   try {
     const sanitized = encodeURIComponent(rawTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim());
     const searchType = isMovie ? 'movie' : 'tv';
     const endpoint = `${CONFIG.APIS.TMDB_BASE}/search/${searchType}?query=${sanitized}`;
     const res = await fetch(endpoint);
+    if (!res.ok) throw new Error('Search failed');
     const data = await res.json();
     if (data.results?.length > 0) {
       STATE.currentTMDBId = data.results[0].id;
@@ -834,6 +836,8 @@ window.resolveTMDBId = async function(rawTitle, isMovie = false) {
   } catch (e) {
     STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
   }
+
+  tmdbResolvedIdCache.set(cacheKey, STATE.currentTMDBId);
 };
 
 window.fetchSeriesSeasons = async function(tmdbId) {
@@ -919,13 +923,24 @@ window.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
 };
 
 window.renderEpisodeGrid = async function() {
-  const isMovie = STATE.currentAnime?.format === 'MOVIE';
   const container = document.getElementById('episodesMasterSection');
   const epList = document.getElementById('epList');
   const seasonSelect = document.getElementById('seasonSelect');
   const episodeRangeSelect = document.getElementById('episodeRangeSelect');
   const episodesTotalPill = document.getElementById('episodesTotalPill');
 
+  if (!STATE.currentAnime || !STATE.currentAnime.id) {
+    if (epList) {
+      epList.innerHTML = `
+        <div style="text-align:center; padding: 24px; color: var(--text-muted);">
+          <i class="fas fa-circle-exclamation" style="font-size:24px; margin-bottom:8px; color:var(--accent-red);"></i>
+          <p>Please select an anime or movie to load episode listings.</p>
+        </div>`;
+    }
+    return;
+  }
+
+  const isMovie = STATE.currentAnime.format === 'MOVIE';
   if (isMovie) {
     if (container) container.style.display = 'none';
     return;
@@ -973,9 +988,9 @@ window.renderEpisodeGrid = async function() {
     }
   }
 
-  const posterFallback = STATE.currentAnime?.bannerImage ||
-    STATE.currentAnime?.coverImage?.extraLarge ||
-    STATE.currentAnime?.coverImage?.large || '';
+  const posterFallback = STATE.currentAnime.bannerImage ||
+    STATE.currentAnime.coverImage?.extraLarge ||
+    STATE.currentAnime.coverImage?.large || '';
 
   let richEpisodes = null;
   if (STATE.currentTMDBId && STATE.currentTMDBId !== CONFIG.DEFAULT_TMDB_FALLBACK) {
@@ -1069,9 +1084,9 @@ window.nextEpisode = function() {
   }
 };
 
-// ===============================================================
-// 9. TMDB DISCOVER ENGINE & DUAL-UNIVERSE TRANSFORMER
-// ===============================================================
+// ============================================================================
+// 11. DUAL-UNIVERSE TMDB CATALOG ENGINE (NETFLIX & LIVE ACTION)
+// ============================================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
   const title = item.title || item.name || 'Untitled';
@@ -1250,9 +1265,9 @@ window.generateRowHTML = function(title, items, rowIndex) {
   `;
 };
 
-// ===============================================================
-// 10. UNIFIED CATEGORY FILTERING & TAB NAVIGATION PIPELINE
-// ===============================================================
+// ============================================================================
+// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER
+// ============================================================================
 window.applyQuickFilter = async function(filterKey, element) {
   const key = (filterKey || 'ALL').toUpperCase();
 
@@ -1403,9 +1418,9 @@ window.loadHindiDubbed = async function() {
   }
 };
 
-// ===============================================================
-// 11. DUAL-UNIVERSE TRANSFORMER (NETFLIX VS ANIME)
-// ===============================================================
+// ============================================================================
+// 13. DUAL-UNIVERSE TRANSFORMER (NETFLIX VS ANIME UNIVERSE)
+// ============================================================================
 window.toggleNetflixMode = async function(skipUrlSync = false) {
   STATE.isNetflixMode = !STATE.isNetflixMode;
 
@@ -1531,9 +1546,9 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// ===============================================================
-// 12. MODAL, DRAWER & WATCHLIST CONTROLLERS (SAFE ROUTER ACCESS)
-// ===============================================================
+// ============================================================================
+// 14. MODAL, DRAWER & WATCHLIST MANAGERS
+// ============================================================================
 window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
   const drawer = document.getElementById('mobileNavDrawer');
   const overlay = document.getElementById('mobileDrawerOverlay');
@@ -1670,9 +1685,9 @@ window.updateWatchlistBadge = function() {
   if (mobileCounter) mobileCounter.innerText = STATE.watchlist.length;
 };
 
-// ===============================================================
-// 13. POWER-USER KEYBOARD BINDINGS & SHORTCUTS
-// ===============================================================
+// ============================================================================
+// 15. KEYBOARD ACCESSIBILITY & SHORTCUT ENGINE
+// ============================================================================
 function initKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
     if (['input', 'textarea', 'select'].includes(document.activeElement.tagName.toLowerCase())) return;
@@ -1733,9 +1748,9 @@ window.toggleTheaterMode = function() {
   }
 };
 
-// ===============================================================
-// 14. RUNTIME HELPERS, QUIET CATCHERS & TITLE SEASON PARSER
-// ===============================================================
+// ============================================================================
+// 16. RUNTIME UTILITIES & TELEMETRY LISTENERS
+// ============================================================================
 window.showToast = function(msg) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
@@ -1794,11 +1809,13 @@ window.addEventListener('message', (e) => {
   }
 });
 
+// ============================================================================
+// 17. BOOTSTRAP ORCHESTRATOR
+// ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
   initKeyboardShortcuts();
 
-  // Safely check PWA standalone mode
   try {
     const isPwaInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const pill = document.getElementById('appStatusPill');
