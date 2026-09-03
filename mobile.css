@@ -1,8 +1,8 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
    File: mobile.css
-   Version: 3.1.0
-   Fixes: Hero Blend Masking, Button Shrinkage, Card Proportions & Chip Scroll
+   Version: 3.0.0
+   Architecture: Ultra-Sleek Micro Dock, Optimized Card Density, Zero-Jitter Touch
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -14,7 +14,6 @@
     width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
-    background-color: #040406;
     -webkit-overflow-scrolling: touch;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: auto;
@@ -28,10 +27,12 @@
   }
 
   body {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+    /* Generous clearance so the bottom row of anime cards never gets covered */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Accessible touch targets with manipulation behavior */
   button, a, input, select, .chip, .server-btn, .dock-btn {
     touch-action: manipulation;
   }
@@ -41,40 +42,34 @@
   }
 
   /* --------------------------------------------------------------------------
-     2. MOBILE HEADER & GLASSMORPHIC TOP BAR
+     2. MOBILE HEADER & COMPACT BRANDING
      -------------------------------------------------------------------------- */
   .header {
-    height: 54px;
+    height: 56px;
     padding: 0 12px;
     top: 0;
-    left: 0;
-    right: 0;
-    background: rgba(4, 4, 6, 0.75) !important;
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     z-index: 1500;
   }
 
   .header-left {
     gap: 8px;
-    align-items: center;
   }
 
   .brand-name {
     font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
   }
 
   .brand-icon-wrapper {
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
   }
 
   .brand-icon-wrapper i {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .brand-badge {
@@ -108,24 +103,17 @@
 
   .header-right {
     gap: 6px;
-    align-items: center;
   }
 
   .icon-btn {
-    width: 34px;
-    height: 34px;
+    width: 35px;
+    height: 35px;
     font-size: 13px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .search-wrapper.open {
     position: fixed;
-    top: 54px;
+    top: 56px;
     left: 0;
     right: 0;
     width: 100vw;
@@ -133,400 +121,17 @@
     padding: 10px 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
     z-index: 1600;
     animation: mobileSearchDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   @keyframes mobileSearchDown {
-    from { opacity: 0; transform: translateY(-8px); }
+    from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   /* --------------------------------------------------------------------------
-     3. HERO BILLBOARD & ADVANCED CANVAS SMUDGE MASK
-     -------------------------------------------------------------------------- */
-  .hero {
-    position: relative;
-    min-height: 480px;
-    height: 70vh;
-    max-height: 560px;
-    padding: 0 14px 18px 14px;
-    display: flex;
-    align-items: flex-end;
-    overflow: hidden;
-    background-size: cover;
-    background-position: center top;
-  }
-
-  /* Multi-stop alpha blending gradient that smoothly smudges into the dark background */
-  .hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(4, 4, 6, 0.2) 0%,
-      rgba(4, 4, 6, 0.4) 35%,
-      rgba(4, 4, 6, 0.75) 65%,
-      rgba(4, 4, 6, 0.95) 88%,
-      #040406 100%
-    );
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 2;
-    margin-top: 0;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .hero-network-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    background: rgba(255, 8, 68, 0.2);
-    border: 1px solid rgba(255, 8, 68, 0.4);
-    color: #ff3366;
-  }
-
-  .hero-title {
-    font-size: clamp(1.4rem, 5.5vw, 1.85rem);
-    font-weight: 900;
-    line-height: 1.15;
-    margin-bottom: 8px;
-    color: #fff;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
-  }
-
-  .hero-tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-
-  .tag-match, .tag-box, .tag-hindi {
-    font-size: 9.5px;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .tag-match {
-    color: #00f5a0;
-    background: rgba(0, 245, 160, 0.15);
-  }
-
-  .tag-hindi {
-    color: #ff0844;
-    background: rgba(255, 8, 68, 0.15);
-  }
-
-  .hero-desc {
-    font-size: 12px;
-    line-height: 1.45;
-    color: rgba(255, 255, 255, 0.75);
-    margin-bottom: 14px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* HERO ACTION BUTTONS FIX (Prevents shrinking / squishing) */
-  .hero-btns {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    flex-wrap: nowrap;
-  }
-
-  .hero-btns .btn-primary,
-  .hero-btns .btn-play {
-    flex: 1 1 auto;
-    min-width: 110px;
-    height: 40px;
-    padding: 0 14px;
-    font-size: 13px;
-    font-weight: 700;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: #fff;
-    color: #000;
-    white-space: nowrap;
-    border: none;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-  }
-
-  .hero-btns .btn-secondary,
-  .hero-btns .btn-details {
-    flex: 1 1 auto;
-    min-width: 100px;
-    height: 40px;
-    padding: 0 12px;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #fff;
-    white-space: nowrap;
-  }
-
-  .hero-btns .btn-icon-round,
-  .hero-btns .btn-action-icon {
-    flex: 0 0 40px;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: #fff;
-  }
-
-  /* --------------------------------------------------------------------------
-     4. HORIZONTAL FILTER CHIPS RAIL (FIX HORIZONTAL OVERFLOW & COMPRESSION)
-     -------------------------------------------------------------------------- */
-  .quick-chips-rail {
-    position: relative;
-    z-index: 10;
-    padding: 0 12px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .chips-container,
-  #filterChips {
-    display: flex !important;
-    align-items: center;
-    gap: 8px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    white-space: nowrap !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    padding: 4px 2px 8px 2px !important;
-  }
-
-  .chips-container::-webkit-scrollbar,
-  #filterChips::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .chip {
-    flex: 0 0 auto !important;
-    height: 32px;
-    padding: 0 14px !important;
-    font-size: 11.5px !important;
-    font-weight: 600;
-    border-radius: 16px !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-  }
-
-  .chip.active,
-  .chip:hover {
-    background: #ff0844 !important;
-    border-color: #ff0844 !important;
-    color: #fff !important;
-    box-shadow: 0 3px 12px rgba(255, 8, 68, 0.4);
-  }
-
-  .chip:active {
-    transform: scale(0.95);
-  }
-
-  /* --------------------------------------------------------------------------
-     5. COMPACT ANIME & MOVIE CARDS (MINIMIZED DENSITY & ASPECT FIX)
-     -------------------------------------------------------------------------- */
-  .content-rows {
-    padding-top: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding-bottom: 24px;
-  }
-
-  .row-section {
-    margin: 8px 0 !important;
-    padding: 0 12px !important;
-  }
-
-  .row-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.2px;
-    margin-bottom: 8px !important;
-    color: #fff;
-  }
-
-  .carousel-track {
-    display: flex !important;
-    gap: 8px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 2px 2px 10px 2px !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-  }
-
-  .carousel-track::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  /* Miniaturized High-Density Mobile Card Structure */
-  .anime-card,
-  .card.ui-card-locked {
-    position: relative !important;
-    flex: 0 0 102px !important;
-    width: 102px !important;
-    min-width: 102px !important;
-    max-width: 102px !important;
-    height: 152px !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    background: #0f1016 !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
-    transform: translateZ(0);
-    flex-shrink: 0 !important;
-  }
-
-  .anime-card img,
-  .anime-card .card-img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 8px !important;
-    display: block;
-  }
-
-  /* Miniaturized Floating Type/Rating Badges */
-  .card-badge,
-  .card-badge-top {
-    position: absolute;
-    top: 4px !important;
-    right: 4px !important;
-    font-size: 7.5px !important;
-    font-weight: 800 !important;
-    padding: 1.5px 4px !important;
-    border-radius: 4px !important;
-    background: rgba(0, 0, 0, 0.75) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    color: #fff !important;
-    z-index: 3;
-    line-height: 1;
-  }
-
-  .card-badge-hindi {
-    position: absolute;
-    top: 4px !important;
-    left: 4px !important;
-    font-size: 7px !important;
-    font-weight: 800 !important;
-    padding: 1.5px 4px !important;
-    border-radius: 4px !important;
-    background: rgba(255, 8, 68, 0.85) !important;
-    color: #fff !important;
-    z-index: 3;
-    line-height: 1;
-  }
-
-  /* Bottom Poster Vignette Gradient */
-  .card-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 24px 6px 6px 6px !important;
-    background: linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0) 40%,
-      rgba(4, 4, 6, 0.75) 75%,
-      rgba(4, 4, 6, 0.98) 100%
-    ) !important;
-    border-radius: 0 0 8px 8px !important;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  .card-title {
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
-    color: #fff !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
-    margin: 0 !important;
-  }
-
-  .card-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 8.5px !important;
-    color: rgba(255, 255, 255, 0.65) !important;
-    margin-top: 2px !important;
-  }
-
-  .card-score {
-    color: #00f5a0 !important;
-    font-weight: 700;
-  }
-
-  .top10-rank {
-    font-size: 2.2rem !important;
-    left: -2px !important;
-    bottom: 2px !important;
-    line-height: 1 !important;
-    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.9) !important;
-  }
-
-  /* --------------------------------------------------------------------------
-     6. ULTRA-SLEEK MICRO DOCK
+     3. ULTRA-SLEEK COMPACT MICRO DOCK (SOLVES CARD OVERLAP & BLOCKED TITLES)
      -------------------------------------------------------------------------- */
   .floating-quick-dock {
     position: fixed;
@@ -534,28 +139,35 @@
     left: 50%;
     transform: translate3d(-50%, 0, 0);
     width: auto !important;
-    min-width: 170px;
-    max-width: 240px;
-    height: 38px;
-    background: rgba(10, 10, 16, 0.8) !important;
+    min-width: 180px;
+    max-width: 250px;
+    height: 40px;
+    background: rgba(10, 10, 16, 0.72) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
     border-radius: 9999px !important;
-    padding: 3px 6px !important;
+    padding: 3px 8px !important;
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
     gap: 8px !important;
     z-index: 1200;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+    animation: microDockFloatIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    pointer-events: auto;
+  }
+
+  @keyframes microDockFloatIn {
+    from { opacity: 0; transform: translate3d(-50%, 20px, 0) scale(0.92); }
+    to { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
   }
 
   .floating-quick-dock .dock-btn {
     background: transparent !important;
     border: none !important;
-    width: 30px !important;
-    height: 30px !important;
+    width: 32px !important;
+    height: 32px !important;
     border-radius: 50% !important;
     display: flex !important;
     align-items: center !important;
@@ -563,17 +175,22 @@
     padding: 0 !important;
     margin: 0 !important;
     cursor: pointer;
-    color: rgba(255, 255, 255, 0.8);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s ease;
     flex-shrink: 0;
   }
 
   .floating-quick-dock .dock-btn i,
   .floating-quick-dock .dock-btn svg {
-    font-size: 13px !important;
+    font-size: 13.5px !important;
+    transition: transform 0.2s ease;
+  }
+
+  .floating-quick-dock .dock-btn:hover i {
+    transform: scale(1.15);
   }
 
   .floating-quick-dock .dock-btn:active {
-    transform: scale(0.85) !important;
+    transform: scale(0.82) !important;
     background: rgba(255, 255, 255, 0.12) !important;
   }
 
@@ -582,7 +199,209 @@
   }
 
   /* --------------------------------------------------------------------------
-     7. STREAMING MODAL & ACTION SHEET
+     4. COMPACT & BALANCED CARDS FOR ANIME, MOVIES & SERIES
+     -------------------------------------------------------------------------- */
+  .content-rows {
+    padding-top: 14px;
+    gap: 20px;
+    padding-bottom: 24px;
+  }
+
+  .row-section {
+    margin: 16px 0 !important;
+    padding: 0 12px !important;
+  }
+
+  .row-header {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    margin-bottom: 8px !important;
+    gap: 6px;
+  }
+
+  .carousel-track {
+    gap: 10px !important;
+    padding: 4px 2px 10px 2px !important;
+  }
+
+  /* Optimized card dimensions: smaller footprint, crisp artwork, zero clipping */
+  .anime-card,
+  .card.ui-card-locked {
+    flex: 0 0 118px !important;
+    min-width: 118px !important;
+    max-width: 118px !important;
+    height: 178px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7) !important;
+  }
+
+  .anime-card img {
+    border-radius: 10px !important;
+  }
+
+  /* Scaled down in-card badge */
+  .card-badge,
+  .card-badge-top {
+    top: 5px !important;
+    right: 5px !important;
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .card-badge-hindi {
+    top: 5px !important;
+    left: 5px !important;
+    font-size: 7.5px !important;
+    padding: 2px 5px !important;
+  }
+
+  /* Proportional bottom vignette overlay */
+  .card-overlay {
+    padding: 28px 8px 7px 8px !important;
+    border-radius: 0 0 10px 10px !important;
+  }
+
+  .card-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.22 !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
+  }
+
+  .card-meta {
+    font-size: 9.5px !important;
+    margin-top: 3px !important;
+    gap: 6px !important;
+  }
+
+  .card-score i {
+    font-size: 8px !important;
+  }
+
+  /* Top 10 rank styling adjustment */
+  .top10-rank {
+    font-size: 2.8rem !important;
+    left: 0px !important;
+    bottom: 6px !important;
+    -webkit-text-stroke: 1.2px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     5. HERO BILLBOARD & CHIPS FOR MOBILE
+     -------------------------------------------------------------------------- */
+  .hero {
+    min-height: 400px;
+    height: 68vh;
+    padding: 0 14px;
+    align-items: flex-end;
+    padding-bottom: 20px;
+  }
+
+  .hero-content {
+    margin-top: 0;
+    max-width: 100%;
+  }
+
+  .hero-network-badge {
+    font-size: 9.5px;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-size: clamp(1.6rem, 6.5vw, 2.2rem);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .hero-tags {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .tag-match, .tag-box, .tag-hindi {
+    font-size: 10px;
+    padding: 2px 7px;
+  }
+
+  .hero-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    -webkit-line-clamp: 2;
+  }
+
+  .hero-btns {
+    gap: 7px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .btn-icon-round {
+    width: 36px;
+    height: 36px;
+  }
+
+  .quick-chips-rail {
+    padding: 0 12px;
+    margin-top: -18px;
+  }
+
+  .chips-container {
+    gap: 6px;
+    padding: 6px 0;
+  }
+
+  .chip {
+    padding: 6px 12px;
+    font-size: 11.5px;
+    border-radius: 20px;
+  }
+
+  /* --------------------------------------------------------------------------
+     6. MOBILE SIDE DRAWER
+     -------------------------------------------------------------------------- */
+  .mobile-nav-drawer {
+    width: 84vw;
+    max-width: 310px;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    box-shadow: 20px 0 60px rgba(0, 0, 0, 0.95);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 12px;
+  }
+
+  .mobile-nav-link {
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 12px;
+  }
+
+  .mobile-nav-link:active {
+    transform: scale(0.97);
+  }
+
+  /* --------------------------------------------------------------------------
+     7. UNIFIED MOBILE STREAMING MODAL & SHEET
      -------------------------------------------------------------------------- */
   .modal-container.active {
     padding: 0;
@@ -596,6 +415,7 @@
     min-height: 100dvh;
     height: auto !important;
     max-width: 100vw !important;
+    max-height: none !important;
     border-radius: 0;
     border: none;
     display: flex;
@@ -604,11 +424,19 @@
     padding-top: env(safe-area-inset-top, 0px);
     animation: mobileSheetSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     z-index: 1400;
+    overflow: visible !important;
   }
 
   @keyframes mobileSheetSlideUp {
     from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-nav-strip {
+    padding: 10px 14px;
+    background: rgba(10, 11, 16, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 1401;
   }
 
   .modal-player-wrap {
@@ -619,11 +447,89 @@
     position: sticky !important;
     top: 0;
     z-index: 50;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95);
   }
 
   .modal-body {
     padding: 12px;
+    overflow-y: visible !important;
+    height: auto !important;
+    flex: none !important;
     background: #07070a;
+  }
+
+  .player-action-strip {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    background: rgba(12, 13, 20, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .player-action-left {
+    display: none;
+  }
+
+  .player-action-right {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .player-action-right::-webkit-scrollbar {
+    display: none;
+  }
+
+  .modal-pill-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    flex: 0 0 auto;
+    border-radius: 9999px;
+  }
+
+  .modal-pill-btn:active {
+    transform: scale(0.94);
+  }
+
+  .modal-tabs {
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    white-space: nowrap;
+  }
+
+  .modal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    padding: 7px 13px;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* --------------------------------------------------------------------------
+     8. SERVER SCROLLER & EPISODE BROWSER
+     -------------------------------------------------------------------------- */
+  .server-controls {
+    padding: 10px 12px;
+    background: rgba(10, 11, 16, 0.9);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .server-pills-scroll,
@@ -632,9 +538,11 @@
     gap: 6px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 4px 0;
+    scroll-behavior: smooth;
+    padding: 2px 2px 6px 2px;
     white-space: nowrap;
-    scrollbar-width: none;
+    width: 100%;
+    scroll-snap-type: x proximity;
   }
 
   .server-pills-scroll::-webkit-scrollbar,
@@ -644,13 +552,106 @@
 
   .server-btn,
   .server-node-btn {
+    scroll-snap-align: start;
     flex: 0 0 auto;
     padding: 6px 12px;
-    font-size: 11px;
+    font-size: 11.5px;
     border-radius: 9999px;
   }
 
-  /* Universal active feedback */
+  .ep-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .ep-card {
+    padding: 8px;
+    border-radius: 12px;
+    gap: 10px;
+  }
+
+  .ep-thumb-box {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .ep-title {
+    font-size: 12.5px;
+  }
+
+  .ep-overview {
+    display: none;
+  }
+
+ /* --------------------------------------------------------------------------
+     9. TOAST & OVERLAY ADJUSTMENTS (ELEVATED HUD MATRIX & KINETIC NOTIFICATIONS)
+     -------------------------------------------------------------------------- */
+  .toast-container {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate3d(-50%, 0, 0) !important;
+    width: 90% !important;
+    max-width: 360px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+    z-index: 99999 !important; /* Elevates above modal-overlay & modal-container (2000-2001) */
+    pointer-events: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .toast {
+    width: 100% !important;
+    padding: 12px 18px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    border-radius: 14px !important;
+    background: rgba(14, 15, 24, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 8, 68, 0.25) !important;
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    color: #fff !important;
+    will-change: transform, opacity !important;
+    transform: translate3d(0, 24px, 0) scale(0.92) !important;
+    opacity: 0 !important;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease !important;
+  }
+
+  .toast.visible {
+    transform: translate3d(0, 0, 0) scale(1) !important;
+    opacity: 1 !important;
+  }
+
+  .toast i,
+  .toast svg {
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .toast-info i { color: var(--modal-accent-cyan, #00f2fe) !important; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.6)) !important; }
+  .toast-success i { color: var(--modal-accent-emerald, #00f5a0) !important; filter: drop-shadow(0 0 6px rgba(0, 245, 160, 0.6)) !important; }
+  .toast-error i { color: var(--modal-accent-red, #ff0844) !important; filter: drop-shadow(0 0 6px rgba(255, 8, 68, 0.6)) !important; }
+
+  .watchlist-drawer,
+  .p2p-chat-sidebar {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    z-index: 100000 !important; /* Keeps drawers accessible over any modal layer */
+  }
+
   button:active, 
   .anime-card:active {
     transform: scale(0.96) !important;
@@ -658,6 +659,7 @@
   }
 }
 
+/* Desktop viewport fallback */
 @media (min-width: 769px) {
   #filterChips { 
     overflow: visible; 
