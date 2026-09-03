@@ -1,41 +1,70 @@
 /* ==========================================================================
-   ADVANCED CINEMATIC MODAL SYSTEM (components-modal.css)
-   Includes: Video Viewport, Kinetic Server Switcher, Episode Browser,
-   Glass Tabs, Dynamic Metadata Matrix, Watchlist Drawer, & Shortcut Overlays.
+   ANIFLIX ULTRA — ADVANCED CINEMATIC MODAL SYSTEM (ENTERPRISE EDITION)
+   File: components-modal.css
+   Version: 30.4.0 High-Performance Quantum Glassmorphism Matrix
+   Architecture: GPU Hardware Composited layers, Sticky Video Lock,
+                 Anti-Collision Horizontal Scrollers, Sub-pixel Animation
    ========================================================================== */
 
+/* ==========================================================================
+   01. DESIGN TOKENS, KINETIC CURVES & DYNAMIC ROOTS
+   ========================================================================== */
 :root {
-  --modal-pad: clamp(14px, 2.5vw, 28px);
-  --modal-bg-surface: #0a0a0f;
-  --modal-bg-elevated: #13131c;
+  --modal-pad: clamp(14px, 2.5vw, 32px);
+  --modal-bg-base: #040407;
+  --modal-bg-surface: #0a0a10;
+  --modal-bg-elevated: #12121c;
+  --modal-bg-card: #161624;
+  --modal-bg-glass: rgba(14, 14, 24, 0.78);
+  --modal-bg-glass-heavy: rgba(10, 10, 18, 0.94);
+
   --modal-border-subtle: rgba(255, 255, 255, 0.08);
-  --modal-border-glow: rgba(255, 255, 255, 0.2);
+  --modal-border-medium: rgba(255, 255, 255, 0.14);
+  --modal-border-glow: rgba(255, 255, 255, 0.24);
+  --modal-border-focus: rgba(0, 242, 254, 0.6);
+
+  /* Quantum Chromatic Accents */
   --modal-accent-red: #ff0844;
-  --modal-accent-glow: rgba(255, 8, 68, 0.45);
+  --modal-accent-red-hover: #ff2a5f;
+  --modal-accent-glow: rgba(255, 8, 68, 0.55);
   --modal-accent-cyan: #00f2fe;
+  --modal-accent-cyan-hover: #4facfe;
+  --modal-accent-cyan-glow: rgba(0, 242, 254, 0.45);
   --modal-accent-emerald: #00f5a0;
+  --modal-accent-emerald-glow: rgba(0, 245, 160, 0.45);
   --modal-accent-gold: #ffb703;
+  --modal-accent-gold-glow: rgba(255, 183, 3, 0.45);
+  --modal-accent-purple: #9d4edd;
+  --modal-accent-purple-glow: rgba(157, 78, 221, 0.45);
+
+  /* Contrast Typography Structure */
   --modal-text-main: #ffffff;
-  --modal-text-secondary: #a3a3c2;
-  --modal-text-muted: #5e5e7a;
+  --modal-text-secondary: #c4c7de;
+  --modal-text-muted: #6e7290;
+
+  /* Spring Physics & Fluid Transitions */
   --modal-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --modal-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --modal-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --modal-spring-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --modal-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --modal-font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --modal-font-mono: 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* --------------------------------------------------------------------------
-   1. VIEWPORT BACKDROP & MODAL CORE
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   02. VIEWPORT BACKDROP & ISOLATION ENGINE
+   ========================================================================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 50% 30%, rgba(14, 14, 24, 0.88) 0%, rgba(4, 4, 6, 0.98) 100%);
+  background: radial-gradient(circle at 50% 20%, rgba(20, 20, 38, 0.82) 0%, rgba(4, 4, 7, 0.98) 100%);
   z-index: 2000;
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.35s var(--modal-ease), visibility 0.35s ease;
+  transition: opacity 0.38s var(--modal-ease), visibility 0.38s ease;
   will-change: opacity, visibility;
 }
 
@@ -55,50 +84,66 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: clamp(0px, 3vw, 36px) clamp(0px, 2vw, 20px);
+  padding: clamp(0px, 3.5vw, 42px) clamp(0px, 2vw, 24px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(24px) scale(0.98);
-  transition: opacity 0.35s var(--modal-ease), transform 0.35s var(--modal-ease), visibility 0.35s ease;
+  transform: translate3d(0, 30px, 0) scale(0.97);
+  transition: opacity 0.38s var(--modal-ease), transform 0.38s var(--modal-spring-snappy), visibility 0.38s ease;
   scrollbar-gutter: stable;
+  overscroll-behavior-y: contain;
 }
 
 .modal-container.active {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translateY(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 .modal-dialog {
   background: var(--modal-bg-surface);
   width: 100%;
-  max-width: 1160px;
-  border-radius: clamp(14px, 2.4vw, 24px);
+  max-width: 1180px;
+  border-radius: clamp(16px, 2.4vw, 26px);
   overflow: hidden;
   position: relative;
-  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.85), 0 0 1px 1px var(--modal-border-subtle);
-  margin-bottom: clamp(16px, 4vw, 60px);
+  box-shadow: 0 40px 100px -15px rgba(0, 0, 0, 0.94), 0 0 1px 1px var(--modal-border-subtle);
+  margin-bottom: clamp(20px, 4vw, 64px);
   height: fit-content;
   border: 1px solid var(--modal-border-subtle);
   display: flex;
   flex-direction: column;
+  transform: translateZ(0);
 }
 
-/* --------------------------------------------------------------------------
-   2. TOP NAVIGATION DOCKED STRIP
-   -------------------------------------------------------------------------- */
+/* Ambient Top Accent Light Line */
+.modal-dialog::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--modal-accent-red) 30%, var(--modal-accent-cyan) 70%, transparent 100%);
+  z-index: 35;
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   03. TOP NAVIGATION BAR & DOCKED CONTROL STRIP
+   ========================================================================== */
 .modal-nav-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px var(--modal-pad);
-  background: rgba(10, 10, 15, 0.94);
+  padding: 14px var(--modal-pad);
+  background: rgba(10, 10, 16, 0.9);
   border-bottom: 1px solid var(--modal-border-subtle);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 25;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 30;
 }
 
 .modal-nav-left {
@@ -106,6 +151,7 @@
   align-items: center;
   gap: 12px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .modal-brand-tag {
@@ -113,24 +159,32 @@
   font-weight: 900;
   text-transform: uppercase;
   color: #fff;
-  background: linear-gradient(135deg, var(--modal-accent-red), #990024);
-  padding: 4px 10px;
-  border-radius: 6px;
-  letter-spacing: 0.8px;
-  display: flex;
+  background: linear-gradient(135deg, var(--modal-accent-red) 0%, #a70022 100%);
+  padding: 5px 12px;
+  border-radius: 8px;
+  letter-spacing: 1px;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 0 16px var(--modal-accent-glow);
+  box-shadow: 0 0 18px var(--modal-accent-glow);
   flex-shrink: 0;
+  user-select: none;
+}
+
+.modal-brand-tag i,
+.modal-brand-tag svg {
+  font-size: 11px;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
 }
 
 .modal-now-playing-text {
-  font-size: clamp(12px, 1.2vw, 14px);
+  font-size: clamp(12.5px, 1.2vw, 14.5px);
   font-weight: 700;
   color: var(--modal-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px;
 }
 
 .btn-close-modal {
@@ -147,38 +201,49 @@
   cursor: pointer;
   outline: none;
   flex-shrink: 0;
-  transition: all 0.25s ease;
+  transition: transform 0.28s var(--modal-spring), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .btn-close-modal:hover,
 .btn-close-modal:focus-visible {
   background: var(--modal-accent-red);
   border-color: var(--modal-accent-red);
-  transform: rotate(90deg) scale(1.05);
-  box-shadow: 0 0 16px var(--modal-accent-glow);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 0 22px var(--modal-accent-glow);
 }
 
-/* --------------------------------------------------------------------------
-   3. VIDEO PLAYER ENGINE & CINEMATIC COVER VIEWPORT + ACTION DECK
-   -------------------------------------------------------------------------- */
+.btn-close-modal:active {
+  transform: rotate(90deg) scale(0.92);
+}
+
+/* ==========================================================================
+   04. VIDEO VIEWPORT, HERO AMBIENT COVER & ACTION DECK
+   ========================================================================== */
 .modal-player-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #020204;
+  background: #000;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  contain: layout paint;
 }
 
-.modal-player-wrap iframe {
+.modal-player-wrap iframe,
+.modal-player-wrap video,
+.modal-player-wrap #streamFrame,
+.modal-player-wrap #nativeStreamVideo {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  border: none;
+  border: 0;
   display: block;
-  z-index: 2;
+  z-index: 5;
+  background: #000;
 }
 
 .modal-backdrop-preview {
@@ -187,8 +252,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.78) saturate(1.1);
-  transition: transform 0.4s ease;
+  filter: brightness(0.68) saturate(1.18);
+  transition: transform 0.6s var(--modal-ease);
   z-index: 1;
 }
 
@@ -197,9 +262,9 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(10, 10, 15, 0.2) 0%,
-    rgba(10, 10, 15, 0.5) 50%,
-    rgba(10, 10, 15, 0.98) 100%
+    rgba(7, 7, 10, 0.1) 0%,
+    rgba(7, 7, 10, 0.45) 50%,
+    rgba(7, 7, 10, 0.98) 100%
   );
   z-index: 2;
   pointer-events: none;
@@ -208,25 +273,71 @@
 .player-cover-overlay {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 15;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: clamp(18px, 4vw, 42px);
-  pointer-events: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.82) 100%);
+  padding: clamp(16px, 4vw, 42px);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.player-cover-overlay:hover {
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.75) 100%);
 }
 
 .player-cover-overlay h2 {
-  font-size: clamp(1.5rem, 3.8vw, 2.6rem);
+  font-size: clamp(1.4rem, 3.6vw, 2.8rem);
   font-weight: 900;
   color: #fff;
   letter-spacing: -0.5px;
   line-height: 1.15;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95);
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95);
   margin: 0;
+  text-align: center;
+  max-width: 90%;
 }
 
-/* Player Primary Control Belt */
+.modal-big-play-btn {
+  width: clamp(66px, 8vw, 84px);
+  height: clamp(66px, 8vw, 84px);
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 35px rgba(255, 255, 255, 0.45);
+  margin-bottom: 14px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.32s var(--modal-spring), background 0.25s ease, box-shadow 0.3s ease;
+}
+
+.modal-big-play-btn i,
+.modal-big-play-btn svg {
+  color: #000;
+  font-size: clamp(22px, 3vw, 28px);
+  margin-left: 4px;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.player-cover-overlay:hover .modal-big-play-btn {
+  transform: scale(1.14);
+  background: var(--modal-accent-red);
+  box-shadow: 0 0 48px var(--modal-accent-glow), 0 0 22px rgba(255, 8, 68, 0.8);
+}
+
+.player-cover-overlay:hover .modal-big-play-btn i,
+.player-cover-overlay:hover .modal-big-play-btn svg {
+  color: #fff;
+  transform: scale(1.08);
+}
+
+/* ==========================================================================
+   05. KINETIC PLAYER CONTROL BELT & ACTION DECK
+   ========================================================================== */
 .player-action-strip {
   display: flex;
   align-items: center;
@@ -236,7 +347,7 @@
   background: linear-gradient(180deg, rgba(16, 16, 24, 0.98) 0%, rgba(10, 10, 16, 0.99) 100%);
   border-bottom: 1px solid var(--modal-border-subtle);
   position: relative;
-  z-index: 10;
+  z-index: 20;
 }
 
 .player-action-left {
@@ -254,9 +365,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px;
 }
 
-/* Horizontal Scrollable Sleek Deck for Features */
+/* Horizontal Scrollable Action Bar */
 .player-action-right {
   display: flex;
   align-items: center;
@@ -275,10 +387,11 @@
   display: none;
 }
 
+/* Sleek Glass Pill Buttons */
 .modal-pill-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #c3c7db;
+  color: var(--modal-text-secondary);
   padding: 8px 16px;
   border-radius: 9999px;
   font-size: clamp(11.5px, 1.05vw, 13px);
@@ -291,9 +404,9 @@
   flex-shrink: 0;
   scroll-snap-align: start;
   white-space: nowrap;
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.22s var(--modal-spring), background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   user-select: none;
   font-family: inherit;
   outline: none;
@@ -311,52 +424,55 @@
   transform: translateY(0) scale(0.96);
 }
 
-/* Feature Icon Color Accents */
-.modal-pill-btn i, 
+.modal-pill-btn i,
 .modal-pill-btn svg {
   font-size: 13px;
   transition: transform 0.2s ease;
 }
 
-.modal-pill-btn:hover i {
-  transform: scale(1.12);
+.modal-pill-btn:hover i,
+.modal-pill-btn:hover svg {
+  transform: scale(1.15);
 }
 
-.modal-pill-btn[onclick*="MiniPlayer"] i { color: var(--modal-accent-cyan, #00f2fe); filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.5)); }
-.modal-pill-btn[onclick*="PartyChat"] i { color: var(--modal-accent-emerald, #00f5a0); filter: drop-shadow(0 0 8px rgba(0, 245, 160, 0.5)); }
-.modal-pill-btn[onclick*="Volume"] i { color: var(--modal-accent-gold, #ffb703); filter: drop-shadow(0 0 8px rgba(255, 183, 3, 0.5)); }
-.modal-pill-btn[onclick*="Theater"] i { color: #c77dff; filter: drop-shadow(0 0 8px rgba(199, 125, 255, 0.5)); }
-.modal-pill-btn[onclick*="Dim"] i { color: #e9ecef; }
-.modal-pill-btn[onclick*="share"] i { color: #48cae4; }
-.modal-pill-btn[onclick*="Watchlist"] i { color: var(--modal-accent-emerald, #00f5a0); }
+/* Feature Chromatic Highlights */
+.modal-pill-btn[onclick*="MiniPlayer"] i, .modal-pill-btn[data-action*="mini"] i { color: var(--modal-accent-cyan); filter: drop-shadow(0 0 8px var(--modal-accent-cyan-glow)); }
+.modal-pill-btn[onclick*="PartyChat"] i, .modal-pill-btn[data-action*="chat"] i { color: var(--modal-accent-emerald); filter: drop-shadow(0 0 8px var(--modal-accent-emerald-glow)); }
+.modal-pill-btn[onclick*="Volume"] i, .modal-pill-btn[data-action*="volume"] i { color: var(--modal-accent-gold); filter: drop-shadow(0 0 8px var(--modal-accent-gold-glow)); }
+.modal-pill-btn[onclick*="Theater"] i, .modal-pill-btn[data-action*="theater"] i { color: var(--modal-accent-purple); filter: drop-shadow(0 0 8px var(--modal-accent-purple-glow)); }
+.modal-pill-btn[onclick*="Dim"] i { color: #f1f2f6; }
+.modal-pill-btn[onclick*="share"] i { color: #38bdf8; }
+.modal-pill-btn[onclick*="Watchlist"] i { color: var(--modal-accent-emerald); }
 
 .modal-pill-btn.primary-action {
   background: var(--modal-accent-red);
   border-color: var(--modal-accent-red);
+  color: #fff;
   box-shadow: 0 0 20px var(--modal-accent-glow);
 }
 
 .modal-pill-btn.primary-action:hover {
-  background: #ff2458;
-  border-color: #ff2458;
+  background: var(--modal-accent-red-hover);
+  border-color: var(--modal-accent-red-hover);
 }
 
 .modal-pill-btn.next-ep-btn {
-  background: linear-gradient(135deg, rgba(255, 8, 68, 0.3), rgba(0, 242, 254, 0.2));
-  border-color: rgba(255, 8, 68, 0.5);
+  background: linear-gradient(135deg, rgba(255, 8, 68, 0.28), rgba(0, 242, 254, 0.18));
+  border-color: rgba(255, 8, 68, 0.45);
   color: #fff;
   font-weight: 800;
-  box-shadow: 0 0 20px rgba(255, 8, 68, 0.3);
+  box-shadow: 0 0 18px rgba(255, 8, 68, 0.25);
 }
 
 .modal-pill-btn.next-ep-btn:hover {
-  background: linear-gradient(135deg, var(--modal-accent-red, #ff0844), #b7094c);
-  border-color: var(--modal-accent-red, #ff0844);
-  box-shadow: 0 0 25px var(--modal-accent-glow);
+  background: linear-gradient(135deg, var(--modal-accent-red), #990024);
+  border-color: var(--modal-accent-red);
+  box-shadow: 0 0 26px var(--modal-accent-glow);
 }
-/* --------------------------------------------------------------------------
-   4. STREAM ROUTING & SERVER CONTROL ENGINE
-   -------------------------------------------------------------------------- */
+
+/* ==========================================================================
+   06. STREAM ROUTING & SERVER CONTROL MATRIX (ANTI-OVERFLOW)
+   ========================================================================== */
 .server-controls {
   background: rgba(10, 11, 16, 0.98);
   padding: clamp(14px, 2vw, 18px) var(--modal-pad);
@@ -497,9 +613,9 @@
   letter-spacing: 0.5px;
 }
 
-/* --------------------------------------------------------------------------
-   5. MODAL TABS ENGINE & DATA SURFACES
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   07. HOLOGRAPHIC TABS & SURFACE ENGINE
+   ========================================================================== */
 .modal-body {
   padding: var(--modal-pad);
   display: flex;
@@ -576,37 +692,17 @@
 @keyframes tabFadeSlide {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translate3d(0, 10px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
-/* Mobile responsive adjustments for server buttons */
-@media (max-width: 768px) {
-  .server-pills-scroll,
-  #serverButtonsContainer,
-  #serverSelectionContainer {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 6px;
-    scroll-snap-type: x proximity;
-  }
-
-  .server-btn,
-  .server-node-btn {
-    flex: 0 0 auto;
-    min-width: 140px;
-    max-width: 200px;
-    scroll-snap-align: start;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   6. METADATA MATRIX & OVERVIEW TAB
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   08. METADATA MATRIX & OVERVIEW TAB
+   ========================================================================== */
 .overview-grid {
   display: grid;
   grid-template-columns: 2.2fr 1fr;
@@ -712,9 +808,9 @@
   font-weight: 700;
 }
 
-/* --------------------------------------------------------------------------
-   7. INTERACTIVE EPISODE BROWSER (KINETIC GLOW & REFINED CARD DESIGN)
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   09. INTERACTIVE EPISODE BROWSER (KINETIC CARD SUITE)
+   ========================================================================== */
 .episodes-master-section {
   margin-top: clamp(24px, 3.5vw, 40px);
   border-top: 1px solid var(--modal-border-subtle);
@@ -816,13 +912,13 @@
   align-items: center;
   gap: clamp(12px, 2vw, 20px);
   padding: clamp(10px, 1.4vw, 14px);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+  transition: transform 0.25s var(--modal-spring), 
               background 0.25s ease, 
               border-color 0.25s ease, 
               box-shadow 0.25s ease;
@@ -832,15 +928,15 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(255, 8, 68, 0.06) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(255, 8, 68, 0.08) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
 
 .ep-card:hover {
-  background: rgba(255, 255, 255, 0.065);
+  background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.22);
-  transform: translateY(-2px) translateX(4px);
+  transform: translate3d(4px, -2px, 0);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
 }
 
@@ -849,7 +945,7 @@
 }
 
 .ep-card:active {
-  transform: translateY(0) scale(0.98);
+  transform: translate3d(0, 0, 0) scale(0.98);
 }
 
 .ep-card.playing {
@@ -904,7 +1000,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s var(--modal-ease);
   display: block;
 }
 
@@ -969,9 +1065,10 @@
   gap: 6px;
   text-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
 }
-/* --------------------------------------------------------------------------
-   8. CAST MATRICES & MEDIA RECOMMENDATIONS
-   -------------------------------------------------------------------------- */
+
+/* ==========================================================================
+   10. CAST MATRIX & MEDIA RECOMMENDATIONS
+   ========================================================================== */
 .cast-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 22vw, 220px), 1fr));
@@ -986,12 +1083,13 @@
   padding: 12px;
   border-radius: 16px;
   border: 1px solid var(--modal-border-subtle);
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.25s ease, transform 0.25s var(--modal-spring);
 }
 
 .cast-card:hover {
   background: rgba(255, 255, 255, 0.05);
-  transform: translateY(-2px);
+  transform: translate3d(0, -3px, 0);
+  border-color: var(--modal-border-glow);
 }
 
 .cast-card img {
@@ -1023,9 +1121,9 @@
   gap: clamp(12px, 1.8vw, 18px);
 }
 
-/* --------------------------------------------------------------------------
-   9. SLIDE-OUT WATCHLIST DRAWER
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   11. SLIDE-OUT WATCHLIST DRAWER
+   ========================================================================== */
 .drawer-overlay {
   position: fixed;
   inset: 0;
@@ -1086,6 +1184,7 @@
   align-items: center;
   gap: 10px;
   margin: 0;
+  color: #fff;
 }
 
 .drawer-close-btn {
@@ -1135,9 +1234,9 @@
   opacity: 0.25;
 }
 
-/* --------------------------------------------------------------------------
-   10. SHORTCUT MODAL ENGINE
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   12. SHORTCUT MODAL OVERLAY
+   ========================================================================== */
 .shortcuts-modal {
   position: fixed;
   inset: 0;
@@ -1165,11 +1264,11 @@
 @keyframes modalScaleUp {
   from {
     opacity: 0;
-    transform: scale(0.94) translateY(12px);
+    transform: scale(0.94) translate3d(0, 12px, 0);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(1) translate3d(0, 0, 0);
   }
 }
 
@@ -1184,6 +1283,7 @@
   font-size: 1.25rem;
   font-weight: 800;
   margin: 0;
+  color: #fff;
 }
 
 .shortcuts-list {
@@ -1212,11 +1312,11 @@
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
 }
 
-/* --------------------------------------------------------------------------
-   11. FLUID RESPONSIVE BREAKPOINT MATRIX & STICKY MOBILE PATCH
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   13. FLUID RESPONSIVE MATRIX & STICKY MOBILE CONTROLLER
+   ========================================================================== */
 @media (max-width: 768px) {
-  /* Unified Mobile Scrolling Container */
+  /* Unified Viewport Sizing Anchor (Prevents Vertical Shifting) */
   .modal-container {
     position: fixed;
     inset: 0;
@@ -1265,7 +1365,7 @@
     flex-shrink: 0;
   }
 
-  /* Natural Flow for Lower Content */
+  /* Body Flows Natively Underneath */
   .modal-body {
     position: relative;
     z-index: 10;
@@ -1286,13 +1386,13 @@
   }
 
   .player-action-strip {
-    padding: 12px 16px;
+    padding: 12px 14px;
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
 
-  /* FORCE HORIZONTAL SCROLL DECK FOR PLAYER FEATURES (FIXES VERTICAL STACK) */
+  /* Horizontal Action Deck Slider */
   .player-action-right {
     width: 100% !important;
     display: flex !important;
@@ -1308,10 +1408,6 @@
     scroll-snap-type: x proximity !important;
   }
 
-  .player-action-right::-webkit-scrollbar {
-    display: none !important;
-  }
-
   .modal-pill-btn {
     flex: 0 0 auto !important;
     min-width: max-content !important;
@@ -1319,18 +1415,18 @@
     padding: 7px 14px !important;
     font-size: 11.5px !important;
     scroll-snap-align: start !important;
-    white-space: nowrap !important;
   }
 
-  /* Anti-Collision Server Scroller */
+  /* Horizontal Server Switcher */
   .server-controls {
     flex-direction: column;
     align-items: flex-start;
+    padding: 12px 14px;
   }
 
   .server-info-col {
     width: 100%;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .server-pills-scroll,
@@ -1338,34 +1434,31 @@
   #serverSelectionContainer {
     width: 100%;
     max-width: 100%;
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 4px 2px 8px 2px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 4px 2px 8px 2px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x proximity !important;
   }
 
   .server-pills-scroll::-webkit-scrollbar,
   #serverButtonsContainer::-webkit-scrollbar,
   #serverSelectionContainer::-webkit-scrollbar {
-    display: none;
+    display: none !important;
   }
 
   .server-btn,
   .server-node-btn {
-    flex: 0 0 auto;
-    min-width: 135px;
-    max-width: 190px;
-    scroll-snap-align: start;
-    padding: 7px 12px;
-    font-size: 11.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex: 0 0 auto !important;
+    min-width: 135px !important;
+    max-width: 200px !important;
+    scroll-snap-align: start !important;
+    padding: 8px 14px !important;
+    font-size: 11.5px !important;
   }
 }
 
@@ -1374,26 +1467,22 @@
     padding: 10px 14px;
   }
 
-  .modal-body {
-    padding: 14px;
-  }
-
   .player-cover-overlay {
     padding: 14px;
   }
 
   .cast-grid {
-    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
 
   .recommendations-grid {
-    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
 }
 
 @media (min-width: 1920px) {
   .modal-dialog {
-    max-width: 1440px;
+    max-width: 1380px;
   }
   
   .modal-player-wrap {
@@ -1401,125 +1490,9 @@
   }
 }
 
-/* Mobile overflow guardrails: children must shrink inside modal viewport */
-@media (max-width: 768px) {
-  .modal-dialog,
-  .modal-body,
-  .tab-content,
-  .overview-grid,
-  .overview-main-col,
-  .side-info-col,
-  .episodes-master-section,
-  .ep-grid,
-  .ep-card,
-  .ep-info {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .ep-grid {
-    overflow-x: hidden;
-  }
-}
-
 /* ==========================================================================
-   12. ANIFLIX ULTRA — MODAL STABILITY / MOBILE V6.1 PATCH
+   14. ACCESSIBILITY & PERFORMANCE HARDENING
    ========================================================================== */
-html,
-body {
-  max-width: 100%;
-  min-width: 0;
-}
-
-.modal-overlay,
-.modal-container,
-.modal-dialog,
-.modal-body,
-.modal-player-wrap,
-.player-action-strip,
-.server-controls,
-.episodes-master-section {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.modal-container,
-.modal-dialog {
-  box-sizing: border-box;
-}
-
-.modal-container {
-  overscroll-behavior-x: none;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.modal-container::-webkit-scrollbar {
-  display: none;
-}
-
-/* Safe Desktop Layout */
-@media (min-width: 769px) {
-  .modal-container {
-    width: 100%;
-    padding: clamp(18px, 3vw, 36px) clamp(14px, 2vw, 24px);
-  }
-
-  .modal-dialog {
-    width: min(100%, 1160px);
-    max-width: 1160px;
-    margin: 0 auto clamp(18px, 4vw, 60px);
-    overflow: hidden;
-  }
-
-  .modal-player-wrap {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    flex: 0 0 auto;
-  }
-}
-
-/* Mobile Player Container Safety */
-.modal-player-wrap,
-.modal-dialog .modal-player-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #020204;
-  overflow: hidden;
-  flex-shrink: 0;
-  contain: layout paint;
-}
-
-.modal-player-wrap iframe,
-.modal-player-wrap video,
-.modal-player-wrap #streamFrame,
-.modal-player-wrap #nativeStreamVideo {
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  display: block;
-  border: 0;
-}
-
-.modal-player-wrap.collapsed,
-.modal-player-wrap.minimized,
-.modal-player-wrap.scrolled,
-.modal-player-wrap.player-collapsed {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  min-height: 0;
-  max-height: none;
-  aspect-ratio: 16 / 9;
-  flex: 0 0 auto;
-  flex-shrink: 0;
-  transform: none;
-}
-
 @media (hover: none) and (pointer: coarse) {
   .btn-close-modal,
   .modal-pill-btn,
@@ -1528,11 +1501,11 @@ body {
   .tab-btn,
   .ep-card,
   .drawer-close-btn {
-    min-height: 40px;
+    min-height: 42px;
   }
 
   .btn-close-modal {
-    min-width: 40px;
+    min-width: 42px;
   }
 }
 
@@ -1556,7 +1529,11 @@ body {
   .server-node-btn,
   .ep-card,
   .ep-thumb-box img,
-  .btn-close-modal {
+  .btn-close-modal,
+  .tab-content.active,
+  .shortcuts-card,
+  .server-status-dot.online,
+  .server-dot.online {
     animation: none !important;
     transition: none !important;
   }
