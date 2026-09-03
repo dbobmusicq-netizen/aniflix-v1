@@ -10,12 +10,12 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Advanced Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="/favicon.ico?v=30.4.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=30.4.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=30.4.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=30.4.0" />
-  <link rel="manifest" href="/manifest.json?v=30.4.0" />
+  <!-- Advanced Favicon Suite & Multi-Platform PWA Branding (Relative Paths)[cite: 1] -->
+  <link rel="shortcut icon" href="favicon.ico?v=32.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=32.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=32.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=32.0.0" />
+  <link rel="manifest" href="manifest.json?v=32.0.0" />
   
   <!-- Windows Tile & Theme Color Metadata for Progressive Web App Integration -->
   <meta name="theme-color" content="#040406" />
@@ -41,67 +41,310 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- 2. CACHE-BUSTED MODULAR STYLESHEETS: Update ?v= on every release -->
-  <link rel="stylesheet" href="theme-base.css?v=30.4.0">
-  <link rel="stylesheet" href="components-modal.css?v=30.4.0">
-  <link rel="stylesheet" href="p2p.css?v=30.4.0">
-  <link rel="stylesheet" href="webapp.css?v=30.4.0">
-  <link rel="stylesheet" href="mobile.css?v=30.4.0">
+  <!-- 2. CACHE-BUSTED MODULAR STYLESHEETS (Updated to v32.0.0) -->
+  <link rel="stylesheet" href="theme-base.css?v=32.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=32.0.0">
+  <link rel="stylesheet" href="p2p.css?v=32.0.0">
+  <link rel="stylesheet" href="webapp.css?v=32.0.0">
+  <link rel="stylesheet" href="mobile.css?v=32.0.0">
 
-  <!-- ANIMATIONS & PLAYER LOADING STYLES -->
+  <!-- ADVANCED KINETIC ANIMATIONS, SPLASH PRELOADER & AD-BLOCK MODAL STYLES -->
   <style>
+    /* ==========================================================================
+       SPLASH PRELOADER & GLOBAL SHIFT TRANSITIONS
+       ========================================================================== */
+    #siteSplashPreloader {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: radial-gradient(circle at 50% 35%, #10101c 0%, #030305 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+      contain: strict;
+    }
+    #siteSplashPreloader.preloader-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-kinetic-core {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .splash-orb-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: #ff0844;
+      border-right-color: #00f2fe;
+      animation: kineticOrbRotate 1.1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+      box-shadow: 0 0 25px rgba(255, 8, 68, 0.4), inset 0 0 15px rgba(0, 242, 254, 0.3);
+    }
+    .splash-orb-ring-inner {
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-bottom-color: #ff0844;
+      animation: kineticOrbRotateReverse 1.8s linear infinite;
+    }
+    .splash-logo-symbol {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #ff0844 0%, #b80710 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(255, 8, 68, 0.8);
+      animation: coreLogoPulse 1.4s ease-in-out infinite alternate;
+    }
+    .splash-logo-symbol i {
+      color: #fff;
+      font-size: 22px;
+      margin-left: 3px;
+    }
+    .splash-text-group {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .splash-brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 2px;
+      text-shadow: 0 0 16px rgba(255, 8, 68, 0.5);
+    }
+    .splash-caption {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #00f2fe;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: textBlinkGlow 1.6s infinite alternate;
+    }
+
+    /* Shifting Mode & Opening Title Floating HUD Loader */
+    #globalTransitionLoader {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translate3d(-50%, -20px, 0);
+      z-index: 99990;
+      background: rgba(12, 13, 20, 0.88);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 242, 254, 0.3);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #fff;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #globalTransitionLoader.active {
+      display: flex;
+      opacity: 1;
+      transform: translate3d(-50%, 0, 0);
+    }
+    .mini-spinner-quantum {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #00f2fe;
+      border-radius: 50%;
+      animation: spinLoader 0.75s linear infinite;
+    }
+
+    @keyframes kineticOrbRotate {
+      0% { transform: rotate(0deg) scale(0.96); }
+      50% { transform: rotate(180deg) scale(1.05); }
+      100% { transform: rotate(360deg) scale(0.96); }
+    }
+    @keyframes kineticOrbRotateReverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+    @keyframes coreLogoPulse {
+      0% { transform: scale(0.92); box-shadow: 0 0 20px rgba(255, 8, 68, 0.5); }
+      100% { transform: scale(1.08); box-shadow: 0 0 35px rgba(255, 8, 68, 0.95); }
+    }
+    @keyframes textBlinkGlow {
+      0% { opacity: 0.5; filter: drop-shadow(0 0 2px rgba(0, 242, 254, 0.2)); }
+      100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.7)); }
+    }
+    @keyframes spinLoader {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Player Loading Overlay Animation inside modal */
     .player-loader-overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(4, 4, 6, 0.88);
+      background: rgba(4, 4, 6, 0.92);
       z-index: 45;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(8px);
-      transition: opacity 0.3s ease;
+      backdrop-filter: blur(12px);
+      transition: opacity 0.35s ease;
       pointer-events: none;
     }
     .player-logo-pulsar {
-      font-size: 3rem;
-      color: #e50914;
-      animation: playerLogoPulse 1.4s ease-in-out infinite alternate;
+      font-size: 2.8rem;
+      color: #ff0844;
+      animation: coreLogoPulse 1.2s ease-in-out infinite alternate;
     }
     .player-spinner {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(255, 255, 255, 0.15);
-      border-top-color: #e50914;
+      width: 42px;
+      height: 42px;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #ff0844;
       border-radius: 50%;
-      animation: spinLoader 0.9s linear infinite;
+      animation: spinLoader 0.85s linear infinite;
       margin-top: 14px;
     }
     .player-loading-text {
       margin-top: 12px;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 13px;
+      font-size: 12.5px;
       letter-spacing: 1.5px;
       color: #fff;
       font-weight: 700;
       text-transform: uppercase;
-      opacity: 0.85;
-    }
-    @keyframes playerLogoPulse {
-      0% { transform: scale(0.92); opacity: 0.65; filter: drop-shadow(0 0 8px rgba(229,9,20,0.4)); }
-      100% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 22px rgba(229,9,20,0.9)); }
-    }
-    @keyframes spinLoader {
-      to { transform: rotate(360deg); }
-    }
-    .brand-icon-wrapper i {
-      animation: playerLogoPulse 2.8s ease-in-out infinite alternate;
+      opacity: 0.9;
     }
 
-    /* PWA Automatic Cache-Refresh Notification Bar */
+    /* ==========================================================================
+       SMART OS-AWARE ADBLOCK RECOMMENDER MODAL
+       ========================================================================== */
+    .adblock-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 999995;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInOverlay 0.3s ease forwards;
+    }
+    .adblock-modal-card {
+      background: #0d0d16;
+      border: 1px solid rgba(255, 8, 68, 0.35);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.95), 0 0 30px rgba(255, 8, 68, 0.2);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 490px;
+      padding: clamp(20px, 3vw, 30px);
+      position: relative;
+      animation: modalSpringUp 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+    }
+    @keyframes fadeInOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes modalSpringUp {
+      from { transform: translate3d(0, 30px, 0) scale(0.92); opacity: 0; }
+      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+    }
+    .adblock-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .adblock-shield-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, rgba(255, 8, 68, 0.25), rgba(0, 242, 254, 0.2));
+      border: 1px solid rgba(255, 8, 68, 0.5);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ff0844;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(255, 8, 68, 0.3);
+    }
+    .adblock-modal-header h3 {
+      font-size: 19px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.2px;
+    }
+    .adblock-body-text {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #c4c7de;
+      margin-bottom: 18px;
+    }
+    .adblock-highlight-box {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .adblock-highlight-box strong {
+      color: #00f5a0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .adblock-modal-btn {
+      width: 100%;
+      height: 44px;
+      background: linear-gradient(135deg, #ff0844 0%, #b80710 100%);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(255, 8, 68, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .adblock-modal-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* PWA Update Banner */
     #updateNotificationBar {
       position: fixed;
       top: 0;
@@ -136,12 +379,56 @@
       margin-left: 12px;
       transition: transform 0.2s ease;
     }
-    #updateNotificationBar button:active {
-      transform: scale(0.95);
-    }
   </style>
 </head>
 <body class="theme-dark">
+
+  <!-- ========================================================================
+       ADVANCED QUANTUM SPLASH PRELOADER ON SITE OPENING
+       ======================================================================== -->
+  <div id="siteSplashPreloader" aria-hidden="false">
+    <div class="splash-kinetic-core">
+      <div class="splash-orb-ring"></div>
+      <div class="splash-orb-ring-inner"></div>
+      <div class="splash-logo-symbol">
+        <i class="fas fa-play"></i>
+      </div>
+    </div>
+    <div class="splash-text-group">
+      <span class="splash-brand-title">ANIFLIX<small style="font-size: 11px; color:#ff0844; margin-left: 4px;">ULTRA</small></span>
+      <span class="splash-caption" id="splashSubStatus">Synchronizing Neural Streams...</span>
+    </div>
+  </div>
+
+  <!-- FLOATING NAVIGATION / MODE TRANSITION HUD LOADER -->
+  <div id="globalTransitionLoader" role="status" aria-live="polite">
+    <div class="mini-spinner-quantum"></div>
+    <span id="globalTransitionText">Switching Stream Universe...</span>
+  </div>
+
+  <!-- SMART OS-AWARE ADBLOCK RECOMMENDER MODAL (SHOWN ONCE PER DAY) -->
+  <div class="adblock-modal-backdrop" id="adblockTipModal">
+    <div class="adblock-modal-card">
+      <div class="adblock-modal-header">
+        <div class="adblock-shield-icon">
+          <i class="fas fa-shield-halved"></i>
+        </div>
+        <div>
+          <h3>Enjoy 100% Ad-Free Streaming</h3>
+          <small style="color: #a3a3c2;">Clean & Pop-Up Free Experience</small>
+        </div>
+      </div>
+      <p class="adblock-body-text" id="adblockMessageBody">
+        Third-party video servers often trigger intrusive popups. To stream smoothly without interruptions, follow this tip for your device:
+      </p>
+      <div class="adblock-highlight-box" id="adblockRecommendationBox">
+        <!-- Injected dynamically based on user OS -->
+      </div>
+      <button class="adblock-modal-btn" type="button" onclick="closeAdblockTipModal()">
+        <span>Got It, Let's Stream</span> <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
 
   <!-- AUTO-UPDATE NOTIFICATION BANNER -->
   <div id="updateNotificationBar" role="alert">
@@ -181,18 +468,18 @@
           <i class="fas fa-play"></i>
         </div>
         <span class="brand-name" id="brandTitleText">ANIFLIX<small class="brand-badge">ULTRA</small></span>
-        <!-- Dynamic APP Installation Badge: Displays ONLY in installed PWA standalone mode -->
+        <!-- Dynamic APP Installation Badge -->
         <span class="pwa-badge" id="appStatusPill" style="display:none;"><i class="fas fa-bolt"></i> APP</span>
       </a>
 
       <!-- Desktop Navigation Links -->
       <nav class="nav-desktop">
         <ul class="nav-links">
-          <li><a class="nav-link active" id="navHome" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li>
-          <li><a class="nav-link" id="navHindi" onclick="window.loadHindiDubbed()"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>
-          <li><a class="nav-link" onclick="window.navigateGenre('Action', 'Action Blockbusters')"><span>Action</span></a></li>
-          <li><a class="nav-link" onclick="window.navigateGenre('Romance', 'Romance & Drama')"><span>Romance</span></a></li>
-          <li><a class="nav-link" onclick="window.navigateGenre('Fantasy', 'Isekai & Fantasy')"><span>Fantasy</span></a></li>
+          <li><a class="nav-link active" id="navHome" onclick="triggerNavWithLoader('Home', () => window.navigateGenre(null, 'Home'))"><i class="fas fa-house"></i> <span>Home</span></a></li>
+          <li><a class="nav-link" id="navHindi" onclick="triggerNavWithLoader('Hindi Dubbed', () => window.loadHindiDubbed())"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>
+          <li><a class="nav-link" onclick="triggerNavWithLoader('Action', () => window.navigateGenre('Action', 'Action Blockbusters'))"><span>Action</span></a></li>
+          <li><a class="nav-link" onclick="triggerNavWithLoader('Romance', () => window.navigateGenre('Romance', 'Romance & Drama'))"><span>Romance</span></a></li>
+          <li><a class="nav-link" onclick="triggerNavWithLoader('Fantasy', () => window.navigateGenre('Fantasy', 'Isekai & Fantasy'))"><span>Fantasy</span></a></li>
         </ul>
       </nav>
     </div>
@@ -212,8 +499,8 @@
       </div>
       <div class="search-dropdown" id="searchDropdown"></div>
 
-      <!-- Netflix Mode Toggle Button (Inline SVG Vector) -->
-      <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch to Netflix / Live-Action Mode" aria-label="Netflix Mode" onclick="window.toggleNetflixMode()">
+      <!-- Netflix Mode Toggle Button -->
+      <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch to Netflix / Live-Action Mode" aria-label="Netflix Mode" onclick="triggerNavWithLoader('Shifting Universes...', () => window.toggleNetflixMode())">
         <svg class="netflix-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5.398 0v24c1.173-.24 2.346-.51 3.518-.78V0H5.398z" fill="#E50914"/>
           <path d="M15.084 0v21.57c1.172-.27 2.345-.54 3.518-.78V0h-3.518z" fill="#E50914"/>
@@ -247,7 +534,7 @@
       <i class="fas fa-calendar-days" style="color:var(--accent-gold);"></i>
       <span class="dock-tooltip">Schedule</span>
     </button>
-    <button class="dock-btn" title="Roll a Random Anime / Live-Action Title" aria-label="Random Title Roll" onclick="window.playRandomAnime()">
+    <button class="dock-btn" title="Roll a Random Anime / Live-Action Title" aria-label="Random Title Roll" onclick="triggerNavWithLoader('Rolling Random Title...', () => window.playRandomAnime())">
       <i class="fas fa-shuffle" style="color:var(--accent-purple);"></i>
       <span class="dock-tooltip">Random</span>
     </button>
@@ -296,7 +583,7 @@
         <i class="fas fa-calendar-days" style="color:var(--accent-gold);"></i>
         <span>Schedule</span>
       </button>
-      <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.playRandomAnime()">
+      <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Rolling Random...', () => window.playRandomAnime())">
         <i class="fas fa-shuffle" style="color:var(--accent-purple);"></i>
         <span>Random Title</span>
       </button>
@@ -305,11 +592,11 @@
     <!-- MAIN NAVIGATION LINKS -->
     <div class="drawer-section-label">CATEGORIES & NAV</div>
     <ul class="mobile-nav-list">
-      <li><a class="mobile-nav-link active" onclick="window.toggleMobileNav(false); window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> Home</a></li>
-      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.loadHindiDubbed()"><i class="fas fa-language"></i> Hindi Dubbed</a></li>
-      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Action', 'Action Blockbusters')"><i class="fas fa-bolt"></i> Action</a></li>
-      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Romance', 'Romance & Drama')"><i class="fas fa-heart"></i> Romance</a></li>
-      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.navigateGenre('Fantasy', 'Isekai & Fantasy')"><i class="fas fa-dungeon"></i> Fantasy & Isekai</a></li>
+      <li><a class="mobile-nav-link active" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Home', () => window.navigateGenre(null, 'Home'))"><i class="fas fa-house"></i> Home</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Hindi Dubs', () => window.loadHindiDubbed())"><i class="fas fa-language"></i> Hindi Dubbed</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Action', () => window.navigateGenre('Action', 'Action Blockbusters'))"><i class="fas fa-bolt"></i> Action</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Romance', () => window.navigateGenre('Romance', 'Romance & Drama'))"><i class="fas fa-heart"></i> Romance</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Fantasy', () => window.navigateGenre('Fantasy', 'Isekai & Fantasy'))"><i class="fas fa-dungeon"></i> Fantasy & Isekai</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.openWatchlistModal()"><i class="fas fa-bookmark"></i> My Watchlist (<span id="mobileWatchlistCount">0</span>)</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.toggleShortcutsModal(true)"><i class="fas fa-keyboard"></i> Keyboard Shortcuts</a></li>
     </ul>
@@ -376,14 +663,14 @@
   <!-- QUICK CHIPS HORIZONTAL FILTER BAR -->
   <section class="quick-chips-rail" aria-label="Quick Category Filter">
     <div class="chips-container" id="filterChips">
-      <button class="chip active" type="button" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button>
-      <button class="chip" type="button" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button>
-      <button class="chip" type="button" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tower-broadcast"></i> Airing</button>
-      <button class="chip" type="button" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button>
-      <button class="chip" id="chipCategory1" type="button" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button>
-      <button class="chip" id="chipCategory2" type="button" onclick="window.applyQuickFilter('SECONDARY', this)"><i class="fas fa-dungeon"></i> Fantasy</button>
-      <button class="chip" id="chipCategory3" type="button" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>
-      <button class="chip" type="button" onclick="window.applyQuickFilter('ROMANCE', this)"><i class="fas fa-heart"></i> Romance</button>
+      <button class="chip active" type="button" onclick="triggerNavWithLoader('All Catalogs', () => window.applyQuickFilter('ALL', this))"><i class="fas fa-border-all"></i> All</button>
+      <button class="chip" type="button" onclick="triggerNavWithLoader('Hindi Dubs', () => window.applyQuickFilter('HINDI', this))"><i class="fas fa-language"></i> Hindi Dubs</button>
+      <button class="chip" type="button" onclick="triggerNavWithLoader('Airing Now', () => window.applyQuickFilter('TOP_AIRING', this))"><i class="fas fa-tower-broadcast"></i> Airing</button>
+      <button class="chip" type="button" onclick="triggerNavWithLoader('Movies', () => window.applyQuickFilter('MOVIES', this))"><i class="fas fa-film"></i> Movies</button>
+      <button class="chip" id="chipCategory1" type="button" onclick="triggerNavWithLoader('Action', () => window.applyQuickFilter('ACTION', this))"><i class="fas fa-bolt"></i> Action</button>
+      <button class="chip" id="chipCategory2" type="button" onclick="triggerNavWithLoader('Fantasy', () => window.applyQuickFilter('SECONDARY', this))"><i class="fas fa-dungeon"></i> Fantasy</button>
+      <button class="chip" id="chipCategory3" type="button" onclick="triggerNavWithLoader('Sci-Fi', () => window.applyQuickFilter('SCI_FI', this))"><i class="fas fa-microchip"></i> Sci-Fi</button>
+      <button class="chip" type="button" onclick="triggerNavWithLoader('Romance', () => window.applyQuickFilter('ROMANCE', this))"><i class="fas fa-heart"></i> Romance</button>
     </div>
   </section>
 
@@ -706,27 +993,111 @@
     </div>
   </div>
 
-  <!-- 3. CACHE-BUSTED MODULAR SCRIPT ENGINES: Update ?v= on every release -->
-  <script src="core-engine.js?v=30.4.0"></script>
-  <script src="dash-player.js?v=30.4.0"></script>
-  <script src="streaming-ui.js?v=30.4.0"></script>
-  <script src="p2p.js?v=30.4.0"></script>
-  <script src="webapp.js?v=30.4.0"></script>
+  <!-- 3. CACHE-BUSTED MODULAR SCRIPT ENGINES (Updated to v32.0.0)[cite: 1] -->
+  <script src="core-engine.js?v=32.0.0"></script>
+  <script src="dash-player.js?v=32.0.0"></script>
+  <script src="streaming-ui.js?v=32.0.0"></script>
+  <script src="p2p.js?v=32.0.0"></script>
+  <script src="webapp.js?v=32.0.0"></script>
 
-  <!-- 4. INTELLIGENT SERVICE WORKER LIFECYCLE CONTROLLER -->
+  <!-- 4. INTELLIGENT TRANSITION & ONCE-PER-DAY ADBLOCK LOGIC -->
   <script>
+    // Smooth Transition Loader Trigger
+    window.triggerNavWithLoader = function(label, callback) {
+      const loader = document.getElementById('globalTransitionLoader');
+      const text = document.getElementById('globalTransitionText');
+      if (loader && text) {
+        text.innerText = label ? `Loading ${label}...` : 'Loading Catalog...';
+        loader.classList.add('active');
+      }
+      try {
+        if (typeof callback === 'function') callback();
+      } finally {
+        setTimeout(() => {
+          if (loader) loader.classList.remove('active');
+        }, 650);
+      }
+    };
+
+    // Auto-Dismiss Preloader Once Dynamic Elements Hydrate
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const preloader = document.getElementById('siteSplashPreloader');
+        if (preloader) {
+          preloader.classList.add('preloader-hidden');
+          setTimeout(() => preloader.remove(), 600);
+        }
+        checkAndShowAdblockNotice();
+      }, 700);
+    });
+
+    // Device-Aware Adblock Recommender (Daily Rate Limit)
+    function checkAndShowAdblockNotice() {
+      const STORAGE_KEY = 'aniflix_adblock_notice_date';
+      const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const lastShownDate = localStorage.getItem(STORAGE_KEY);
+
+      // Only display once per calendar day
+      if (lastShownDate === todayStr) {
+        return;
+      }
+
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobile = /android|iphone|ipad|ipod/i.test(userAgent);
+      const isApple = /macintosh|mac os x|iphone|ipad|ipod/i.test(userAgent);
+
+      const box = document.getElementById('adblockRecommendationBox');
+      const modal = document.getElementById('adblockTipModal');
+
+      if (isMobile) {
+        box.innerHTML = `
+          <strong><i class="fas fa-mobile-screen"></i> Mobile (Android / iOS) Recommendation:</strong>
+          <p style="margin: 4px 0 0 0; color: #a3a3c2;">
+            1. Open AniFlix in <b>Brave Browser</b> (built-in pop-up shield).<br>
+            2. Or set your phone's Private DNS to: <code style="color:#00f2fe; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px;">dns.adguard-dns.com</code>
+          </p>
+        `;
+      } else {
+        box.innerHTML = `
+          <strong><i class="fas fa-desktop"></i> Desktop (${isApple ? 'macOS' : 'Windows / PC'}) Recommendation:</strong>
+          <p style="margin: 4px 0 0 0; color: #a3a3c2;">
+            Install the <b>uBlock Origin</b> browser extension or use <b>Brave Browser</b> to permanently neutralize server popups.
+          </p>
+        `;
+      }
+
+      if (modal) modal.style.display = 'flex';
+      localStorage.setItem(STORAGE_KEY, todayStr);
+    }
+
+    function closeAdblockTipModal() {
+      const modal = document.getElementById('adblockTipModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // Intercept Card Click to trigger loader
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('.anime-card');
+      if (card) {
+        const loader = document.getElementById('globalTransitionLoader');
+        const text = document.getElementById('globalTransitionText');
+        if (loader && text) {
+          text.innerText = 'Initializing HD Stream...';
+          loader.classList.add('active');
+          setTimeout(() => loader.classList.remove('active'), 1200);
+        }
+      }
+    });
+
+    // PWA Service Worker Registration with Immediate Update Trigger
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        // Appending version parameter to sw.js ensures the browser checks for updates on every page load
-        navigator.serviceWorker.register('/sw.js?v=30.4.0').then(reg => {
-          // Check for background updates immediately
+        navigator.serviceWorker.register('sw.js?v=32.0.0').then(reg => {
           reg.update();
-
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // A new version has been installed; prompt user or trigger automatic reload
                 const banner = document.getElementById('updateNotificationBar');
                 if (banner) banner.style.display = 'flex';
               }
@@ -736,7 +1107,6 @@
           console.warn('[PWA] Service Worker registration failed:', err);
         });
 
-        // Handle the transition when a new service worker takes over
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
