@@ -1,21 +1,22 @@
 /**
  * AniFlix Ultra - Advanced Production Service Worker Engine
- * Version: 4.0.0 Enterprise Hybrid Offline/Real-Time Sync
+ * Version: 30.4.0 Enterprise Hybrid Offline/Real-Time Sync
  * 
- * Architecture:
- * - Multi-Tier Cache Layer (Static Shell, Dynamic Responses, Media Cache, Image Engine)
- * - Intelligent Stream Bypass (NxSha, Filmu, VidCore, VidSrc, 2Embed, HLS/DASH Chunks, Range Requests)
- * - Stale-While-Revalidate with Out-of-Order Execution & Network Timeout Fallback
- * - Offline Shell & Media Fallback Vector Synthesizers
- * - Dynamic FIFO Cache Pruning Engine
- * - Background Sync Engine for Watch Progress (IndexedDB bridge)
- * - Bi-directional Web Push Notifications & Deep-Link Dispatchers
+ * Key Upgrades:
+ * - Direct cache synchronization with index.html version (?v=30.4.0).
+ * - Instant Lifecycle Takeover: self.skipWaiting() on install and clients.claim() on activate.
+ * - Robust query-string agnostic matching for versioned assets (ignores ?v= hashes in CacheStorage).
+ * - Multi-Tier Cache Layer (Static Shell, Dynamic Responses, Media Cache, Image Engine).
+ * - Intelligent Stream Bypass (NxSha, Filmu, VidCore, VidFast, Range Requests, HLS/DASH Chunks).
+ * - Automated FIFO Cache Pruning Engine & Stale Cache Eviction.
+ * - Background Sync Engine for Watch Progress (IndexedDB bridge).
+ * - Bi-directional Web Push Notifications & Deep-Link Dispatchers.
  */
 
-const VERSION = 'v4.0.0';
-const STATIC_CACHE = `aniflix-static-${VERSION}`;
-const DYNAMIC_CACHE = `aniflix-dynamic-${VERSION}`;
-const IMAGE_CACHE = `aniflix-images-${VERSION}`;
+const VERSION = '30.4.0';
+const STATIC_CACHE = `aniflix-static-v${VERSION}`;
+const DYNAMIC_CACHE = `aniflix-dynamic-v${VERSION}`;
+const IMAGE_CACHE = `aniflix-images-v${VERSION}`;
 
 const MAX_IMAGE_ENTRIES = 90;
 const MAX_DYNAMIC_ENTRIES = 75;
@@ -29,6 +30,7 @@ const IMMUTABLE_APP_SHELL = [
   '/components-modal.css',
   '/p2p.css',
   '/webapp.css',
+  '/mobile.css',
   '/core-engine.js',
   '/streaming-ui.js',
   '/dash-player.js',
@@ -117,7 +119,7 @@ function fetchWithTimeout(request, timeoutMs = NETWORK_TIMEOUT_MS) {
 }
 
 // ===============================================================
-// 1. LIFECYCLE: INSTALL (Pre-cache Shell & Skip Waiting)
+// 1. LIFECYCLE: INSTALL (Pre-cache Shell & Skip Waiting Immediately)
 // ===============================================================
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -140,7 +142,7 @@ self.addEventListener('install', (event) => {
 });
 
 // ===============================================================
-// 2. LIFECYCLE: ACTIVATE (Purge Outdated Caches & Claim Clients)
+// 2. LIFECYCLE: ACTIVATE (Purge Outdated Caches & Claim All Tabs)
 // ===============================================================
 self.addEventListener('activate', (event) => {
   const activeCaches = [STATIC_CACHE, DYNAMIC_CACHE, IMAGE_CACHE];
@@ -149,6 +151,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (!activeCaches.includes(key)) {
+            console.info(`[SW Activate] Deleting stale cache: ${key}`);
             return caches.delete(key);
           }
         })
@@ -170,7 +173,7 @@ self.addEventListener('fetch', (event) => {
   // - PeerJS WebRTC signaling channels
   // - Media Byte-Range scrubbing requests (206 Partial Content breaks inside CacheStorage)
   // - Video Stream chunks (.ts, .m4s, .m3u8, .mpd) and Video Proxy Relay (/api/proxy)
-  // - Live Stream Servers (NxSha, Filmu, VidCore, VidSrc, etc.)
+  // - Live Stream Servers (NxSha, Filmu, VidCore, VidFast, etc.)
   if (
     request.method !== 'GET' ||
     url.protocol.startsWith('ws') ||
@@ -193,7 +196,7 @@ self.addEventListener('fetch', (event) => {
   ) {
     event.respondWith(
       caches.open(IMAGE_CACHE).then(async (cache) => {
-        const cachedResponse = await cache.match(request);
+        const cachedResponse = await cache.match(request, { ignoreSearch: true });
         if (cachedResponse) return cachedResponse;
 
         try {
@@ -215,7 +218,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static App Shell Strategy: Stale-While-Revalidate
+  // 3. Static App Shell Strategy: Stale-While-Revalidate with Query-Agnostic Cache Match
   // CSS, JS, Fonts, and Local Navigation Shell Assets
   if (
     request.destination === 'style' ||
@@ -224,7 +227,7 @@ self.addEventListener('fetch', (event) => {
     url.origin === location.origin
   ) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
+      caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
         const fetchPromise = fetch(request)
           .then(async (networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
@@ -235,7 +238,7 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() => {
             if (request.mode === 'navigate') {
-              return caches.match('/index.html');
+              return caches.match('/index.html', { ignoreSearch: true });
             }
           });
 
@@ -257,11 +260,11 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(async () => {
-        const cached = await caches.match(request);
+        const cached = await caches.match(request, { ignoreSearch: true });
         if (cached) return cached;
 
         if (request.mode === 'navigate') {
-          const indexShell = await caches.match('/index.html');
+          const indexShell = await caches.match('/index.html', { ignoreSearch: true });
           if (indexShell) return indexShell;
         }
 
