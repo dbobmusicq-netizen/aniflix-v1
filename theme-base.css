@@ -103,12 +103,12 @@ body::-webkit-scrollbar {
 
 html {
   color-scheme: dark;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   width: 100%;
   min-height: 100%;
-  overflow-x: clip;
+  overflow-x: hidden;
 }
 
 body {
@@ -125,7 +125,7 @@ body {
     radial-gradient(circle at 10% 0%, rgba(255, 8, 68, 0.09) 0%, transparent 45%),
     radial-gradient(circle at 90% 35%, rgba(0, 242, 254, 0.06) 0%, transparent 45%),
     radial-gradient(circle at 50% 95%, rgba(157, 78, 221, 0.05) 0%, transparent 50%);
-  background-attachment: fixed;
+  background-attachment: scroll;
   display: flex;
   flex-direction: column;
 }
@@ -1733,7 +1733,7 @@ body::after {
 
 /* Hero cinematic depth */
 .hero-bg {
-  will-change: transform, filter;
+  will-change: auto;
   animation: afHeroBreath 18s ease-in-out infinite alternate;
 }
 .hero::after {
@@ -1779,7 +1779,7 @@ body::after {
 /* Cards: Netflix-like lift, glow, image zoom and gradient reveal */
 .anime-card {
   transform-origin: center bottom;
-  will-change: transform;
+  will-change: auto;
 }
 .anime-card::before {
   content: "";
@@ -1810,7 +1810,7 @@ body::after {
 }
 .anime-card img {
   transition: transform .65s var(--ui-smooth), filter .45s ease;
-  will-change: transform;
+  will-change: auto;
 }
 .anime-card:hover {
   transform: translateY(-10px) scale(1.045);
@@ -2069,5 +2069,471 @@ body::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+  }
+}
+/* ==========================================================================
+   ANIFLIX STABILITY CORE 6.0 — LOW-MEMORY / COMPOSITOR-SAFE LAYER
+   --------------------------------------------------------------------------
+   Designed for 2–3 GB RAM Android phones and aggressive touch interaction.
+
+   Problems addressed:
+   1. Blank/half-painted viewport after very fast vertical scrolling.
+   2. Blank/half-painted viewport after rapid tab switching.
+   3. Full-black compositor state after long idle periods on some mobile GPUs.
+   4. Excessive GPU memory caused by fixed/blurred/animated full-screen layers.
+   5. Scroll-snap fighting high-velocity finger scrolling.
+   6. Persistent will-change promotion of many large elements.
+   7. Expensive backdrop-filter surfaces on low-memory touch devices.
+   8. Large animated shadows/filters causing long frames and checkerboard-like
+      raster gaps during fast scrolling.
+
+   IMPORTANT:
+   - No HTML or JavaScript changes required.
+   - No content-visibility:auto is used intentionally; it can cause visible
+     blank gaps on some older mobile browsers during high-speed scrolling.
+   - Functional loading/buffering indicators remain animated.
+   ========================================================================== */
+
+/* ---------- Stable document/compositor foundation ---------- */
+html {
+  scroll-behavior: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none;
+  background: var(--bg-base);
+}
+
+body {
+  overflow-x: hidden !important;
+  background-color: var(--bg-base) !important;
+  background-attachment: scroll !important;
+  isolation: isolate;
+  min-height: 100%;
+}
+
+/*
+ * Full-screen decorative pseudo-elements are a frequent source of GPU
+ * pressure when combined with fixed headers, P2P overlays and backdrop blur.
+ * Keep them static on desktop and remove them on touch devices.
+ */
+body::before {
+  animation: none !important;
+  transform: none !important;
+}
+
+body::after {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Ambient glow is decorative, so it must never be allowed to compromise paint. */
+.ambient-glow {
+  transition: none !important;
+  will-change: auto !important;
+}
+
+.content-rows {
+  isolation: isolate;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+}
+
+/* ---------- Prevent persistent GPU promotion ---------- */
+.hero-bg,
+.anime-card,
+.anime-card img,
+.search-item img,
+.top10-rank {
+  will-change: auto !important;
+}
+
+/* Only promote an element while it is actually being interacted with. */
+@media (hover: hover) and (pointer: fine) {
+  .anime-card:hover,
+  .anime-card:hover img {
+    will-change: transform !important;
+  }
+
+  .hero:hover .hero-bg {
+    will-change: transform !important;
+  }
+}
+
+/* ---------- Stable horizontal rails ---------- */
+.carousel-track,
+.chips-container {
+  scroll-behavior: auto !important;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+}
+
+.carousel-track {
+  scroll-snap-type: x proximity !important;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .carousel-track {
+    scroll-snap-type: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Fast tab switching: no compositor animation between panels ---------- */
+.tab-content {
+  transform: none !important;
+  filter: none !important;
+  will-change: auto !important;
+}
+
+.tab-content.active {
+  display: block !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  animation: none !important;
+  will-change: auto !important;
+}
+
+/*
+ * This is intentionally stronger than the visual tab animation from the
+ * modal stylesheet. Switching tabs becomes a synchronous, stable paint
+ * rather than repeatedly creating/destroying transformed layers.
+ */
+.modal-body {
+  transform: none !important;
+  filter: none !important;
+  will-change: auto !important;
+}
+
+/* ---------- Touch-device low-memory profile ---------- */
+@media (hover: none) and (pointer: coarse) {
+  /*
+   * Disable only decorative effects. Functional UI remains intact.
+   * Opaque surfaces are considerably cheaper than backdrop-filter on
+   * older Android GPUs.
+   */
+  body::before,
+  body::after,
+  .ambient-glow {
+    display: none !important;
+  }
+
+  .header,
+  .header.scrolled,
+  .search-dropdown,
+  .floating-quick-dock,
+  .mobile-nav-drawer,
+  .mobile-drawer-overlay,
+  .chip,
+  .card-badge-top,
+  .aniskip-pill-btn,
+  .modal-pill-btn,
+  .server-node-btn,
+  .player-buffering-indicator {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .header.scrolled {
+    background: rgba(10, 10, 16, 0.985) !important;
+  }
+
+  .search-dropdown {
+    background: rgba(14, 14, 22, 0.99) !important;
+  }
+
+  .floating-quick-dock {
+    background: rgba(14, 14, 22, 0.97) !important;
+  }
+
+  .mobile-nav-drawer {
+    background: rgba(12, 12, 18, 0.995) !important;
+  }
+
+  .mobile-drawer-overlay {
+    background: rgba(0, 0, 0, 0.92) !important;
+  }
+
+  /*
+   * Decorative infinite animations are stopped. Loading/buffering indicators
+   * are deliberately excluded so playback state still communicates normally.
+   */
+  .hero-network-badge,
+  .chip.active,
+  .server-status-dot.optimal,
+  .server-node-btn.active-server::before,
+  .floating-quick-dock::before,
+  .brand-icon-wrapper::after,
+  .skeleton,
+  .skeleton-card,
+  .loading-card,
+  .card-skeleton {
+    animation: none !important;
+  }
+
+  .hero-bg {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  .anime-card,
+  .anime-card img,
+  .search-item img,
+  .top10-rank,
+  .btn,
+  .icon-btn,
+  .dock-btn,
+  .chip,
+  .server-node-btn,
+  .ep-badge-btn,
+  .drawer-tool-btn,
+  .mobile-nav-link {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      opacity 120ms ease !important;
+    will-change: auto !important;
+  }
+
+  .anime-card:hover,
+  .anime-card:hover img,
+  .icon-btn:hover,
+  .dock-btn:hover,
+  .chip:hover,
+  .server-node-btn:hover,
+  .ep-badge-btn:hover,
+  .drawer-tool-btn:hover,
+  .mobile-nav-link:hover {
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .anime-card {
+    box-shadow: 0 7px 18px rgba(0,0,0,.58) !important;
+  }
+
+  .anime-card::before,
+  .anime-card::after {
+    display: none !important;
+  }
+
+  .card-overlay {
+    opacity: 1 !important;
+  }
+
+  .card-badge-top {
+    background: rgba(0,0,0,.88) !important;
+  }
+
+  .quick-chips-rail::before {
+    display: none !important;
+  }
+
+  .floating-quick-dock {
+    box-shadow: 0 10px 26px rgba(0,0,0,.65) !important;
+  }
+
+  /*
+   * Avoid huge filter/shadow repaint regions around the hero on phones.
+   * The image itself remains fully visible.
+   */
+  .hero-bg {
+    filter: brightness(.82) !important;
+  }
+
+  .hero-content,
+  .hero-title,
+  .hero-desc,
+  .hero-btns {
+    animation: none !important;
+    filter: none !important;
+  }
+
+  /*
+   * Do not allow horizontal rails to steal vertical gesture handling.
+   * Horizontal carousels remain natively scrollable.
+   */
+  .carousel-track,
+  .chips-container {
+    touch-action: pan-x pan-y;
+  }
+}
+
+/* ---------- Extra-conservative profile for very small screens ---------- */
+@media (max-width: 480px) {
+  :root {
+    --glass-blur: none;
+  }
+
+  .header,
+  .header.scrolled {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 5px 18px rgba(0,0,0,.5) !important;
+  }
+
+  .toast {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(14,14,20,.98) !important;
+    box-shadow: 0 10px 24px rgba(0,0,0,.65) !important;
+  }
+
+  .search-wrapper.open {
+    box-shadow: 0 0 16px rgba(255,8,68,.16) !important;
+  }
+
+  .hero {
+    overflow: hidden;
+  }
+
+  .hero-overlay {
+    filter: none !important;
+  }
+
+  .anime-card {
+    box-shadow: 0 6px 16px rgba(0,0,0,.55) !important;
+  }
+
+  .row-section {
+    contain: none !important;
+  }
+}
+
+/* ---------- Desktop stability without sacrificing the cinematic look ---------- */
+@media (hover: hover) and (pointer: fine) {
+  /*
+   * Keep backdrop blur only where it is useful, but prevent it from being
+   * attached to large scrolling content.
+   */
+  .row-section,
+  .row-container,
+  .carousel-track,
+  .anime-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /*
+   * Heavy full-screen ambient animation is static; this prevents continuous
+   * repainting while the user is scrolling.
+   */
+  .ambient-glow {
+    animation: none !important;
+    will-change: auto !important;
+  }
+}
+
+/* ---------- Avoid accidental horizontal layout expansion ---------- */
+.header-left,
+.header-right,
+.search-wrapper,
+.search-wrapper.open,
+.content-rows,
+.row-section,
+.row-container,
+.carousel-track {
+  min-width: 0;
+}
+
+.search-wrapper.open {
+  max-width: calc(100vw - 24px);
+}
+
+img,
+video,
+iframe {
+  height: auto;
+}
+
+/* ---------- Safe-area handling for modern phones ---------- */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .header {
+    padding-left: max(var(--page-padding), env(safe-area-inset-left));
+    padding-right: max(var(--page-padding), env(safe-area-inset-right));
+  }
+
+  .floating-quick-dock {
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .toast-container {
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/*
+ * The site must retain a visible base surface even if a GPU-backed visual
+ * layer is lost/throttled by the browser. No transparent full-screen layer
+ * is allowed to be the visual foundation.
+ */
+html,
+body,
+#app,
+main.content-rows {
+  background-color: var(--bg-base);
+}
+
+/* ---------- Functional motion only ---------- */
+.player-buffering-indicator.active .spinner-ring {
+  animation: spinRing .85s linear infinite !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-buffering-indicator.active .spinner-ring {
+    animation: none !important;
+  }
+}
+
+/* ---------- Final motion safety ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  body::before,
+  body::after,
+  .ambient-glow {
+    display: none !important;
+  }
+
+  .hero-bg,
+  .hero-content,
+  .hero-title,
+  .hero-desc,
+  .hero-btns,
+  .hero-network-badge,
+  .chip.active,
+  .server-status-dot,
+  .floating-quick-dock::before,
+  .tab-content.active {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* ---------- Forced-colors / high-contrast fallback ---------- */
+@media (forced-colors: active) {
+  body::before,
+  body::after,
+  .ambient-glow {
+    display: none !important;
+  }
+
+  .anime-card,
+  .chip,
+  .server-node-btn,
+  .icon-btn,
+  .dock-btn {
+    box-shadow: none !important;
+    border: 1px solid CanvasText;
   }
 }
