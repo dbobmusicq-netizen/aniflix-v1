@@ -586,42 +586,82 @@
     display: none;
   }
 
-  /* --------------------------------------------------------------------------
-     9. TOAST & OVERLAY ADJUSTMENTS
+ /* --------------------------------------------------------------------------
+     9. TOAST & OVERLAY ADJUSTMENTS (ELEVATED HUD MATRIX & KINETIC NOTIFICATIONS)
      -------------------------------------------------------------------------- */
   .toast-container {
+    position: fixed !important;
     left: 50% !important;
     right: auto !important;
-    transform: translateX(-50%) !important;
+    transform: translate3d(-50%, 0, 0) !important;
     width: 90% !important;
     max-width: 360px !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 58px) !important;
-    z-index: 1700;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+    z-index: 99999 !important; /* Elevates above modal-overlay & modal-container (2000-2001) */
+    pointer-events: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
   }
 
   .toast {
     width: 100% !important;
-    padding: 10px 16px;
-    font-size: 12px;
+    padding: 12px 18px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    border-radius: 14px !important;
+    background: rgba(14, 15, 24, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 8, 68, 0.25) !important;
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    color: #fff !important;
+    will-change: transform, opacity !important;
+    transform: translate3d(0, 24px, 0) scale(0.92) !important;
+    opacity: 0 !important;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease !important;
   }
+
+  .toast.visible {
+    transform: translate3d(0, 0, 0) scale(1) !important;
+    opacity: 1 !important;
+  }
+
+  .toast i,
+  .toast svg {
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .toast-info i { color: var(--modal-accent-cyan, #00f2fe) !important; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.6)) !important; }
+  .toast-success i { color: var(--modal-accent-emerald, #00f5a0) !important; filter: drop-shadow(0 0 6px rgba(0, 245, 160, 0.6)) !important; }
+  .toast-error i { color: var(--modal-accent-red, #ff0844) !important; filter: drop-shadow(0 0 6px rgba(255, 8, 68, 0.6)) !important; }
 
   .watchlist-drawer,
   .p2p-chat-sidebar {
-    width: 100vw;
-    max-width: 100vw;
-    border-radius: 0;
-    height: 100dvh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    z-index: 100000 !important; /* Keeps drawers accessible over any modal layer */
   }
 
-  button:active, .anime-card:active {
-    transform: scale(0.96);
-    transition: transform 0.08s ease-out;
+  button:active, 
+  .anime-card:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.08s ease-out !important;
   }
 }
 
 /* Desktop viewport fallback */
 @media (min-width: 769px) {
-  #filterChips { overflow: visible; }
+  #filterChips { 
+    overflow: visible; 
+  }
 }
