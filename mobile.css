@@ -586,61 +586,65 @@
     display: none;
   }
 
- /* --------------------------------------------------------------------------
-     9. TOAST & OVERLAY ADJUSTMENTS (ELEVATED HUD MATRIX & KINETIC NOTIFICATIONS)
+/* --------------------------------------------------------------------------
+     9. TOAST & OVERLAY ADJUSTMENTS (NATURAL ISOLATED LAYER FIX)
      -------------------------------------------------------------------------- */
   .toast-container {
     position: fixed !important;
     left: 50% !important;
     right: auto !important;
-    transform: translate3d(-50%, 0, 0) !important;
+    transform: translateX(-50%) !important;
     width: 90% !important;
     max-width: 360px !important;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
-    z-index: 99999 !important; /* Elevates above modal-overlay & modal-container (2000-2001) */
+    /* Elevated cleanly above modals (2000-2001) without breaking lower stacking contexts */
+    z-index: 100000 !important;
     pointer-events: none !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
+    align-items: center !important;
   }
 
   .toast {
+    position: relative !important;
     width: 100% !important;
-    padding: 12px 18px !important;
-    font-size: 12.5px !important;
+    box-sizing: border-box !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
-    border-radius: 14px !important;
-    background: rgba(14, 15, 24, 0.92) !important;
-    border: 1px solid rgba(255, 255, 255, 0.16) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 8, 68, 0.25) !important;
+    border-radius: 12px !important;
+    background: rgba(14, 15, 24, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85) !important;
     pointer-events: auto !important;
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
     color: #fff !important;
-    will-change: transform, opacity !important;
-    transform: translate3d(0, 24px, 0) scale(0.92) !important;
+    transform: translateY(16px) scale(0.95) !important;
     opacity: 0 !important;
-    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease !important;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
   }
 
   .toast.visible {
-    transform: translate3d(0, 0, 0) scale(1) !important;
+    transform: translateY(0) scale(1) !important;
     opacity: 1 !important;
   }
 
   .toast i,
   .toast svg {
-    font-size: 15px !important;
+    font-size: 14px !important;
     flex-shrink: 0 !important;
   }
 
-  .toast-info i { color: var(--modal-accent-cyan, #00f2fe) !important; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.6)) !important; }
-  .toast-success i { color: var(--modal-accent-emerald, #00f5a0) !important; filter: drop-shadow(0 0 6px rgba(0, 245, 160, 0.6)) !important; }
-  .toast-error i { color: var(--modal-accent-red, #ff0844) !important; filter: drop-shadow(0 0 6px rgba(255, 8, 68, 0.6)) !important; }
+  .toast-info i { color: #00f2fe !important; }
+  .toast-success i { color: #00f5a0 !important; }
+  .toast-error i { color: #ff0844 !important; }
 
+  /* Drawers keep default modal sizing and proper layer stacking */
   .watchlist-drawer,
   .p2p-chat-sidebar {
     width: 100vw !important;
@@ -649,13 +653,14 @@
     height: 100dvh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    z-index: 100000 !important; /* Keeps drawers accessible over any modal layer */
+    z-index: 9999 !important;
   }
 
+  /* Natural UI tap response */
   button:active, 
   .anime-card:active {
-    transform: scale(0.96) !important;
-    transition: transform 0.08s ease-out !important;
+    transform: scale(0.97);
+    transition: transform 0.08s ease-out;
   }
 }
 
