@@ -1,8 +1,9 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
    File: mobile.css
-   Version: 4.0.0 (Pure CSS — Zero JavaScript Dependency)
-   Fixes: Hero Smudge Mask, Button Sizing, Miniaturized Cards & Scroll Physics
+   Version: 5.0.0
+   Architecture: Ultra-Sleek Fluid Typography, Dedicated Category Filter Rail,
+                 Kinetic Section Headers, High-Density Cards & Micro Dock
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -44,15 +45,15 @@
      2. MOBILE HEADER & GLASSMORPHIC TOP BAR
      -------------------------------------------------------------------------- */
   .header {
-    height: 54px;
-    padding: 0 12px;
+    height: 56px;
+    padding: 0 14px;
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(4, 4, 6, 0.78) !important;
+    background: rgba(4, 4, 6, 0.82) !important;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     z-index: 1500;
   }
 
@@ -62,24 +63,24 @@
   }
 
   .brand-name {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 800;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
   }
 
   .brand-icon-wrapper {
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
   }
 
   .brand-icon-wrapper i {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .brand-badge {
-    font-size: 8px;
-    padding: 1px 4px;
+    font-size: 8.5px;
+    padding: 1px 5px;
   }
 
   .nav-desktop {
@@ -112,9 +113,9 @@
   }
 
   .icon-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 13px;
+    width: 36px;
+    height: 36px;
+    font-size: 13.5px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -125,7 +126,7 @@
 
   .search-wrapper.open {
     position: fixed;
-    top: 54px;
+    top: 56px;
     left: 0;
     right: 0;
     width: 100vw;
@@ -144,14 +145,14 @@
   }
 
   /* --------------------------------------------------------------------------
-     3. HERO BILLBOARD & ADVANCED CANVAS SMUDGE MASK (NO HARD CUTOFF)
+     3. HERO BILLBOARD & ADVANCED CANVAS SMUDGE MASK
      -------------------------------------------------------------------------- */
   .hero {
     position: relative;
-    min-height: 480px;
-    height: 70vh;
-    max-height: 560px;
-    padding: 0 14px 18px 14px;
+    min-height: 460px;
+    height: 68vh;
+    max-height: 540px;
+    padding: 0 14px 16px 14px;
     display: flex;
     align-items: flex-end;
     overflow: hidden;
@@ -170,17 +171,17 @@
     object-position: center top;
   }
 
-  /* Multi-stop alpha blending gradient: smudges artwork seamlessly into #040406 */
+  /* Progressive smooth gradient smudge into dark backdrop */
   .hero-overlay {
     position: absolute;
     inset: 0;
     z-index: 1;
     background: linear-gradient(
       180deg,
-      rgba(4, 4, 6, 0.15) 0%,
-      rgba(4, 4, 6, 0.4) 30%,
-      rgba(4, 4, 6, 0.75) 60%,
-      rgba(4, 4, 6, 0.94) 84%,
+      rgba(4, 4, 6, 0.1) 0%,
+      rgba(4, 4, 6, 0.38) 35%,
+      rgba(4, 4, 6, 0.72) 65%,
+      rgba(4, 4, 6, 0.94) 86%,
       #040406 100%
     ) !important;
   }
@@ -197,25 +198,25 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 9.5px;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
+    letter-spacing: 0.6px;
+    padding: 3px 9px;
     margin-bottom: 8px;
     border-radius: 6px;
     background: rgba(255, 8, 68, 0.2);
-    border: 1px solid rgba(255, 8, 68, 0.4);
-    color: #ff3366;
+    border: 1px solid rgba(255, 8, 68, 0.45);
+    color: #ff2a5f;
   }
 
   .hero-title {
-    font-size: clamp(1.4rem, 5.5vw, 1.85rem);
+    font-size: clamp(1.45rem, 5.8vw, 1.95rem);
     font-weight: 900;
     line-height: 1.15;
     margin-bottom: 8px;
     color: #fff;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
   }
 
   .hero-tags {
@@ -229,9 +230,9 @@
   .tag-match, .tag-box, .tag-hindi {
     font-size: 9.5px;
     font-weight: 700;
-    padding: 2px 6px;
+    padding: 2.5px 7px;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .tag-match {
@@ -245,9 +246,9 @@
   }
 
   .hero-desc {
-    font-size: 12px;
+    font-size: 12.5px;
     line-height: 1.45;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.78);
     margin-bottom: 14px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -255,7 +256,7 @@
     overflow: hidden;
   }
 
-  /* HERO ACTION BUTTONS: PREVENT SHRINKING & PRESERVE TOUCH TARGETS */
+  /* Robust, Unshrinkable Action Buttons */
   .hero-btns {
     display: flex !important;
     align-items: center !important;
@@ -266,12 +267,12 @@
 
   .hero-btns .btn-play {
     flex: 1 1 auto !important;
-    min-width: 110px !important;
-    height: 40px !important;
+    min-width: 112px !important;
+    height: 42px !important;
     padding: 0 14px !important;
     font-size: 13px !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
+    font-weight: 800 !important;
+    border-radius: 12px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -280,25 +281,25 @@
     color: #000 !important;
     white-space: nowrap !important;
     border: none !important;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.22) !important;
     flex-shrink: 0 !important;
   }
 
   .hero-btns .btn-info {
     flex: 1 1 auto !important;
-    min-width: 100px !important;
-    height: 40px !important;
+    min-width: 104px !important;
+    height: 42px !important;
     padding: 0 12px !important;
     font-size: 12px !important;
-    font-weight: 600 !important;
-    border-radius: 10px !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 5px !important;
     background: rgba(255, 255, 255, 0.12) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.18) !important;
     color: #fff !important;
     white-space: nowrap !important;
@@ -306,11 +307,11 @@
   }
 
   .hero-btns .btn-icon-round {
-    flex: 0 0 40px !important;
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    border-radius: 10px !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 12px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -321,122 +322,148 @@
   }
 
   /* --------------------------------------------------------------------------
-     4. HORIZONTAL FILTER CHIPS RAIL (FIX SQUISHED/CUT OFF BUTTONS)
+     4. CATEGORY FILTER CHIPS RAIL (FIXED: ALL, HINDI DUBS, AIRING, MOVIES, ETC.)
      -------------------------------------------------------------------------- */
   .quick-chips-rail {
     position: relative;
-    z-index: 10;
-    padding: 0 12px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    width: 100%;
-    overflow: hidden;
+    z-index: 20 !important;
+    padding: 0 14px !important;
+    margin-top: 14px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    display: block !important;
+    overflow: hidden !important;
   }
 
   .chips-container,
   #filterChips {
     display: flex !important;
-    align-items: center;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
     gap: 8px !important;
+    width: 100% !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     white-space: nowrap !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
     padding: 4px 2px 8px 2px !important;
+    scroll-snap-type: x proximity;
   }
 
   .chips-container::-webkit-scrollbar,
   #filterChips::-webkit-scrollbar {
     display: none !important;
+    height: 0 !important;
   }
 
   .chip {
     flex: 0 0 auto !important;
-    height: 32px;
+    min-width: max-content !important;
+    height: 36px !important;
     padding: 0 14px !important;
-    font-size: 11.5px !important;
-    font-weight: 600;
-    border-radius: 16px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    border-radius: 18px !important;
     display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.06) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    background: rgba(22, 22, 34, 0.85) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+    color: #c4c7de !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    scroll-snap-align: start;
+    user-select: none;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   }
 
-  .chip.active,
-  .chip:hover {
-    background: #ff0844 !important;
-    border-color: #ff0844 !important;
-    color: #fff !important;
-    box-shadow: 0 3px 12px rgba(255, 8, 68, 0.4);
+  .chip i,
+  .chip svg {
+    font-size: 12px !important;
+    color: #ff0844;
   }
 
   .chip:active {
     transform: scale(0.95);
   }
 
+  .chip.active,
+  .chip:hover {
+    background: linear-gradient(135deg, #ff0844 0%, #b80710 100%) !important;
+    border-color: #ff0844 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(255, 8, 68, 0.4) !important;
+  }
+
+  .chip.active i,
+  .chip.active svg {
+    color: #fff !important;
+  }
+
   /* --------------------------------------------------------------------------
-     5. COMPACT ANIME & MOVIE CARDS (MINIMIZED DENSITY & CORRECT ASPECT RATIO)
+     5. CATEGORY HEADERS & COMPACT HIGH-DENSITY POSTER CARDS
      -------------------------------------------------------------------------- */
   .content-rows {
     padding-top: 6px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding-bottom: 24px;
+    gap: 18px;
+    padding-bottom: 26px;
   }
 
   .row-section {
-    margin: 8px 0 !important;
-    padding: 0 12px !important;
+    margin: 6px 0 !important;
+    padding: 0 14px !important;
   }
 
+  /* Correct and bold Category Text Headers ("Trending Masterpieces", etc.) */
   .row-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 17px !important;
     font-weight: 800 !important;
-    letter-spacing: 0.2px;
-    margin-bottom: 8px !important;
-    color: #fff;
+    letter-spacing: -0.2px !important;
+    margin-bottom: 10px !important;
+    color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
   }
 
   .carousel-track {
     display: flex !important;
-    gap: 8px !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    padding: 2px 2px 10px 2px !important;
+    padding: 4px 2px 10px 2px !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
+    scroll-snap-type: x mandatory;
   }
 
   .carousel-track::-webkit-scrollbar {
     display: none !important;
   }
 
-  /* Compact Card Footprint for Mobile Screens */
+  /* Miniaturized, High-Density Aspect-Ratio Poster Cards */
   .anime-card,
   .card.ui-card-locked {
     position: relative !important;
-    flex: 0 0 102px !important;
-    width: 102px !important;
-    min-width: 102px !important;
-    max-width: 102px !important;
-    height: 152px !important;
-    border-radius: 8px !important;
+    flex: 0 0 112px !important;
+    width: 112px !important;
+    min-width: 112px !important;
+    max-width: 112px !important;
+    height: 168px !important;
+    border-radius: 10px !important;
     overflow: hidden !important;
-    background: #0f1016 !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+    background: #111118 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.65) !important;
+    scroll-snap-align: start;
     transform: translateZ(0);
     flex-shrink: 0 !important;
   }
@@ -446,18 +473,19 @@
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     display: block;
   }
 
+  /* Card Tags (Top-right & Top-left) */
   .card-badge,
   .card-badge-top {
     position: absolute;
-    top: 4px !important;
-    right: 4px !important;
-    font-size: 7.5px !important;
+    top: 5px !important;
+    right: 5px !important;
+    font-size: 8px !important;
     font-weight: 800 !important;
-    padding: 1.5px 4px !important;
+    padding: 2px 5px !important;
     border-radius: 4px !important;
     background: rgba(0, 0, 0, 0.75) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -468,45 +496,46 @@
 
   .card-badge-hindi {
     position: absolute;
-    top: 4px !important;
-    left: 4px !important;
-    font-size: 7px !important;
+    top: 5px !important;
+    left: 5px !important;
+    font-size: 7.5px !important;
     font-weight: 800 !important;
-    padding: 1.5px 4px !important;
+    padding: 2px 5px !important;
     border-radius: 4px !important;
-    background: rgba(255, 8, 68, 0.85) !important;
+    background: rgba(255, 8, 68, 0.9) !important;
     color: #fff !important;
     z-index: 3;
     line-height: 1;
   }
 
+  /* Bottom Vignette Overlay & Anime Titles */
   .card-overlay {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 24px 6px 6px 6px !important;
+    padding: 28px 7px 7px 7px !important;
     background: linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0) 40%,
-      rgba(4, 4, 6, 0.75) 75%,
+      rgba(0, 0, 0, 0) 35%,
+      rgba(4, 4, 6, 0.78) 72%,
       rgba(4, 4, 6, 0.98) 100%
     ) !important;
-    border-radius: 0 0 8px 8px !important;
+    border-radius: 0 0 10px 10px !important;
     z-index: 2;
     pointer-events: none;
   }
 
   .card-title {
-    font-size: 10px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
     color: #fff !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
     margin: 0 !important;
   }
 
@@ -514,22 +543,22 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 8.5px !important;
+    font-size: 9px !important;
     color: rgba(255, 255, 255, 0.65) !important;
-    margin-top: 2px !important;
+    margin-top: 3px !important;
   }
 
   .card-score {
     color: #00f5a0 !important;
-    font-weight: 700;
+    font-weight: 800;
   }
 
   .top10-rank {
-    font-size: 2.2rem !important;
+    font-size: 2.6rem !important;
     left: -2px !important;
     bottom: 2px !important;
     line-height: 1 !important;
-    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.9) !important;
+    -webkit-text-stroke: 1.2px rgba(0, 0, 0, 0.9) !important;
   }
 
   /* --------------------------------------------------------------------------
@@ -544,7 +573,7 @@
     min-width: 170px;
     max-width: 240px;
     height: 38px;
-    background: rgba(10, 10, 16, 0.8) !important;
+    background: rgba(10, 10, 16, 0.82) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
@@ -561,8 +590,8 @@
   .floating-quick-dock .dock-btn {
     background: transparent !important;
     border: none !important;
-    width: 30px !important;
-    height: 30px !important;
+    width: 32px !important;
+    height: 32px !important;
     border-radius: 50% !important;
     display: flex !important;
     align-items: center !important;
@@ -570,13 +599,13 @@
     padding: 0 !important;
     margin: 0 !important;
     cursor: pointer;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.85);
     flex-shrink: 0;
   }
 
   .floating-quick-dock .dock-btn i,
   .floating-quick-dock .dock-btn svg {
-    font-size: 13px !important;
+    font-size: 13.5px !important;
   }
 
   .floating-quick-dock .dock-btn:active {
@@ -589,7 +618,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     7. STREAMING MODAL & ACTION SHEET
+     7. STREAMING MODAL & STICKY VIDEO CONTROLS
      -------------------------------------------------------------------------- */
   .modal-container.active {
     padding: 0;
@@ -723,7 +752,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     8. TOAST NOTIFICATIONS ELEVATION (SOLVES HIDDEN ALERT ON SHARE)
+     8. TOAST NOTIFICATIONS ELEVATION (SOLVES HIDDEN POPUP ON SHARE)
      -------------------------------------------------------------------------- */
   .toast-container {
     position: fixed !important;
