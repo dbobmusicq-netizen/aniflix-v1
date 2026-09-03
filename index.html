@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <title>AniFlix Ultra - Stream Anime & Live-Action Across All Devices</title>
   
+  <!-- 1. ZERO-CACHE HEADERS: Prevents browser from locking onto stale HTML -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <!-- Advanced Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="manifest" href="/manifest.json" />
+  <link rel="shortcut icon" href="/favicon.ico?v=30.4.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=30.4.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=30.4.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=30.4.0" />
+  <link rel="manifest" href="/manifest.json?v=30.4.0" />
   
   <!-- Windows Tile & Theme Color Metadata for Progressive Web App Integration -->
   <meta name="theme-color" content="#040406" />
@@ -36,17 +41,15 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Separated Modular CSS Stylesheets -->
-  <link rel="stylesheet" href="theme-base.css">
-  <link rel="stylesheet" href="components-modal.css">
-  <link rel="stylesheet" href="p2p.css">
-  <link rel="stylesheet" href="webapp.css">
-  <link rel="stylesheet" href="mobile.css">
-  
+  <!-- 2. CACHE-BUSTED MODULAR STYLESHEETS: Update ?v= on every release -->
+  <link rel="stylesheet" href="theme-base.css?v=30.4.0">
+  <link rel="stylesheet" href="components-modal.css?v=30.4.0">
+  <link rel="stylesheet" href="p2p.css?v=30.4.0">
+  <link rel="stylesheet" href="webapp.css?v=30.4.0">
+  <link rel="stylesheet" href="mobile.css?v=30.4.0">
 
   <!-- ANIMATIONS & PLAYER LOADING STYLES -->
   <style>
-    /* Player Loading Overlay Animation */
     .player-loader-overlay {
       position: absolute;
       top: 0;
@@ -97,9 +100,57 @@
     .brand-icon-wrapper i {
       animation: playerLogoPulse 2.8s ease-in-out infinite alternate;
     }
+
+    /* PWA Automatic Cache-Refresh Notification Bar */
+    #updateNotificationBar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 99999;
+      background: linear-gradient(90deg, #ff0844 0%, #990024 100%);
+      color: #fff;
+      padding: 12px 18px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(255, 8, 68, 0.4);
+      font-family: 'Outfit', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      animation: slideDownUpdate 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideDownUpdate {
+      from { transform: translateY(-100%); }
+      to { transform: translateY(0); }
+    }
+    #updateNotificationBar button {
+      background: #fff;
+      color: #000;
+      border: none;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 12px;
+      transition: transform 0.2s ease;
+    }
+    #updateNotificationBar button:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body class="theme-dark">
+
+  <!-- AUTO-UPDATE NOTIFICATION BANNER -->
+  <div id="updateNotificationBar" role="alert">
+    <span><i class="fas fa-sparkles" style="margin-right: 8px;"></i> A new version of AniFlix Ultra is available!</span>
+    <div>
+      <button onclick="window.location.reload(true)">Update Now</button>
+      <i class="fas fa-xmark" onclick="document.getElementById('updateNotificationBar').style.display='none'" style="margin-left: 12px; cursor: pointer;"></i>
+    </div>
+  </div>
 
   <!-- MULTIPLAYER VIRTUAL CURSOR LAYER -->
   <div id="p2pCursorLayer"></div>
@@ -148,7 +199,7 @@
 
     <!-- Header Controls: Streamlined Search, PWA Install, Netflix Mode & Watchlist -->
     <div class="header-right">
-      <!-- Desktop PWA Install App Action Button (Dynamically shown by beforeinstallprompt) -->
+      <!-- Desktop PWA Install App Action Button -->
       <button class="icon-btn" id="headerInstallBtn" style="display:none;" title="Install AniFlix App on Device" aria-label="Install App" onclick="triggerPwaInstall()">
         <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
       </button>
@@ -202,7 +253,7 @@
     </button>
   </aside>
 
-  <!-- SIDE MENU DRAWER (CONTAINING ALL POWER-USER TOOLS, NOTIFICATION SETTINGS & NAV) -->
+  <!-- SIDE MENU DRAWER -->
   <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="window.toggleMobileNav(false)"></div>
   <aside class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="Navigation & Tools Menu">
     <div class="mobile-drawer-header">
@@ -312,7 +363,7 @@
       </div>
     </div>
 
-    <!-- Right Side Rail Indicators (Large Desktop Screens) -->
+    <!-- Right Side Rail Indicators -->
     <div class="hero-side-rail" aria-hidden="true">
       <span class="rail-indicator active"></span>
       <span class="rail-indicator"></span>
@@ -337,9 +388,7 @@
   </section>
 
   <!-- MAIN DYNAMIC CONTENT ROWS -->
-  <main class="content-rows" id="contentRows">
-    <!-- Carousel sections dynamically injected by streaming-ui.js -->
-  </main>
+  <main class="content-rows" id="contentRows"></main>
 
   <!-- SUPER ADVANCED CINEMATIC MODAL & STREAMING SUITE -->
   <div class="modal-overlay" id="modalOverlay" onclick="window.closeModal()"></div>
@@ -374,7 +423,7 @@
         <!-- P2P Realtime Emote Particle Physics Canvas -->
         <canvas id="p2pCanvasOverlay"></canvas>
 
-        <!-- P2P Emote Reaction Bar (Twitch / IG Live Style) -->
+        <!-- P2P Emote Reaction Bar -->
         <div class="p2p-reaction-bar" id="p2pReactionBar">
           <button class="p2p-emote-btn" type="button" onclick="window.p2pParty?.sendEmote('🔥')">🔥</button>
           <button class="p2p-emote-btn" type="button" onclick="window.p2pParty?.sendEmote('😂')">😂</button>
@@ -412,15 +461,12 @@
           <span class="player-current-ep-title" id="playerStreamTitle"></span>
         </div>
         <div class="player-action-right">
-          <!-- Picture-in-Picture (PiP) Floating Mini-Player Pill -->
           <button class="modal-pill-btn pip-trigger-btn" type="button" onclick="window.webApp?.togglePictureInPicture(document.getElementById('nativeStreamVideo') || document.getElementById('streamFrame'))" title="Detach into Floating Mini-Player">
             <i class="fas fa-arrow-up-right-from-square"></i> <span>Mini Player</span>
           </button>
-          <!-- P2P Chat Sidebar Toggle Button -->
           <button class="modal-pill-btn" type="button" onclick="document.getElementById('p2pChatSidebar').classList.toggle('open')" id="p2pChatToggleBtn" title="Toggle Watch Party Live Chat">
             <i class="fas fa-comments" style="color:var(--accent-emerald);"></i> <span>Party Chat</span>
           </button>
-          <!-- Web Audio Sound Booster Pill -->
           <button class="modal-pill-btn booster-btn" type="button" onclick="toggleAudioVolumeBooster()" id="audioBoosterBtn" title="Boost Audio Output up to 250%">
             <i class="fas fa-volume-high"></i> <span id="audioBoosterLabel">100% Volume</span>
           </button>
@@ -451,9 +497,7 @@
           <span class="server-status-caption" id="activeServerCaption">Server 1 (Native Direct Stream)</span>
         </div>
 
-        <div class="server-pills-scroll" id="serverButtonsContainer">
-          <!-- Dynamically populated by streaming-ui.js renderServerControlsDOM() -->
-        </div>
+        <div class="server-pills-scroll" id="serverButtonsContainer"></div>
       </div>
 
       <!-- Modal Body & Responsive Tab Navigation -->
@@ -508,7 +552,6 @@
               </div>
             </div>
 
-            <!-- Kinetic Episode Grid -->
             <div class="ep-grid" id="epList"></div>
           </div>
         </div>
@@ -531,7 +574,7 @@
     </div>
   </div>
 
-  <!-- JIKAN WEEKLY AIRING BROADCAST CALENDAR MODAL -->
+  <!-- JIKAN CALENDAR MODAL -->
   <div class="drawer-overlay" id="scheduleModalOverlay" onclick="closeScheduleModal()"></div>
   <div class="shortcuts-modal" id="scheduleModal" role="dialog" aria-modal="true" aria-labelledby="scheduleTitle">
     <div class="shortcuts-card schedule-card" style="max-width: 820px; width: 95%;">
@@ -539,16 +582,14 @@
         <h4 id="scheduleTitle"><i class="fas fa-calendar-days" style="color:var(--accent-red);"></i> Weekly Simulcast Airing Schedule</h4>
         <i class="fas fa-xmark" style="cursor:pointer;" onclick="closeScheduleModal()" aria-label="Close Schedule"></i>
       </div>
-      <div class="schedule-day-tabs" id="scheduleDayTabs" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:14px;">
-        <!-- Injected via JavaScript (Mon-Sun) -->
-      </div>
+      <div class="schedule-day-tabs" id="scheduleDayTabs" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:14px;"></div>
       <div class="schedule-items-grid" id="scheduleItemsContainer" style="max-height:480px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
         <div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Fetching live broadcast feeds...</div>
       </div>
     </div>
   </div>
 
-  <!-- TRACE.MOE VISUAL SCREENSHOT SEARCH MODAL -->
+  <!-- TRACE.MOE SEARCH MODAL -->
   <div class="drawer-overlay" id="traceMoeOverlay" onclick="closeTraceMoeModal()"></div>
   <div class="shortcuts-modal" id="traceMoeModal" role="dialog" aria-modal="true" aria-labelledby="traceMoeTitle">
     <div class="shortcuts-card" style="max-width: 580px;">
@@ -566,7 +607,7 @@
     </div>
   </div>
 
-  <!-- P2P WEBRTC WATCH PARTY MODAL -->
+  <!-- P2P WATCH PARTY MODAL -->
   <div class="drawer-overlay" id="watchPartyOverlay" onclick="closeWatchPartyModal()"></div>
   <div class="shortcuts-modal" id="watchPartyModal" role="dialog" aria-modal="true" aria-labelledby="partyTitle">
     <div class="shortcuts-card" style="max-width: 480px;">
@@ -594,7 +635,7 @@
     </div>
   </div>
 
-  <!-- P2P LIVE SYNCED CHAT & ROSTER DRAWER -->
+  <!-- P2P LIVE SYNCED CHAT DRAWER -->
   <aside class="p2p-chat-sidebar" id="p2pChatSidebar">
     <div class="p2p-chat-header">
       <h3>Watch Party Live</h3>
@@ -645,7 +686,7 @@
     <div class="watchlist-items-container" id="watchlistItemsList"></div>
   </aside>
 
-  <!-- KEYBOARD SHORTCUTS MODAL (DESKTOP) -->
+  <!-- KEYBOARD SHORTCUTS MODAL -->
   <div class="shortcuts-modal" id="shortcutsModal" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
     <div class="shortcuts-card">
       <div class="shortcuts-header">
@@ -665,13 +706,46 @@
     </div>
   </div>
 
-  <!-- SEPARATED MODULAR SCRIPT ENGINES (PROPER DEPENDENCY EXECUTION ORDER) -->
-  <script src="core-engine.js"></script>
-  <script src="dash-player.js"></script>
-  
-  <script src="streaming-ui.js"></script>
-  <script src="p2p.js"></script>
-  <script src="webapp.js"></script>
+  <!-- 3. CACHE-BUSTED MODULAR SCRIPT ENGINES: Update ?v= on every release -->
+  <script src="core-engine.js?v=30.4.0"></script>
+  <script src="dash-player.js?v=30.4.0"></script>
+  <script src="streaming-ui.js?v=30.4.0"></script>
+  <script src="p2p.js?v=30.4.0"></script>
+  <script src="webapp.js?v=30.4.0"></script>
 
+  <!-- 4. INTELLIGENT SERVICE WORKER LIFECYCLE CONTROLLER -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // Appending version parameter to sw.js ensures the browser checks for updates on every page load
+        navigator.serviceWorker.register('/sw.js?v=30.4.0').then(reg => {
+          // Check for background updates immediately
+          reg.update();
+
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // A new version has been installed; prompt user or trigger automatic reload
+                const banner = document.getElementById('updateNotificationBar');
+                if (banner) banner.style.display = 'flex';
+              }
+            });
+          });
+        }).catch(err => {
+          console.warn('[PWA] Service Worker registration failed:', err);
+        });
+
+        // Handle the transition when a new service worker takes over
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload(true);
+          }
+        });
+      });
+    }
+  </script>
 </body>
 </html>
