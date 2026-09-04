@@ -1,131 +1,484 @@
 /* ==========================================================================
-   ANIFLIX ULTRA - ADVANCED TOUCH & LOW-RAM RESPONSIVE OVERRIDES
-   File: mobile.css | Version: 36.0.0 Enterprise Ultra-Sync
-   Architecture: Zero Cascade Collisions, Keyboard Protection, Notch Immunity
+   ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
+   File: mobile.css | Version: 39.0.0 Enterprise Ultra-Sync
+   Architecture: Zero Cascade Collisions, Unshrinkable Buttons, Notch Immunity,
+                 Keyboard Auto-Protection & High-Density Native Scrolling
    ========================================================================== */
 
 @media (max-width: 768px) {
-  /* 1. iOS Auto-Zoom & Flex Blowout Elimination */
+  /* --------------------------------------------------------------------------
+     1. GLOBAL TOUCH ERGONOMICS & VIEWPORT SAFETY
+     -------------------------------------------------------------------------- */
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: #040406;
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: auto;
+    touch-action: pan-y;
+  }
+
+  #__next, #app, main {
+    min-height: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  body {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Strict iOS Safari Auto-Zoom Neutralizer & Flex Blowout Guards */
   input[type="text"],
   input[type="search"],
   select,
   textarea,
   .ep-select {
-    font-size: 16px !important; 
+    font-size: 16px !important;
   }
-  
+
   .card-overlay,
   .card-title,
   .player-action-left,
-  .ep-meta-content {
+  .player-current-ep-title,
+  .ep-meta-content,
+  .ep-title {
     min-width: 0 !important;
   }
 
-  /* 2. Unified Single-Stop Landscape Safe Insets */
-  .header,
-  .modal-nav-strip,
-  .player-action-strip,
-  .server-controls {
+  button, a, input, select, .chip, .server-btn, .dock-btn {
+    touch-action: manipulation;
+  }
+
+  /* --------------------------------------------------------------------------
+     2. MOBILE HEADER & LANDSCAPE SAFE-AREA ANCHORING
+     -------------------------------------------------------------------------- */
+  .header {
+    height: 56px;
+    padding: 0 12px;
     padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
     padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 10, 16, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 1500;
   }
 
-  .mobile-nav-toggle {
-    display: inline-flex;
+  .header-left {
+    gap: 8px;
+    align-items: center;
   }
 
-  /* 3. Streamlined Hero Dimensions for Small Screens */
-  .hero {
-    min-height: 440px;
-    height: 66vh;
-    padding-bottom: 18px;
+  .brand-name {
+    font-size: 15px;
+    letter-spacing: 0.4px;
   }
 
-  .hero-title {
-    font-size: clamp(1.4rem, 5.6vw, 1.9rem);
-    line-height: 1.15;
-  }
-
-  .hero-desc {
-    -webkit-line-clamp: 2;
-    font-size: 12px;
-  }
-
-  .hero-btns {
-    width: 100%;
-    gap: 6px;
-  }
-
-  .btn-play {
-    flex: 1 1 auto;
-    min-width: 108px;
-    height: 40px;
-    font-size: 12.5px;
-    justify-content: center;
-  }
-
-  .btn-info {
-    flex: 1 1 auto;
-    min-width: 98px;
-    height: 40px;
-    font-size: 12px;
-    justify-content: center;
-  }
-
-  .btn-icon-round {
-    flex: 0 0 40px;
-    width: 40px;
-    height: 40px;
-  }
-
-  /* 4. Exact Physical Card Scaling for Low-VRAM Devices */
-  .anime-card {
-    flex: 0 0 114px;
-    width: 114px;
-    height: 170px;
+  .brand-icon-wrapper {
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
   }
 
-  .card-title {
-    font-size: 10.5px;
-  }
-
-  .top10-rank {
-    font-size: 2.6rem;
-  }
-
-  /* 5. Compact Thumb Dock */
-  .floating-quick-dock {
-    width: auto;
-    min-width: 180px;
-    height: 40px;
-    bottom: 12px;
-    gap: 12px;
-    padding: 0 12px;
-  }
-
-  .floating-quick-dock .dock-btn {
-    width: 30px;
-    height: 30px;
-  }
-
-  .floating-quick-dock .dock-btn i {
+  .brand-icon-wrapper i {
     font-size: 13px;
   }
 
-  /* 6. High-Priority Floating Toast */
-  .toast-container {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
-    width: 92% !important;
-    z-index: var(--z-toast) !important;
+  .brand-badge {
+    font-size: 8px;
+    padding: 1px 4px;
   }
 
-  .toast {
-    padding: 10px 14px !important;
+  .nav-desktop {
+    display: none !important;
+  }
+
+  .mobile-nav-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-main, #fff);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background 0.2s ease, transform 0.15s ease;
+    z-index: 1501;
+  }
+
+  .mobile-nav-toggle:active {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(0.92);
+  }
+
+  .header-right {
+    gap: 6px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 13px;
+  }
+
+  .search-wrapper.open {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    background: rgba(8, 8, 14, 0.98);
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1600;
+    animation: mobileSearchDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes mobileSearchDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --------------------------------------------------------------------------
+     3. HERO BILLBOARD & UNBREAKABLE BUTTON METRICS
+     -------------------------------------------------------------------------- */
+  .hero {
+    min-height: 420px;
+    height: 66vh;
+    padding: 0 14px 20px 14px;
+    align-items: flex-end;
+  }
+
+  .hero-content {
+    margin-top: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .hero-network-badge {
+    font-size: 9.5px;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-size: clamp(1.5rem, 6vw, 2.1rem);
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+
+  .hero-tags {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .tag-match, .tag-box, .tag-hindi {
+    font-size: 10px;
+    padding: 2px 7px;
+  }
+
+  .hero-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    -webkit-line-clamp: 2;
+  }
+
+  /* Hero action buttons: strict non-collapsing targets */
+  .hero-btns {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .hero-btns .btn-play {
+    flex: 1 1 auto !important;
+    min-width: 110px !important;
+    height: 40px !important;
+    padding: 0 14px !important;
     font-size: 12.5px !important;
+    font-weight: 800 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    background: #fff !important;
+    color: #000 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 
-  /* 7. Virtual Keyboard Protection: Auto-banish Dock on Text Input */
+  .hero-btns .btn-info {
+    flex: 1 1 auto !important;
+    min-width: 100px !important;
+    height: 40px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #fff !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .hero-btns .btn-icon-round {
+    flex: 0 0 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #fff !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     4. HORIZONTAL FILTER CHIPS RAIL
+     -------------------------------------------------------------------------- */
+  .quick-chips-rail {
+    padding: 0 12px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .chips-container,
+  #filterChips {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 4px 0 8px 0 !important;
+    padding-left: max(0px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0px, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .chips-container::-webkit-scrollbar,
+  #filterChips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .chip {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    height: 34px !important;
+    padding: 0 14px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    border-radius: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    background: #12121c !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-secondary, #c4c7de) !important;
+    user-select: none !important;
+    white-space: nowrap !important;
+  }
+
+  .chip.active {
+    background: var(--accent-red, #ff0844) !important;
+    border-color: var(--accent-red, #ff0844) !important;
+    color: #fff !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     5. HIGH-DENSITY CARD VIEWPORTS (3GB RAM OPTIMIZED)
+     -------------------------------------------------------------------------- */
+  .content-rows {
+    padding-top: 10px;
+    gap: 18px;
+    padding-bottom: 24px;
+  }
+
+  .row-section {
+    margin: 8px 0 !important;
+    padding: 0 12px !important;
+  }
+
+  .row-header {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    margin-bottom: 8px !important;
+    gap: 6px;
+    color: #fff !important;
+  }
+
+  .carousel-track {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 2px 0 10px 0 !important;
+    padding-left: max(0px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0px, env(safe-area-inset-right, 0px)) !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .carousel-track::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Exact physical scaling prevents reflow thrashing and compositor tile drops */
+  .anime-card,
+  .card.ui-card-locked {
+    flex: 0 0 114px !important;
+    width: 114px !important;
+    min-width: 114px !important;
+    max-width: 114px !important;
+    height: 170px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    contain: paint !important;
+    flex-shrink: 0 !important;
+  }
+
+  .anime-card img {
+    border-radius: 8px !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .card-badge,
+  .card-badge-top {
+    top: 5px !important;
+    right: 5px !important;
+    font-size: 8px !important;
+    font-weight: 800 !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .card-badge-hindi {
+    top: 5px !important;
+    left: 5px !important;
+    font-size: 7.5px !important;
+    font-weight: 800 !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+  }
+
+  .card-overlay {
+    padding: 26px 8px 7px 8px !important;
+    border-radius: 0 0 8px 8px !important;
+  }
+
+  .card-title {
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.22 !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  .card-meta {
+    font-size: 9px !important;
+    margin-top: 3px !important;
+    gap: 6px !important;
+  }
+
+  .card-score i {
+    font-size: 8px !important;
+  }
+
+  .top10-rank {
+    font-size: 2.6rem !important;
+    left: 0px !important;
+    bottom: 4px !important;
+    -webkit-text-stroke: 1.2px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     6. MOBILE QUICK HUD DOCK & VIRTUAL KEYBOARD AUTO-DISMISS
+     -------------------------------------------------------------------------- */
+  .floating-quick-dock {
+    position: fixed;
+    bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) + 6px));
+    left: 50%;
+    transform: translate3d(-50%, 0, 0);
+    width: auto !important;
+    min-width: 180px;
+    max-width: 250px;
+    height: 40px;
+    background: rgba(14, 14, 22, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 9999px !important;
+    padding: 3px 8px !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    z-index: 1200;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85) !important;
+    pointer-events: auto;
+    transition: opacity 0.15s ease, transform 0.15s ease !important;
+  }
+
+  .floating-quick-dock .dock-btn {
+    background: transparent !important;
+    border: none !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .floating-quick-dock .dock-btn i,
+  .floating-quick-dock .dock-btn svg {
+    font-size: 13px !important;
+  }
+
+  .floating-quick-dock .dock-btn:active {
+    transform: scale(0.85) !important;
+  }
+
+  .floating-quick-dock .dock-tooltip {
+    display: none !important;
+  }
+
+  /* Auto-hide floating dock when typing on modern and legacy mobile keyboards */
   body:has(input:focus) .floating-quick-dock,
   body:has(textarea:focus) .floating-quick-dock,
   body.keyboard-open .floating-quick-dock {
@@ -133,169 +486,312 @@
     visibility: hidden !important;
     pointer-events: none !important;
     transform: translate3d(-50%, 20px, 0) !important;
-    transition: opacity 0.15s ease, transform 0.15s ease !important;
-  }
-}
-
-@media (min-width: 769px) {
-  #filterChips { overflow: visible; }
-}
-
-
-/* ==========================================================================
-   FINAL MOBILE SYNC / KEYBOARD / NOTCH / PLAYER LAYER
-   ========================================================================== */
-
-@media (max-width: 768px) {
-  html,
-  body,
-  main,
-  #__next,
-  #app {
-    min-width: 0;
-    max-width: 100%;
   }
 
-  input,
-  input[type="text"],
-  input[type="search"],
-  select,
-  textarea,
-  .ep-select {
-    min-width: 0;
-    max-width: 100%;
-    font-size: 16px !important;
-  }
-
-  .card-overlay,
-  .card-title,
-  .card-meta,
-  .player-action-left,
-  .player-action-right,
-  .player-current-ep-title,
-  .modal-nav-left,
-  .modal-now-playing-text,
-  .server-controls,
-  .server-pills-scroll,
-  #serverButtonsContainer,
-  #serverSelectionContainer,
-  .modal-tabs,
-  .ep-header,
-  .ep-card,
-  .ep-meta-content,
-  .ep-title {
-    min-width: 0 !important;
-  }
-
-  .header,
-  .modal-nav-strip,
-  .player-action-strip,
-  .server-controls {
-    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
-  }
-
-  .carousel-track,
-  .chips-container,
-  .modal-tabs,
-  .player-action-right,
-  .server-pills-scroll,
-  #serverButtonsContainer,
-  #serverSelectionContainer {
-    padding-left: max(0px, env(safe-area-inset-left, 0px));
-    padding-right: max(0px, env(safe-area-inset-right, 0px));
-    scroll-padding-left: max(0px, env(safe-area-inset-left, 0px));
-    scroll-padding-right: max(0px, env(safe-area-inset-right, 0px));
-  }
-
-  body.keyboard-open .floating-quick-dock,
-  body.keyboard-open .toast-container {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
-
-  @supports selector(body:has(input:focus)) {
-    body:has(input:focus) .floating-quick-dock,
-    body:has(input:focus) .toast-container,
-    body:has(select:focus) .floating-quick-dock,
-    body:has(select:focus) .toast-container,
-    body:has(textarea:focus) .floating-quick-dock,
-    body:has(textarea:focus) .toast-container {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-  }
-
+  /* --------------------------------------------------------------------------
+     7. UNIFIED STREAMING MODAL & TOUCH-PANNING ENGINE
+     -------------------------------------------------------------------------- */
   .modal-container {
-    touch-action: pan-y;
-    overflow-x: hidden;
+    padding: 0 !important;
+    align-items: stretch;
+    transform: none !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+  }
+
+  .modal-container.active,
+  .modal-container.open {
+    transform: none !important;
   }
 
   .modal-dialog {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    min-height: 100%;
+    position: relative;
+    width: 100vw !important;
+    min-height: 100dvh;
+    height: auto !important;
+    max-width: 100vw !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+    background: #040406;
+    padding-top: env(safe-area-inset-top, 0px);
+    z-index: 1400;
+    overflow: visible !important;
+    box-shadow: none !important;
   }
 
+  .modal-nav-strip {
+    padding: 10px 14px;
+    padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
+    background: rgba(10, 11, 16, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 1401;
+  }
+
+  /* Native vertical touch scrolling enabled over video viewport */
   .modal-player-wrap {
-    position: relative !important;
-    top: auto !important;
-    z-index: auto !important;
     width: 100% !important;
     aspect-ratio: 16 / 9 !important;
-    touch-action: pan-y;
-  }
-
-  .modal-player-wrap iframe,
-  .modal-player-wrap video {
-    pointer-events: auto;
-  }
-
-  .modal-player-wrap.is-scrolling iframe,
-  .modal-player-wrap.is-scrolling video,
-  .modal-player-wrap.is-scrolling .player-cover-overlay {
-    pointer-events: none !important;
-  }
-
-  .floating-quick-dock {
-    bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) + 6px));
-    max-width: calc(100vw - 24px);
-  }
-
-  .anime-card,
-  .card.ui-card-locked {
     flex-shrink: 0;
-    min-width: 114px;
+    background: #000;
+    position: sticky !important;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95);
+    touch-action: pan-y !important;
   }
 
-  .modal-pill-btn,
+  .modal-body {
+    padding: 12px;
+    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    flex: none !important;
+    background: #07070a;
+  }
+
+  .player-action-strip {
+    padding: 10px 12px;
+    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    background: rgba(12, 13, 20, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .player-action-left {
+    display: none;
+  }
+
+  .player-action-right {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 4px;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .player-action-right::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .modal-pill-btn {
+    flex: 0 0 auto !important;
+    min-height: 38px !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    font-weight: 700;
+    border-radius: 9999px;
+  }
+
+  .modal-tabs {
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .modal-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    padding: 7px 13px;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* --------------------------------------------------------------------------
+     8. SERVER SCROLLER & EPISODE BROWSER
+     -------------------------------------------------------------------------- */
+  .server-controls {
+    padding: 10px 12px;
+    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    background: rgba(10, 11, 16, 0.98);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .server-pills-scroll,
+  #serverButtonsContainer,
+  #serverSelectionContainer {
+    width: 100%;
+    max-width: 100%;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 2px 0 6px 0;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  .server-pills-scroll::-webkit-scrollbar,
+  #serverButtonsContainer::-webkit-scrollbar,
+  #serverSelectionContainer::-webkit-scrollbar {
+    display: none !important;
+  }
+
   .server-btn,
-  .server-node-btn,
-  .chip {
-    flex: 0 0 auto;
-    min-width: max-content;
+  .server-node-btn {
+    flex: 0 0 auto !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    border-radius: 9999px;
   }
 
-  /* Never impose a mobile sticky video. */
-  .modal-player-wrap {
+  .ep-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .ep-card {
+    padding: 8px;
+    border-radius: 12px;
+    gap: 10px;
+  }
+
+  .ep-thumb-box {
+    width: 96px;
+    min-width: 96px;
+  }
+
+  .ep-title {
+    font-size: 12.5px;
+  }
+
+  .ep-overview {
+    display: none;
+  }
+
+  /* --------------------------------------------------------------------------
+     9. TOAST NOTIFICATIONS & HARDWARE-ACCELERATED DRAWERS
+     -------------------------------------------------------------------------- */
+  .toast-container {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 360px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+    z-index: 100000 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .toast {
     position: relative !important;
-    top: auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 11px 16px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    background: #141422 !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85) !important;
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    color: #fff !important;
+    transform: translateY(16px) scale(0.95) !important;
+    opacity: 0 !important;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
   }
-}
 
-@media (hover: none), (pointer: coarse) {
+  .toast.visible {
+    transform: translateY(0) scale(1) !important;
+    opacity: 1 !important;
+  }
+
+  .toast i,
+  .toast svg {
+    font-size: 14px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .toast-info i { color: #00f2fe !important; }
+  .toast-success i { color: #00f5a0 !important; }
+  .toast-error i { color: #ff0844 !important; }
+
+  /* Drawers utilize hardware-composited sliding */
+  .mobile-nav-drawer {
+    width: 84vw;
+    max-width: 310px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: var(--z-drawer, 3000) !important;
+  }
+
+  .watchlist-drawer,
+  .p2p-chat-sidebar {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    z-index: var(--z-drawer, 3000) !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     10. TOUCH-HOVER FIX & INSTANT FEEDBACK
+     -------------------------------------------------------------------------- */
+  button:active, 
+  .anime-card:active {
+    transform: scale(0.97);
+    transition: transform 0.08s ease-out;
+  }
+
+  /* Remove sticky hover artifacts on touch screens */
   .anime-card:hover,
   .chip:hover,
   .modal-pill-btn:hover,
   .server-btn:hover,
-  .server-node-btn:hover,
-  .ep-card:hover {
+  .server-node-btn:hover {
     transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Desktop viewport fallback */
+@media (min-width: 769px) {
+  #filterChips { 
+    overflow: visible; 
   }
 }
