@@ -1,12 +1,64 @@
 /* ==========================================================================
-   ANIFLIX ULTRA - STREAMING MODAL & DRAWER MATRIX
-   File: components-modal.css | Version: 36.0.0 Enterprise Ultra-Sync
-   Architecture: Supports Both .open & .active Triggers, GPU Sliding Drawers
+   ANIFLIX ULTRA — ADVANCED CINEMATIC MODAL SYSTEM (ENTERPRISE ULTRA-SYNC)
+   File: components-modal.css | Version: 39.0.0 Zero-Defect Master Engine
+   Architecture: GPU Hardware-Accelerated Drawers, Multi-Trigger JS Compatibility,
+                 Safe-Area Landscape Anchoring, Aspect-Ratio Fullscreen Unshackling.
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   1. MODAL OVERLAYS & CONTAINERS (DUAL TRIGGER COMPATIBILITY)
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   01. DESIGN TOKENS, CHROMATIC PALETTES & LAYER ELEVATION
+   ========================================================================== */
+:root {
+  --modal-pad: clamp(14px, 2.5vw, 32px);
+  --modal-bg-base: #040407;
+  --modal-bg-surface: #0a0a10;
+  --modal-bg-elevated: #12121c;
+  --modal-bg-card: #161624;
+  --modal-bg-glass: rgba(14, 14, 24, 0.88);
+  --modal-bg-glass-heavy: rgba(10, 10, 18, 0.96);
+
+  --modal-border-subtle: rgba(255, 255, 255, 0.08);
+  --modal-border-medium: rgba(255, 255, 255, 0.14);
+  --modal-border-glow: rgba(255, 255, 255, 0.24);
+  --modal-border-focus: rgba(0, 242, 254, 0.6);
+
+  /* Chromatic Holographic Accents */
+  --modal-accent-red: #ff0844;
+  --modal-accent-red-hover: #ff2a5f;
+  --modal-accent-glow: rgba(255, 8, 68, 0.45);
+  --modal-accent-cyan: #00f2fe;
+  --modal-accent-cyan-hover: #4facfe;
+  --modal-accent-cyan-glow: rgba(0, 242, 254, 0.35);
+  --modal-accent-emerald: #00f5a0;
+  --modal-accent-emerald-glow: rgba(0, 245, 160, 0.35);
+  --modal-accent-gold: #ffb703;
+  --modal-accent-gold-glow: rgba(255, 183, 3, 0.35);
+  --modal-accent-purple: #9d4edd;
+  --modal-accent-purple-glow: rgba(157, 78, 221, 0.35);
+
+  /* Contrast Typography Structure */
+  --modal-text-main: #ffffff;
+  --modal-text-secondary: #c4c7de;
+  --modal-text-muted: #727694;
+
+  /* Universal Rigid Stacking Context (Synchronized Across All CSS Modules) */
+  --z-base: 1;
+  --z-header: 1000;
+  --z-dock: 1500;
+  --z-modal-backdrop: 2000;
+  --z-modal: 2001;
+  --z-drawer: 3000;
+  --z-toast: 99999;
+
+  --modal-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --modal-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --modal-font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --modal-font-mono: 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ==========================================================================
+   02. VIEWPORT BACKDROP & DUAL-TRIGGER MODAL CONTAINER
+   ========================================================================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -14,11 +66,11 @@
   z-index: var(--z-modal-backdrop);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
   pointer-events: none;
+  transition: opacity 0.25s var(--modal-ease), visibility 0.25s ease;
 }
 
-/* Supports both .active and .open from all script layers */
+/* Bi-directional synchronization: supports both .active and .open from JS engines */
 .modal-overlay.active,
 .modal-overlay.open {
   opacity: 1;
@@ -32,79 +84,100 @@
   z-index: var(--z-modal);
   overflow-y: auto;
   overflow-x: hidden;
-  display: none;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 0;
+  padding: clamp(0px, 3vw, 36px) clamp(0px, 2vw, 24px);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease;
-  -webkit-overflow-scrolling: touch;
+  pointer-events: none;
+  transform: translate3d(0, 16px, 0) scale(0.98);
+  transition: opacity 0.28s var(--modal-ease), transform 0.28s var(--modal-ease), visibility 0.28s ease;
+  overscroll-behavior-y: contain;
 }
 
 .modal-container.active,
 .modal-container.open {
-  display: flex !important;
   opacity: 1 !important;
   visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translate3d(0, 0, 0) scale(1) !important;
 }
 
 .modal-dialog {
-  background: #08080e;
+  background: var(--modal-bg-surface);
   width: 100%;
-  min-height: 100%;
-  border: none;
+  max-width: 1120px;
+  border-radius: clamp(14px, 2vw, 22px);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 1px 1px var(--modal-border-subtle);
+  margin-bottom: clamp(20px, 4vw, 54px);
+  min-height: auto;
+  height: fit-content;
+  border: 1px solid var(--modal-border-subtle);
   display: flex;
   flex-direction: column;
 }
 
-@media (min-width: 860px) {
-  .modal-container {
-    padding: 30px 18px;
-  }
-  .modal-dialog {
-    max-width: 1060px;
-    min-height: auto;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    overflow: hidden;
-  }
+/* Accent Lighting Header Line */
+.modal-dialog::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--modal-accent-red) 35%, var(--modal-accent-cyan) 65%, transparent 100%);
+  z-index: 35;
+  opacity: 0.85;
 }
 
-/* --------------------------------------------------------------------------
-   2. MODAL NAVIGATION STRIP & VIDEO PLAYER
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   03. TOP NAVIGATION BAR & SAFE-AREA STRIP
+   ========================================================================== */
 .modal-nav-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: #0d0d16;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px var(--modal-pad);
+  padding-left: max(var(--modal-pad), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--modal-pad), env(safe-area-inset-right, 0px));
+  background: rgba(10, 10, 16, 0.96);
+  border-bottom: 1px solid var(--modal-border-subtle);
+  position: relative;
+  z-index: 30;
   flex-shrink: 0;
 }
 
 .modal-nav-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
+  flex: 1;
 }
 
 .modal-brand-tag {
   font-size: 10px;
   font-weight: 800;
+  text-transform: uppercase;
   color: #fff;
-  background: var(--accent-red);
-  padding: 3px 8px;
-  border-radius: 4px;
+  background: linear-gradient(135deg, var(--modal-accent-red) 0%, var(--modal-accent-red-hover) 100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 0 14px var(--modal-accent-glow);
   flex-shrink: 0;
+  user-select: none;
 }
 
 .modal-now-playing-text {
-  font-size: 12.5px;
+  font-size: clamp(12.5px, 1.2vw, 14px);
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--modal-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -112,56 +185,154 @@
 }
 
 .btn-close-modal {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--modal-border-subtle);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
   color: #fff;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  cursor: pointer;
+  outline: none;
   flex-shrink: 0;
+  transition: transform 0.25s var(--modal-spring), background 0.2s ease;
 }
 
-/* Responsive Player Aspect Ratio & Fullscreen Override */
+.btn-close-modal:active {
+  transform: scale(0.92);
+}
+
+/* ==========================================================================
+   04. VIDEO VIEWPORT, STREAM FRAME & FULLSCREEN UNSHACKLING
+   ========================================================================== */
 .modal-player-wrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
-  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-/* Native Fullscreen Viewport Unshackling */
+/* Fullscreen letterbox override: occupies absolute display limits cleanly */
 .modal-player-wrap:fullscreen,
 .modal-player-wrap:-webkit-full-screen {
   width: 100vw !important;
   height: 100vh !important;
   max-width: none !important;
+  max-height: none !important;
   aspect-ratio: auto !important;
 }
 
 .modal-player-wrap iframe,
-.modal-player-wrap video {
+.modal-player-wrap video,
+.modal-player-wrap #streamFrame,
+.modal-player-wrap #nativeStreamVideo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  border: none;
+  border: 0;
+  display: block;
+  z-index: 5;
+  background: #000;
 }
 
-/* --------------------------------------------------------------------------
-   3. ACTION BAR & CAROUSEL TRAINS
-   -------------------------------------------------------------------------- */
+.modal-backdrop-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.75);
+  z-index: 1;
+}
+
+.modal-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 7, 10, 0.1) 0%, rgba(7, 7, 10, 0.45) 50%, rgba(7, 7, 10, 0.98) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.player-cover-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.85) 100%);
+  padding: clamp(16px, 4vw, 36px);
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.player-cover-overlay h2 {
+  font-size: clamp(1.4rem, 3.2vw, 2.4rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95);
+  margin: 0;
+  text-align: center;
+  max-width: 90%;
+}
+
+.modal-big-play-btn {
+  width: clamp(62px, 7.5vw, 78px);
+  height: clamp(62px, 7.5vw, 78px);
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+  margin-bottom: 14px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.28s var(--modal-spring), background 0.25s ease;
+}
+
+.modal-big-play-btn i,
+.modal-big-play-btn svg {
+  color: #000;
+  font-size: clamp(20px, 2.8vw, 26px);
+  margin-left: 4px;
+}
+
+/* Passive P2P Reaction Layer */
+#p2pCanvasOverlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+/* ==========================================================================
+   05. KINETIC PLAYER CONTROL BELT & TRUNCATION GUARDS
+   ========================================================================== */
 .player-action-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 14px;
-  background: #0a0a12;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 12px;
+  padding: 10px var(--modal-pad);
+  padding-left: max(var(--modal-pad), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--modal-pad), env(safe-area-inset-right, 0px));
+  background: rgba(10, 10, 16, 0.98);
+  border-bottom: 1px solid var(--modal-border-subtle);
+  position: relative;
+  z-index: 20;
   flex-shrink: 0;
 }
 
@@ -174,7 +345,7 @@
 }
 
 .player-current-ep-title {
-  font-size: 13.5px;
+  font-size: clamp(13px, 1.2vw, 14.5px);
   font-weight: 800;
   color: #fff;
   white-space: nowrap;
@@ -187,162 +358,441 @@
 .player-action-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   max-width: 100%;
+  padding: 4px 0;
 }
-.player-action-right::-webkit-scrollbar { display: none; }
+
+.player-action-right::-webkit-scrollbar {
+  display: none;
+}
 
 .modal-pill-btn {
-  background: #141420;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11.5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--modal-text-secondary);
+  padding: 7px 15px;
+  border-radius: 9999px;
+  font-size: clamp(11.5px, 1.05vw, 12.5px);
   font-weight: 700;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  white-space: nowrap;
+  justify-content: center;
+  gap: 7px;
   flex-shrink: 0;
-}
-.modal-pill-btn.next-ep-btn {
-  background: var(--accent-red);
-  color: #fff;
-  border-color: var(--accent-red);
+  white-space: nowrap;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  user-select: none;
+  outline: none;
 }
 
-/* --------------------------------------------------------------------------
-   4. SERVER NODES & EPISODES
-   -------------------------------------------------------------------------- */
+.modal-pill-btn:active {
+  transform: scale(0.95);
+}
+
+.modal-pill-btn[onclick*="MiniPlayer"] i { color: var(--modal-accent-cyan); }
+.modal-pill-btn[onclick*="PartyChat"] i { color: var(--modal-accent-emerald); }
+.modal-pill-btn[onclick*="Volume"] i { color: var(--modal-accent-gold); }
+.modal-pill-btn[onclick*="Theater"] i { color: var(--modal-accent-purple); }
+.modal-pill-btn[onclick*="share"] i { color: #38bdf8; }
+.modal-pill-btn[onclick*="Watchlist"] i { color: var(--modal-accent-emerald); }
+
+.modal-pill-btn.next-ep-btn {
+  background: var(--modal-accent-red);
+  color: #fff;
+  border-color: var(--modal-accent-red);
+  box-shadow: 0 0 14px var(--modal-accent-glow);
+}
+
+/* ==========================================================================
+   06. SERVER ROUTING & PILL MATRIX
+   ========================================================================== */
 .server-controls {
-  padding: 8px 14px;
-  background: #0d0d16;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 11, 16, 0.98);
+  padding: 10px var(--modal-pad);
+  padding-left: max(var(--modal-pad), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--modal-pad), env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--modal-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: relative;
+  z-index: 18;
+  flex-shrink: 0;
+}
+
+.server-info-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  flex-shrink: 0;
+  gap: 3px;
+  min-width: 0;
 }
 
 .server-label {
   font-size: 10.5px;
   font-weight: 800;
-  color: var(--text-muted);
+  color: var(--modal-text-muted);
   text-transform: uppercase;
-}
-
-.server-pills-scroll {
   display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.server-pills-scroll::-webkit-scrollbar { display: none; }
-
-.server-btn, .server-node-btn {
-  background: #141420;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
-  display: inline-flex;
   align-items: center;
   gap: 6px;
+  letter-spacing: 0.8px;
+  user-select: none;
 }
 
-.server-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-emerald);
+.server-status-caption {
+  font-size: 11.5px;
+  color: var(--modal-accent-cyan);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.server-node-btn.active-server,
-.server-btn.active {
-  background: var(--accent-red);
+.server-pills-scroll,
+#serverButtonsContainer,
+#serverSelectionContainer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.server-btn,
+.server-node-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--modal-border-subtle);
+  color: var(--modal-text-secondary);
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-size: clamp(11px, 1vw, 12px);
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+  min-height: 36px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.server-btn:active,
+.server-node-btn:active {
+  transform: scale(0.95);
+}
+
+.server-btn.active,
+.server-node-btn.active,
+.server-node-btn.active-server {
+  background: var(--modal-accent-red);
+  border-color: var(--modal-accent-red);
   color: #fff;
-  border-color: var(--accent-red);
+  box-shadow: 0 0 16px var(--modal-accent-glow);
 }
 
-.modal-body { padding: 14px; flex: 1 0 auto; }
+.server-status-dot,
+.server-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.server-status-dot.online,
+.server-status-dot.optimal,
+.server-dot.online,
+.server-dot.optimal {
+  background: var(--modal-accent-emerald);
+}
+
+.server-status-dot.slow,
+.server-dot.slow {
+  background: var(--modal-accent-gold);
+}
+
+.server-status-dot.offline,
+.server-dot.offline {
+  background: var(--modal-accent-red);
+}
+
+.server-tag {
+  font-size: 8.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================================================
+   07. MODAL BODY & RESPONSIVE TABS
+   ========================================================================== */
+.modal-body {
+  padding: var(--modal-pad);
+  padding-left: max(var(--modal-pad), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--modal-pad), env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  background: var(--modal-bg-surface);
+  position: relative;
+  z-index: 10;
+  flex: 1 0 auto;
+}
 
 .modal-tabs {
   display: flex;
-  gap: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 14px;
+  gap: clamp(14px, 2.5vw, 26px);
+  border-bottom: 2px solid var(--modal-border-subtle);
+  margin-bottom: clamp(16px, 2.5vw, 24px);
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
-.modal-tabs::-webkit-scrollbar { display: none; }
+
+.modal-tabs::-webkit-scrollbar {
+  display: none;
+}
 
 .tab-btn {
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 700;
-  padding-bottom: 8px;
+  background: none;
+  border: none;
+  color: var(--modal-text-muted);
+  font-size: clamp(13px, 1.2vw, 14.5px);
+  font-weight: 800;
+  padding: 0 2px 10px;
+  cursor: pointer;
+  position: relative;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   white-space: nowrap;
-}
-.tab-btn.active {
-  color: #fff;
-  border-bottom: 2px solid var(--accent-red);
+  user-select: none;
+  transition: color 0.2s ease;
 }
 
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.tab-btn.active {
+  color: #fff;
+  border-bottom: 2px solid var(--modal-accent-red);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* ==========================================================================
+   08. OVERVIEW TAB & METADATA CARDS
+   ========================================================================== */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: clamp(18px, 3vw, 36px);
+  align-items: start;
+}
+
+.overview-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.overview-desc {
+  font-size: clamp(13px, 1.2vw, 14.5px);
+  line-height: 1.75;
+  color: var(--modal-text-secondary);
+  margin: 0 0 18px 0;
+}
+
+.side-info-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--modal-border-subtle);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.side-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.side-info-row span:first-child {
+  color: var(--modal-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+}
+
+.side-info-row span:last-child {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   09. EPISODES DIRECTORY & HIGH-DENSITY TILES
+   ========================================================================== */
+.episodes-master-section {
+  margin-top: clamp(20px, 3vw, 32px);
+  border-top: 1px solid var(--modal-border-subtle);
+  padding-top: clamp(16px, 2.5vw, 24px);
+}
 
 .ep-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-}
-.ep-header h3 { font-size: 14.5px; font-weight: 800; }
-.ep-select {
-  background: #141420;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 16px; /* Strict iOS Zoom Neutralizer */
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.ep-grid { display: flex; flex-direction: column; gap: 6px; }
+.ep-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ep-header-left h3 {
+  font-size: clamp(1.15rem, 1.6vw, 1.35rem);
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.episodes-total-pill {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--modal-text-secondary);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ep-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Force 16px font-size to strictly eliminate mobile input auto-zoom */
+.ep-select {
+  background: var(--modal-bg-elevated);
+  color: #fff;
+  border: 1px solid var(--modal-border-glow);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 16px !important;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+.ep-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 520px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
 .ep-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px;
-  background: #0f0f18;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  gap: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
   min-width: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
+
+.ep-card:active {
+  transform: scale(0.98);
+}
+
 .ep-card.playing {
-  border-color: var(--accent-red);
-  background: rgba(255, 8, 68, 0.12);
+  background: rgba(255, 8, 68, 0.12) !important;
+  border-color: var(--modal-accent-red) !important;
+}
+
+.ep-num {
+  font-size: clamp(14px, 1.8vw, 18px);
+  font-weight: 900;
+  color: #55556d;
+  width: 28px;
+  text-align: center;
+  font-family: var(--modal-font-mono);
+  flex-shrink: 0;
+}
+
+.ep-card.playing .ep-num {
+  color: var(--modal-accent-red);
 }
 
 .ep-thumb-box {
-  width: 80px;
-  height: 46px;
-  border-radius: 4px;
+  position: relative;
+  width: clamp(96px, 16vw, 136px);
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
+  background: #000;
 }
-.ep-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-.ep-meta-content { flex: 1; min-width: 0; overflow: hidden; }
+
+.ep-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ep-info,
+.ep-meta-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .ep-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
+  margin: 0 0 4px 0;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -350,196 +800,363 @@
   min-width: 0;
 }
 
-/* --------------------------------------------------------------------------
-   5. DRAWERS & SHORTCUT OVERLAYS (COMPOSITOR HARDENED)
-   -------------------------------------------------------------------------- */
-.drawer-overlay,
-.mobile-drawer-overlay {
+.ep-air {
+  font-size: 11px;
+  color: var(--modal-accent-cyan);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   10. CAST MATRIX & RECOMMENDATIONS
+   ========================================================================== */
+.cast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.cast-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--modal-border-subtle);
+}
+
+.cast-card img {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--modal-accent-red);
+  flex-shrink: 0;
+}
+
+.cast-names h4 {
+  font-size: 13px;
+  color: #fff;
+  margin: 0 0 2px 0;
+  font-weight: 800;
+}
+
+.cast-names p {
+  font-size: 11px;
+  color: var(--modal-text-muted);
+  margin: 0;
+}
+
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+/* ==========================================================================
+   11. HARDWARE-ACCELERATED DRAWERS (GPU TRANSLATE3D ONLY)
+   ========================================================================== */
+.drawer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   z-index: calc(var(--z-drawer) - 1);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  transition: opacity 0.25s var(--modal-ease), visibility 0.25s ease;
   pointer-events: none;
 }
 
-.drawer-overlay.active,
-.mobile-drawer-overlay.active {
+.drawer-overlay.active {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
-
-.mobile-nav-drawer {
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  width: 280px;
-  background: #0d0d16;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  z-index: var(--z-drawer);
-  padding: 18px;
-  overflow-y: auto;
-  transform: translate3d(-100%, 0, 0);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.mobile-nav-drawer.open { transform: translate3d(0, 0, 0); }
 
 .watchlist-drawer,
 .p2p-chat-sidebar {
   position: fixed;
-  top: 0; right: 0; bottom: 0;
-  width: 100%;
-  max-width: 320px;
-  background: #0a0a12;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(400px, 92vw);
+  background: var(--modal-bg-surface);
+  border-left: 1px solid var(--modal-border-subtle);
   z-index: var(--z-drawer);
-  padding: 16px;
-  overflow-y: auto;
+  padding: clamp(16px, 2.5vw, 24px);
   transform: translate3d(100%, 0, 0);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
-.watchlist-drawer.open,
-.p2p-chat-sidebar.open { transform: translate3d(0, 0, 0); }
 
-.shortcuts-modal {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-modal);
+.watchlist-drawer.open,
+.p2p-chat-sidebar.open {
+  transform: translate3d(0, 0, 0);
+  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.95);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--modal-border-subtle);
+  padding-bottom: 12px;
+}
+
+.drawer-header h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #fff;
+}
+
+.drawer-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--modal-border-subtle);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--modal-text-muted);
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  cursor: pointer;
 }
+
+.drawer-close-btn:hover {
+  background: var(--modal-accent-red);
+  color: #fff;
+}
+
+.watchlist-items-container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   12. SHORTCUT MODAL HUD
+   ========================================================================== */
+.shortcuts-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 4000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
 .shortcuts-modal.open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  display: flex;
 }
 
 .shortcuts-card {
-  background: #0d0d16;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
+  background: var(--modal-bg-elevated);
+  border: 1px solid var(--modal-border-glow);
+  border-radius: 16px;
   padding: 20px;
   width: 100%;
-  max-width: 460px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+  max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95);
 }
 
+.shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.shortcuts-header h4 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+  color: #fff;
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--modal-text-secondary);
+}
+
+.shortcut-row kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--modal-border-glow);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--modal-font-mono);
+  font-size: 11px;
+  color: #fff;
+  font-weight: 800;
+}
 
 /* ==========================================================================
-   FINAL MODAL SYNC / TOUCH / SAFE-AREA LAYER
+   13. MOBILE TOUCH ENGINE & REFLOW-FREE LAYOUT
    ========================================================================== */
-
-.modal-dialog,
-.modal-nav-strip,
-.modal-nav-left,
-.modal-now-playing-text,
-.modal-body,
-.player-action-strip,
-.player-action-left,
-.player-action-right,
-.server-controls,
-.server-info-col,
-.server-pills-scroll,
-#serverButtonsContainer,
-#serverSelectionContainer,
-.modal-tabs,
-.ep-header,
-.ep-card,
-.ep-meta-content,
-.ep-title {
-  min-width: 0;
-}
-
-.modal-nav-strip {
-  padding-left: max(14px, env(safe-area-inset-left, 0px));
-  padding-right: max(14px, env(safe-area-inset-right, 0px));
-}
-
-.player-action-right,
-.server-pills-scroll,
-#serverButtonsContainer,
-#serverSelectionContainer,
-.modal-tabs {
-  padding-left: max(0px, env(safe-area-inset-left, 0px));
-  padding-right: max(0px, env(safe-area-inset-right, 0px));
-  scroll-padding-left: max(0px, env(safe-area-inset-left, 0px));
-  scroll-padding-right: max(0px, env(safe-area-inset-right, 0px));
-  overflow-y: hidden;
-}
-
-.ep-title,
-.player-current-ep-title,
-.modal-now-playing-text,
-.server-status-caption {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.modal-player-wrap {
-  position: relative;
-  top: auto;
-  touch-action: pan-y;
-}
-
-.modal-player-wrap iframe,
-.modal-player-wrap video {
-  pointer-events: auto;
-}
-
-.modal-player-wrap.is-scrolling iframe,
-.modal-player-wrap.is-scrolling video,
-.modal-player-wrap.is-scrolling .player-cover-overlay {
-  pointer-events: none !important;
-}
-
-@media (max-width: 859px) {
-  input,
-  select,
-  textarea,
-  .ep-select {
-    font-size: 16px !important;
+@media (max-width: 768px) {
+  .modal-container {
+    padding: 0 !important;
+    align-items: stretch;
+    transform: none !important;
   }
 
-  .modal-container {
-    overflow-x: hidden;
-    overflow-y: auto;
-    touch-action: pan-y;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+  .modal-container.active,
+  .modal-container.open {
+    transform: none !important;
   }
 
   .modal-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    min-height: 100dvh;
+    box-shadow: none !important;
+  }
+
+  /* Sticky Viewport with Native Vertical Touch Panning Enabled */
+  .modal-player-wrap {
+    position: sticky !important;
+    top: 0;
+    z-index: 50;
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95);
+    flex-shrink: 0;
+    touch-action: pan-y !important;
+  }
+
+  .overview-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .player-action-strip {
+    padding: 10px 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .player-action-right {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .modal-pill-btn {
+    flex: 0 0 auto !important;
+    min-height: 38px !important;
+    padding: 6px 12px !important;
+  }
+
+  .server-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 14px;
+  }
+
+  .server-pills-scroll,
+  #serverButtonsContainer,
+  #serverSelectionContainer {
     width: 100%;
     max-width: 100%;
-    min-width: 0;
-    min-height: 100%;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 4px 0 6px 0 !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
-  .modal-nav-strip {
-    padding-top: max(10px, env(safe-area-inset-top, 0px));
-    padding-left: max(12px, env(safe-area-inset-left, 0px));
-    padding-right: max(12px, env(safe-area-inset-right, 0px));
+  .server-btn,
+  .server-node-btn {
+    flex: 0 0 auto !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
   }
 }
 
-@media (hover: none), (pointer: coarse) {
-  .anime-card:hover,
-  .chip:hover,
-  .modal-pill-btn:hover,
+/* ==========================================================================
+   14. ACCESSIBILITY & MOTION HARDENING
+   ========================================================================== */
+@media (hover: hover) and (pointer: fine) {
+  .btn-close-modal:hover {
+    background: var(--modal-accent-red);
+    border-color: var(--modal-accent-red);
+    transform: rotate(90deg) scale(1.1);
+  }
+
+  .modal-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
   .server-btn:hover,
-  .server-node-btn:hover,
+  .server-node-btn:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
   .ep-card:hover {
-    transform: none !important;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .cast-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .modal-container,
+  .modal-dialog,
+  .modal-overlay,
+  .modal-pill-btn,
+  .server-btn,
+  .server-node-btn,
+  .ep-card,
+  .watchlist-drawer,
+  .p2p-chat-sidebar,
+  .btn-close-modal {
+    animation: none !important;
+    transition: none !important;
+  }
+}
