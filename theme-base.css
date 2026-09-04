@@ -1,34 +1,42 @@
 /* ==========================================================================
-   ANIFLIX ULTRA - THEME BASE & KINETIC CORE ENGINE
-   File: theme-base.css | Version: 36.0.0 Enterprise Ultra-Sync
-   Architecture: Zero Layout Reflow, GPU Layer Determinism, Multi-Spec Harmony
+   ANIFLIX ULTRA - THEME BASE & KINETIC ENGINE (VERSION 38.0.0 ENTERPRISE SYNC)
+   Architecture: Single Authoritative Tree, Zero-Reflow Image Surfaces,
+                 GPU Hardware-Composited Hover Isolation, Strict Layer Hierarchy
    ========================================================================== */
 
+/* --------------------------------------------------------------------------
+   1. UNIFIED DESIGN TOKENS & ELEVATION MATRIX
+   -------------------------------------------------------------------------- */
 :root {
+  /* Surface Palette: Opaque, high-performance base colors to prevent VRAM tile eviction */
   --bg-base: #040406;
   --bg-surface: #0a0a10;
   --bg-elevated: #12121c;
   --bg-card: #151522;
   --bg-card-hover: #1c1c2e;
 
+  /* Accent Chromas & Hardware Glows */
   --accent-red: #ff0844;
   --accent-red-hover: #ff2a5f;
-  --accent-red-glow: rgba(255, 8, 68, 0.4);
+  --accent-red-glow: rgba(255, 8, 68, 0.45);
+  --accent-red-dark: #b80710;
   --accent-cyan: #00f2fe;
   --accent-cyan-glow: rgba(0, 242, 254, 0.35);
   --accent-emerald: #00f5a0;
   --accent-gold: #ffb703;
   --accent-purple: #9d4edd;
 
+  /* Typography Palette */
   --text-main: #ffffff;
   --text-secondary: #c4c7de;
   --text-muted: #727694;
 
+  /* Structural Dimensions */
   --nav-height: 56px;
   --page-pad: clamp(14px, 3.5vw, 42px);
   --card-radius: 10px;
 
-  /* Universal Rigid Stacking Context (Zero Arms-Race) */
+  /* Universal Rigid Stacking Context (Prevents Layer Collisions & Modal Ghosting) */
   --z-base: 1;
   --z-header: 1000;
   --z-dock: 1500;
@@ -37,10 +45,14 @@
   --z-drawer: 3000;
   --z-toast: 99999;
 
+  /* Fonts */
   --font-stack: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'Space Grotesk', ui-monospace, Menlo, Consolas, monospace;
 }
 
+/* --------------------------------------------------------------------------
+   2. NATIVE SCROLL ANCHORING & ZERO-JITTER RESET
+   -------------------------------------------------------------------------- */
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -56,10 +68,11 @@ html {
   min-height: 100%;
   overflow-x: hidden;
   background-color: var(--bg-base);
+  scroll-behavior: auto; /* Disables floaty global inertia that stutters on low-RAM chips */
 }
 
 body {
-  background: var(--bg-base);
+  background: var(--bg-base); /* Clean static background; removes continuous repaint loops */
   color: var(--text-main);
   font-family: var(--font-stack);
   width: 100%;
@@ -72,7 +85,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* JS-Synchronized Unified Scroll Lock */
+/* Safe Scroll Lock (Prevents Background Panning while Preserving Modal Scroll) */
 body.scroll-locked,
 html.scroll-locked {
   overflow: hidden !important;
@@ -84,7 +97,7 @@ img, video, iframe {
   display: block;
 }
 
-/* Prevent Reflow Flashing for Unhydrated Images */
+/* Pre-paint lazy-loaded cards to prevent synchronous reflow spikes */
 img[loading="lazy"] {
   background: #12121c;
   content-visibility: auto;
@@ -104,7 +117,51 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   HEADER NAVIGATION
+   3. HIGH-PRIORITY FLOATING TOAST MATRIX
+   -------------------------------------------------------------------------- */
+.toast-container {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 380px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: #141422;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 12px 18px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.88), 0 0 18px rgba(255, 8, 68, 0.22);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-info i { color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan-glow); }
+.toast-success i { color: var(--accent-emerald); text-shadow: 0 0 8px rgba(0, 245, 160, 0.4); }
+.toast-error i { color: var(--accent-red); text-shadow: 0 0 8px var(--accent-red-glow); }
+
+/* --------------------------------------------------------------------------
+   4. GLASSMORPHIC COMPACT HEADER
    -------------------------------------------------------------------------- */
 .header {
   position: fixed;
@@ -117,7 +174,7 @@ a {
   padding-left: max(var(--page-pad), env(safe-area-inset-left, 0px));
   padding-right: max(var(--page-pad), env(safe-area-inset-right, 0px));
   z-index: var(--z-header);
-  background: rgba(10, 10, 16, 0.96);
+  background: rgba(10, 10, 16, 0.94);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -149,7 +206,10 @@ a {
   flex-shrink: 0;
 }
 
-.brand-icon-wrapper i { font-size: 13px; color: #fff; }
+.brand-icon-wrapper i {
+  font-size: 13px;
+  color: #fff;
+}
 
 .brand-badge {
   font-size: 8.5px;
@@ -183,10 +243,15 @@ a {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: color 0.2s ease;
 }
 
-.nav-link.active { color: #fff; }
+.nav-link.active, .nav-link:hover {
+  color: #fff;
+}
 
 .header-right {
   display: flex;
@@ -205,8 +270,21 @@ a {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  transition: background 0.2s ease;
+  position: relative;
   flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.header-badge-count {
+  position: absolute;
+  top: -3px; right: -3px;
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 8px;
+  border: 1px solid #000;
 }
 
 .search-wrapper {
@@ -230,7 +308,7 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   HERO SPOTLIGHT
+   5. ULTRA-SLEEK HERO SPOTLIGHT
    -------------------------------------------------------------------------- */
 .hero {
   position: relative;
@@ -343,6 +421,7 @@ a {
   white-space: nowrap;
   box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
   flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-info {
@@ -359,6 +438,7 @@ a {
   gap: 6px;
   white-space: nowrap;
   flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .btn-icon-round {
@@ -372,10 +452,13 @@ a {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: background 0.15s ease;
 }
 
+.hero-side-rail { display: none; }
+
 /* --------------------------------------------------------------------------
-   HORIZONTAL CHIP FILTERS
+   6. QUICK FILTER CHIPS RAIL (NOTCH-PROTECTED)
    -------------------------------------------------------------------------- */
 .quick-chips-rail {
   padding: 0 var(--page-pad);
@@ -389,6 +472,8 @@ a {
   overflow-x: auto;
   scrollbar-width: none;
   padding: 4px 0;
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
 }
 .chips-container::-webkit-scrollbar { display: none; }
 
@@ -406,15 +491,18 @@ a {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
+
 .chip.active {
   background: var(--accent-red);
   color: #fff;
   border-color: var(--accent-red);
+  box-shadow: 0 3px 12px var(--accent-red-glow);
 }
 
 /* --------------------------------------------------------------------------
-   CONTENT CARD RAILS
+   7. CONTENT CARD RAILS (RIGID GEOMETRY & ZERO REFLOW)
    -------------------------------------------------------------------------- */
 .content-rows {
   display: flex;
@@ -431,6 +519,7 @@ a {
   font-weight: 800;
   margin-bottom: 10px;
   color: #fff;
+  letter-spacing: -0.2px;
 }
 
 .carousel-track {
@@ -439,6 +528,8 @@ a {
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 8px;
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
 }
 .carousel-track::-webkit-scrollbar { display: none; }
 
@@ -453,6 +544,7 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
   contain: paint;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .anime-card img {
@@ -471,6 +563,7 @@ a {
   padding: 2.5px 5px;
   border-radius: 4px;
   color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   z-index: 2;
 }
 
@@ -478,7 +571,7 @@ a {
   position: absolute;
   inset: auto 0 0 0;
   padding: 32px 8px 8px;
-  background: linear-gradient(180deg, transparent 0%, rgba(4, 4, 6, 0.95) 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(4, 4, 6, 0.96) 100%);
   pointer-events: none;
   min-width: 0;
   z-index: 1;
@@ -502,7 +595,10 @@ a {
   margin-top: 2px;
 }
 
-.card-score { color: var(--accent-emerald); }
+.card-score {
+  color: var(--accent-emerald);
+  font-weight: 800;
+}
 
 .top10-rank {
   font-size: 3.5rem;
@@ -517,7 +613,7 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   FLOATING QUICK DOCK
+   8. COMPACT QUICK HUD DOCK
    -------------------------------------------------------------------------- */
 .floating-quick-dock {
   position: fixed;
@@ -543,21 +639,20 @@ a {
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
 .dock-btn.active, .dock-btn:active { color: #fff; }
 .dock-tooltip { display: none !important; }
 
 /* --------------------------------------------------------------------------
-   SAFE HOVER ISOLATION (DESKTOP / POINTER ONLY)
+   9. DESKTOP HOVER MATRIX (ISOLATED TO PREVENT STICKY MOBILE TAPS)
    -------------------------------------------------------------------------- */
 @media (hover: hover) and (pointer: fine) {
-  .nav-link:hover { color: #fff; }
-
   .anime-card:hover {
     transform: translateY(-4px) scale(1.03);
     border-color: rgba(255, 8, 68, 0.4);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.8), 0 0 16px var(--accent-red-glow);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.85), 0 0 16px var(--accent-red-glow);
     z-index: 2;
   }
   .chip:hover {
@@ -569,7 +664,16 @@ a {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px var(--accent-red-glow);
   }
-  .icon-btn:hover { background: rgba(255, 255, 255, 0.14); }
-  .dock-btn:hover { color: #fff; transform: scale(1.1); }
+  .btn-info:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-2px);
+  }
+  .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+  .dock-btn:hover {
+    color: #fff;
+    transform: scale(1.15);
+  }
 }
-
