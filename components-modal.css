@@ -1,74 +1,26 @@
 /* ==========================================================================
-   ANIFLIX ULTRA — ADVANCED CINEMATIC MODAL SYSTEM (ENTERPRISE EDITION)
-   File: components-modal.css
-   Version: 30.4.0 High-Performance Quantum Glassmorphism Matrix
-   Architecture: GPU Hardware Composited layers, Sticky Video Lock,
-                 Anti-Collision Horizontal Scrollers, Sub-pixel Animation
+   ANIFLIX ULTRA - STREAMING MODAL & DRAWER MATRIX
+   File: components-modal.css | Version: 36.0.0 Enterprise Ultra-Sync
+   Architecture: Supports Both .open & .active Triggers, GPU Sliding Drawers
    ========================================================================== */
 
-/* ==========================================================================
-   01. DESIGN TOKENS, KINETIC CURVES & DYNAMIC ROOTS
-   ========================================================================== */
-:root {
-  --modal-pad: clamp(14px, 2.5vw, 32px);
-  --modal-bg-base: #040407;
-  --modal-bg-surface: #0a0a10;
-  --modal-bg-elevated: #12121c;
-  --modal-bg-card: #161624;
-  --modal-bg-glass: rgba(14, 14, 24, 0.78);
-  --modal-bg-glass-heavy: rgba(10, 10, 18, 0.94);
-
-  --modal-border-subtle: rgba(255, 255, 255, 0.08);
-  --modal-border-medium: rgba(255, 255, 255, 0.14);
-  --modal-border-glow: rgba(255, 255, 255, 0.24);
-  --modal-border-focus: rgba(0, 242, 254, 0.6);
-
-  /* Quantum Chromatic Accents */
-  --modal-accent-red: #ff0844;
-  --modal-accent-red-hover: #ff2a5f;
-  --modal-accent-glow: rgba(255, 8, 68, 0.55);
-  --modal-accent-cyan: #00f2fe;
-  --modal-accent-cyan-hover: #4facfe;
-  --modal-accent-cyan-glow: rgba(0, 242, 254, 0.45);
-  --modal-accent-emerald: #00f5a0;
-  --modal-accent-emerald-glow: rgba(0, 245, 160, 0.45);
-  --modal-accent-gold: #ffb703;
-  --modal-accent-gold-glow: rgba(255, 183, 3, 0.45);
-  --modal-accent-purple: #9d4edd;
-  --modal-accent-purple-glow: rgba(157, 78, 221, 0.45);
-
-  /* Contrast Typography Structure */
-  --modal-text-main: #ffffff;
-  --modal-text-secondary: #c4c7de;
-  --modal-text-muted: #6e7290;
-
-  /* Spring Physics & Fluid Transitions */
-  --modal-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --modal-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --modal-spring-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --modal-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --modal-font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --modal-font-mono: 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-/* ==========================================================================
-   02. VIEWPORT BACKDROP & ISOLATION ENGINE
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   1. MODAL OVERLAYS & CONTAINERS (DUAL TRIGGER COMPATIBILITY)
+   -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 50% 20%, rgba(20, 20, 38, 0.82) 0%, rgba(4, 4, 7, 0.98) 100%);
-  z-index: 2000;
-  backdrop-filter: blur(28px) saturate(140%);
-  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  background: rgba(0, 0, 0, 0.88);
+  z-index: var(--z-modal-backdrop);
   opacity: 0;
   visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
   pointer-events: none;
-  transition: opacity 0.38s var(--modal-ease), visibility 0.38s ease;
-  will-change: opacity, visibility;
 }
 
-.modal-overlay.active {
+/* Supports both .active and .open from all script layers */
+.modal-overlay.active,
+.modal-overlay.open {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -77,277 +29,140 @@
 .modal-container {
   position: fixed;
   inset: 0;
-  z-index: 2001;
+  z-index: var(--z-modal);
   overflow-y: auto;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: flex-start;
-  padding: clamp(0px, 3.5vw, 42px) clamp(0px, 2vw, 24px);
+  padding: 0;
   opacity: 0;
   visibility: hidden;
-  pointer-events: none;
-  transform: translate3d(0, 30px, 0) scale(0.97);
-  transition: opacity 0.38s var(--modal-ease), transform 0.38s var(--modal-spring-snappy), visibility 0.38s ease;
-  scrollbar-gutter: stable;
-  overscroll-behavior-y: contain;
+  transition: opacity 0.2s ease;
+  -webkit-overflow-scrolling: touch;
 }
 
-.modal-container.active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translate3d(0, 0, 0) scale(1);
+.modal-container.active,
+.modal-container.open {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .modal-dialog {
-  background: var(--modal-bg-surface);
+  background: #08080e;
   width: 100%;
-  max-width: 1180px;
-  border-radius: clamp(16px, 2.4vw, 26px);
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 40px 100px -15px rgba(0, 0, 0, 0.94), 0 0 1px 1px var(--modal-border-subtle);
-  margin-bottom: clamp(20px, 4vw, 64px);
-  height: fit-content;
-  border: 1px solid var(--modal-border-subtle);
+  min-height: 100%;
+  border: none;
   display: flex;
   flex-direction: column;
-  transform: translateZ(0);
 }
 
-/* Ambient Top Accent Light Line */
-.modal-dialog::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--modal-accent-red) 30%, var(--modal-accent-cyan) 70%, transparent 100%);
-  z-index: 35;
-  opacity: 0.85;
+@media (min-width: 860px) {
+  .modal-container {
+    padding: 30px 18px;
+  }
+  .modal-dialog {
+    max-width: 1060px;
+    min-height: auto;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
 }
 
-/* ==========================================================================
-   03. TOP NAVIGATION BAR & DOCKED CONTROL STRIP
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   2. MODAL NAVIGATION STRIP & VIDEO PLAYER
+   -------------------------------------------------------------------------- */
 .modal-nav-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px var(--modal-pad);
-  background: rgba(10, 10, 16, 0.9);
-  border-bottom: 1px solid var(--modal-border-subtle);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  position: relative;
-  z-index: 30;
+  padding: 10px 14px;
+  background: #0d0d16;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .modal-nav-left {
   display: flex;
   align-items: center;
-  gap: 12px;
-  overflow: hidden;
+  gap: 8px;
   min-width: 0;
 }
 
 .modal-brand-tag {
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 800;
   color: #fff;
-  background: linear-gradient(135deg, var(--modal-accent-red) 0%, #a70022 100%);
-  padding: 5px 12px;
-  border-radius: 8px;
-  letter-spacing: 1px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 0 18px var(--modal-accent-glow);
+  background: var(--accent-red);
+  padding: 3px 8px;
+  border-radius: 4px;
   flex-shrink: 0;
-  user-select: none;
-}
-
-.modal-brand-tag i,
-.modal-brand-tag svg {
-  font-size: 11px;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
 }
 
 .modal-now-playing-text {
-  font-size: clamp(12.5px, 1.2vw, 14.5px);
+  font-size: 12.5px;
   font-weight: 700;
-  color: var(--modal-text-secondary);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.2px;
+  min-width: 0;
 }
 
 .btn-close-modal {
-  width: 38px;
-  height: 38px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--modal-border-subtle);
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  outline: none;
+  font-size: 14px;
   flex-shrink: 0;
-  transition: transform 0.28s var(--modal-spring), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.btn-close-modal:hover,
-.btn-close-modal:focus-visible {
-  background: var(--modal-accent-red);
-  border-color: var(--modal-accent-red);
-  transform: rotate(90deg) scale(1.1);
-  box-shadow: 0 0 22px var(--modal-accent-glow);
-}
-
-.btn-close-modal:active {
-  transform: rotate(90deg) scale(0.92);
-}
-
-/* ==========================================================================
-   04. VIDEO VIEWPORT, HERO AMBIENT COVER & ACTION DECK
-   ========================================================================== */
+/* Responsive Player Aspect Ratio & Fullscreen Override */
 .modal-player-wrap {
-  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   flex-shrink: 0;
-  contain: layout paint;
+}
+
+/* Native Fullscreen Viewport Unshackling */
+.modal-player-wrap:fullscreen,
+.modal-player-wrap:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  aspect-ratio: auto !important;
 }
 
 .modal-player-wrap iframe,
-.modal-player-wrap video,
-.modal-player-wrap #streamFrame,
-.modal-player-wrap #nativeStreamVideo {
+.modal-player-wrap video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  border: 0;
-  display: block;
-  z-index: 5;
-  background: #000;
+  border: none;
 }
 
-.modal-backdrop-preview {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: brightness(0.68) saturate(1.18);
-  transition: transform 0.6s var(--modal-ease);
-  z-index: 1;
-}
-
-.modal-hero-gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(7, 7, 10, 0.1) 0%,
-    rgba(7, 7, 10, 0.45) 50%,
-    rgba(7, 7, 10, 0.98) 100%
-  );
-  z-index: 2;
-  pointer-events: none;
-}
-
-.player-cover-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.82) 100%);
-  padding: clamp(16px, 4vw, 42px);
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.player-cover-overlay:hover {
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.75) 100%);
-}
-
-.player-cover-overlay h2 {
-  font-size: clamp(1.4rem, 3.6vw, 2.8rem);
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95);
-  margin: 0;
-  text-align: center;
-  max-width: 90%;
-}
-
-.modal-big-play-btn {
-  width: clamp(66px, 8vw, 84px);
-  height: clamp(66px, 8vw, 84px);
-  border-radius: 50%;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 35px rgba(255, 255, 255, 0.45);
-  margin-bottom: 14px;
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.32s var(--modal-spring), background 0.25s ease, box-shadow 0.3s ease;
-}
-
-.modal-big-play-btn i,
-.modal-big-play-btn svg {
-  color: #000;
-  font-size: clamp(22px, 3vw, 28px);
-  margin-left: 4px;
-  transition: color 0.25s ease, transform 0.25s ease;
-}
-
-.player-cover-overlay:hover .modal-big-play-btn {
-  transform: scale(1.14);
-  background: var(--modal-accent-red);
-  box-shadow: 0 0 48px var(--modal-accent-glow), 0 0 22px rgba(255, 8, 68, 0.8);
-}
-
-.player-cover-overlay:hover .modal-big-play-btn i,
-.player-cover-overlay:hover .modal-big-play-btn svg {
-  color: #fff;
-  transform: scale(1.08);
-}
-
-/* ==========================================================================
-   05. KINETIC PLAYER CONTROL BELT & ACTION DECK
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   3. ACTION BAR & CAROUSEL TRAINS
+   -------------------------------------------------------------------------- */
 .player-action-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px var(--modal-pad);
-  background: linear-gradient(180deg, rgba(16, 16, 24, 0.98) 0%, rgba(10, 10, 16, 0.99) 100%);
-  border-bottom: 1px solid var(--modal-border-subtle);
-  position: relative;
-  z-index: 20;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #0a0a12;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .player-action-left {
@@ -359,984 +174,348 @@
 }
 
 .player-current-ep-title {
-  font-size: clamp(13px, 1.25vw, 15px);
+  font-size: 13.5px;
   font-weight: 800;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.2px;
+  min-width: 0;
+  display: block;
 }
 
-/* Horizontal Scrollable Action Bar */
 .player-action-right {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
+  gap: 6px;
   overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   max-width: 100%;
-  padding: 4px 2px;
-  scroll-snap-type: x proximity;
 }
+.player-action-right::-webkit-scrollbar { display: none; }
 
-.player-action-right::-webkit-scrollbar {
-  display: none;
-}
-
-/* Sleek Glass Pill Buttons */
 .modal-pill-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--modal-text-secondary);
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-size: clamp(11.5px, 1.05vw, 13px);
+  background: #141420;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
   font-weight: 700;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-shrink: 0;
-  scroll-snap-align: start;
+  gap: 6px;
   white-space: nowrap;
-  transition: transform 0.22s var(--modal-spring), background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  user-select: none;
-  font-family: inherit;
-  outline: none;
+  flex-shrink: 0;
 }
-
-.modal-pill-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
-}
-
-.modal-pill-btn:active {
-  transform: translateY(0) scale(0.96);
-}
-
-.modal-pill-btn i,
-.modal-pill-btn svg {
-  font-size: 13px;
-  transition: transform 0.2s ease;
-}
-
-.modal-pill-btn:hover i,
-.modal-pill-btn:hover svg {
-  transform: scale(1.15);
-}
-
-/* Feature Chromatic Highlights */
-.modal-pill-btn[onclick*="MiniPlayer"] i, .modal-pill-btn[data-action*="mini"] i { color: var(--modal-accent-cyan); filter: drop-shadow(0 0 8px var(--modal-accent-cyan-glow)); }
-.modal-pill-btn[onclick*="PartyChat"] i, .modal-pill-btn[data-action*="chat"] i { color: var(--modal-accent-emerald); filter: drop-shadow(0 0 8px var(--modal-accent-emerald-glow)); }
-.modal-pill-btn[onclick*="Volume"] i, .modal-pill-btn[data-action*="volume"] i { color: var(--modal-accent-gold); filter: drop-shadow(0 0 8px var(--modal-accent-gold-glow)); }
-.modal-pill-btn[onclick*="Theater"] i, .modal-pill-btn[data-action*="theater"] i { color: var(--modal-accent-purple); filter: drop-shadow(0 0 8px var(--modal-accent-purple-glow)); }
-.modal-pill-btn[onclick*="Dim"] i { color: #f1f2f6; }
-.modal-pill-btn[onclick*="share"] i { color: #38bdf8; }
-.modal-pill-btn[onclick*="Watchlist"] i { color: var(--modal-accent-emerald); }
-
-.modal-pill-btn.primary-action {
-  background: var(--modal-accent-red);
-  border-color: var(--modal-accent-red);
-  color: #fff;
-  box-shadow: 0 0 20px var(--modal-accent-glow);
-}
-
-.modal-pill-btn.primary-action:hover {
-  background: var(--modal-accent-red-hover);
-  border-color: var(--modal-accent-red-hover);
-}
-
 .modal-pill-btn.next-ep-btn {
-  background: linear-gradient(135deg, rgba(255, 8, 68, 0.28), rgba(0, 242, 254, 0.18));
-  border-color: rgba(255, 8, 68, 0.45);
+  background: var(--accent-red);
   color: #fff;
-  font-weight: 800;
-  box-shadow: 0 0 18px rgba(255, 8, 68, 0.25);
+  border-color: var(--accent-red);
 }
 
-.modal-pill-btn.next-ep-btn:hover {
-  background: linear-gradient(135deg, var(--modal-accent-red), #990024);
-  border-color: var(--modal-accent-red);
-  box-shadow: 0 0 26px var(--modal-accent-glow);
-}
-
-/* ==========================================================================
-   06. STREAM ROUTING & SERVER CONTROL MATRIX (ANTI-OVERFLOW)
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   4. SERVER NODES & EPISODES
+   -------------------------------------------------------------------------- */
 .server-controls {
-  background: rgba(10, 11, 16, 0.98);
-  padding: clamp(14px, 2vw, 18px) var(--modal-pad);
-  border-bottom: 1px solid var(--modal-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  position: relative;
-  z-index: 18;
-}
-
-.server-info-col {
+  padding: 8px 14px;
+  background: #0d0d16;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 0;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .server-label {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  color: var(--modal-text-muted);
+  color: var(--text-muted);
   text-transform: uppercase;
+}
+
+.server-pills-scroll {
   display: flex;
-  align-items: center;
   gap: 6px;
-  letter-spacing: 0.9px;
-  user-select: none;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.server-pills-scroll::-webkit-scrollbar { display: none; }
 
-.server-status-caption {
-  font-size: 11.5px;
-  color: var(--modal-accent-cyan);
+.server-btn, .server-node-btn {
+  background: #141420;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.3px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.server-pills-scroll,
-#serverButtonsContainer,
-#serverSelectionContainer {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  max-width: 100%;
-}
-
-.server-btn,
-.server-node-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--modal-border-subtle);
-  color: var(--modal-text-secondary);
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-size: clamp(11.5px, 1.05vw, 13px);
-  font-weight: 700;
-  cursor: pointer;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: transform 0.22s var(--modal-spring), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  font-family: inherit;
-  outline: none;
-  white-space: nowrap;
-  user-select: none;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  min-height: 38px;
+  gap: 6px;
 }
 
-.server-btn:hover,
-.server-node-btn:hover {
-  border-color: var(--modal-border-glow);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.09);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-}
-
-.server-btn:active,
-.server-node-btn:active {
-  transform: translateY(0) scale(0.97);
-}
-
-.server-btn.active,
-.server-node-btn.active,
-.server-node-btn.active-server {
-  background: linear-gradient(135deg, var(--modal-accent-red), #ab0611);
-  border-color: var(--modal-accent-red);
-  color: #fff;
-  box-shadow: 0 0 20px var(--modal-accent-glow);
-}
-
-.server-status-dot,
-.server-dot {
-  width: 8px;
-  height: 8px;
+.server-status-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  flex-shrink: 0;
-  display: inline-block;
-  transition: background 0.25s ease, box-shadow 0.25s ease;
+  background: var(--accent-emerald);
 }
 
-.server-status-dot.online,
-.server-status-dot.optimal,
-.server-dot.online,
-.server-dot.optimal {
-  background: var(--modal-accent-emerald);
-  box-shadow: 0 0 8px var(--modal-accent-emerald);
+.server-node-btn.active-server,
+.server-btn.active {
+  background: var(--accent-red);
+  color: #fff;
+  border-color: var(--accent-red);
 }
 
-.server-status-dot.slow,
-.server-dot.slow {
-  background: var(--modal-accent-gold);
-  box-shadow: 0 0 8px var(--modal-accent-gold);
-}
-
-.server-status-dot.offline,
-.server-dot.offline {
-  background: var(--modal-accent-red);
-  box-shadow: 0 0 8px var(--modal-accent-red);
-}
-
-.server-tag {
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 1px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  letter-spacing: 0.5px;
-}
-
-/* ==========================================================================
-   07. HOLOGRAPHIC TABS & SURFACE ENGINE
-   ========================================================================== */
-.modal-body {
-  padding: var(--modal-pad);
-  display: flex;
-  flex-direction: column;
-  background: var(--modal-bg-surface);
-  position: relative;
-  z-index: 10;
-}
+.modal-body { padding: 14px; flex: 1 0 auto; }
 
 .modal-tabs {
   display: flex;
-  gap: clamp(16px, 3.2vw, 32px);
-  border-bottom: 2px solid var(--modal-border-subtle);
-  margin-bottom: clamp(20px, 3.2vw, 30px);
+  gap: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 14px;
   overflow-x: auto;
-  overflow-y: hidden;
   scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
-
-.modal-tabs::-webkit-scrollbar {
-  display: none;
-}
+.modal-tabs::-webkit-scrollbar { display: none; }
 
 .tab-btn {
-  background: none;
-  border: none;
-  color: var(--modal-text-muted);
-  font-size: clamp(13px, 1.25vw, 15px);
-  font-weight: 800;
-  padding: 0 2px clamp(12px, 1.6vw, 16px);
-  cursor: pointer;
-  position: relative;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding-bottom: 8px;
   white-space: nowrap;
-  transition: color 0.25s ease;
-  outline: none;
-  user-select: none;
 }
-
-.tab-btn:hover,
-.tab-btn:focus-visible {
-  color: var(--modal-text-main);
-}
-
 .tab-btn.active {
   color: #fff;
+  border-bottom: 2px solid var(--accent-red);
 }
 
-.tab-btn.active::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, var(--modal-accent-red), var(--modal-accent-cyan));
-  border-radius: 4px 4px 0 0;
-  box-shadow: 0 0 16px var(--modal-accent-glow);
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-  animation: tabFadeSlide 0.35s var(--modal-ease) forwards;
-}
-
-@keyframes tabFadeSlide {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 10px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-/* ==========================================================================
-   08. METADATA MATRIX & OVERVIEW TAB
-   ========================================================================== */
-.overview-grid {
-  display: grid;
-  grid-template-columns: 2.2fr 1fr;
-  gap: clamp(20px, 3.5vw, 40px);
-  align-items: start;
-}
-
-.overview-main {
-  display: flex;
-  flex-direction: column;
-}
-
-.overview-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.badge-meta {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--modal-border-subtle);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.badge-meta.rating {
-  background: rgba(255, 183, 3, 0.12);
-  border-color: rgba(255, 183, 3, 0.3);
-  color: var(--modal-accent-gold);
-}
-
-.badge-meta.quality {
-  background: rgba(0, 242, 254, 0.12);
-  border-color: rgba(0, 242, 254, 0.3);
-  color: var(--modal-accent-cyan);
-}
-
-.overview-desc {
-  font-size: clamp(13.5px, 1.25vw, 15px);
-  line-height: 1.85;
-  color: var(--modal-text-secondary);
-  margin: 0 0 20px 0;
-}
-
-.genre-tags-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.genre-tag {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--modal-border-subtle);
-  color: var(--modal-text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.genre-tag:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--modal-border-glow);
-  color: #fff;
-}
-
-.side-info-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--modal-border-subtle);
-  border-radius: 18px;
-  padding: clamp(16px, 2vw, 22px);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.side-info-row {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 12.5px;
-}
-
-.side-info-row span:first-child {
-  color: var(--modal-text-muted);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.side-info-row span:last-child {
-  color: #fff;
-  font-weight: 700;
-}
-
-/* ==========================================================================
-   09. INTERACTIVE EPISODE BROWSER (KINETIC CARD SUITE)
-   ========================================================================== */
-.episodes-master-section {
-  margin-top: clamp(24px, 3.5vw, 40px);
-  border-top: 1px solid var(--modal-border-subtle);
-  padding-top: clamp(18px, 3vw, 28px);
-}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
 .ep-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
-
-.ep-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.ep-header-left h3 {
-  font-size: clamp(1.2rem, 1.8vw, 1.45rem);
-  font-weight: 800;
-  margin: 0;
-  color: #fff;
-  letter-spacing: -0.2px;
-}
-
-.episodes-total-pill {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--modal-text-secondary);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.ep-header-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
+.ep-header h3 { font-size: 14.5px; font-weight: 800; }
 .ep-select {
-  background: var(--modal-bg-elevated);
+  background: #141420;
   color: #fff;
-  border: 1px solid var(--modal-border-glow);
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: clamp(12px, 1.1vw, 13.5px);
-  font-weight: 700;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 16px; /* Strict iOS Zoom Neutralizer */
 }
 
-.ep-select:focus {
-  border-color: var(--modal-accent-red);
-  box-shadow: 0 0 14px var(--modal-accent-glow);
-}
+.ep-grid { display: flex; flex-direction: column; gap: 6px; }
 
-.ep-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 540px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-right: 8px;
-  scrollbar-gutter: stable;
-}
-
-.ep-grid::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ep-grid::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-}
-
-.ep-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-.ep-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
-}
-
-/* Modern Holographic Episode Card Design & Spring Physics */
 .ep-card {
   display: flex;
   align-items: center;
-  gap: clamp(12px, 2vw, 20px);
-  padding: clamp(10px, 1.4vw, 14px);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.25s var(--modal-spring), 
-              background 0.25s ease, 
-              border-color 0.25s ease, 
-              box-shadow 0.25s ease;
+  gap: 10px;
+  padding: 6px;
+  background: #0f0f18;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  min-width: 0;
 }
-
-.ep-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(255, 8, 68, 0.08) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.ep-card:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.22);
-  transform: translate3d(4px, -2px, 0);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
-}
-
-.ep-card:hover::before {
-  opacity: 1;
-}
-
-.ep-card:active {
-  transform: translate3d(0, 0, 0) scale(0.98);
-}
-
 .ep-card.playing {
-  background: rgba(255, 8, 68, 0.12) !important;
-  border-color: var(--modal-accent-red) !important;
-  box-shadow: 0 0 28px rgba(255, 8, 68, 0.32) !important;
-}
-
-.ep-card.playing::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--modal-accent-red);
-  box-shadow: 0 0 14px var(--modal-accent-red);
-}
-
-.ep-num {
-  font-size: clamp(16px, 2.2vw, 22px);
-  font-weight: 900;
-  color: #4a4a62;
-  width: clamp(28px, 3.5vw, 40px);
-  text-align: center;
-  font-family: var(--modal-font-mono);
-  flex-shrink: 0;
-  transition: color 0.25s ease, text-shadow 0.25s ease;
-}
-
-.ep-card:hover .ep-num {
-  color: var(--modal-text-secondary);
-}
-
-.ep-card.playing .ep-num {
-  color: var(--modal-accent-red);
-  text-shadow: 0 0 12px var(--modal-accent-glow);
+  border-color: var(--accent-red);
+  background: rgba(255, 8, 68, 0.12);
 }
 
 .ep-thumb-box {
-  position: relative;
-  width: clamp(110px, 20vw, 150px);
-  aspect-ratio: 16 / 9;
-  border-radius: 10px;
+  width: 80px;
+  height: 46px;
+  border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #020204;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
-
-.ep-thumb-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s var(--modal-ease);
-  display: block;
-}
-
-.ep-card:hover .ep-thumb-box img {
-  transform: scale(1.08);
-}
-
-.ep-play-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.ep-play-overlay svg,
-.ep-play-overlay i {
-  font-size: 24px;
-  color: #fff;
-  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.9));
-  transform: scale(0.85);
-  transition: transform 0.25s var(--modal-spring);
-}
-
-.ep-card:hover .ep-play-overlay,
-.ep-card.playing .ep-play-overlay {
-  opacity: 1;
-}
-
-.ep-card:hover .ep-play-overlay i,
-.ep-card.playing .ep-play-overlay i {
-  transform: scale(1);
-}
-
-.ep-info {
-  flex: 1;
-  min-width: 0;
-}
-
+.ep-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+.ep-meta-content { flex: 1; min-width: 0; overflow: hidden; }
 .ep-title {
-  font-size: clamp(13px, 1.25vw, 15px);
+  font-size: 12px;
   font-weight: 700;
-  margin: 0 0 6px 0;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.2px;
+  min-width: 0;
 }
 
-.ep-air {
-  font-size: 11.5px;
-  color: var(--modal-accent-cyan);
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  text-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
-}
-
-/* ==========================================================================
-   10. CAST MATRIX & MEDIA RECOMMENDATIONS
-   ========================================================================== */
-.cast-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 22vw, 220px), 1fr));
-  gap: clamp(12px, 2vw, 20px);
-}
-
-.cast-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid var(--modal-border-subtle);
-  transition: background 0.25s ease, transform 0.25s var(--modal-spring);
-}
-
-.cast-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  transform: translate3d(0, -3px, 0);
-  border-color: var(--modal-border-glow);
-}
-
-.cast-card img {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--modal-accent-red);
-  box-shadow: 0 0 12px rgba(255, 8, 68, 0.3);
-  flex-shrink: 0;
-}
-
-.cast-names h4 {
-  font-size: 13.5px;
-  color: #fff;
-  margin: 0 0 2px 0;
-  font-weight: 800;
-}
-
-.cast-names p {
-  font-size: 11.5px;
-  color: var(--modal-text-muted);
-  margin: 0;
-}
-
-.recommendations-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(130px, 18vw, 175px), 1fr));
-  gap: clamp(12px, 1.8vw, 18px);
-}
-
-/* ==========================================================================
-   11. SLIDE-OUT WATCHLIST DRAWER
-   ========================================================================== */
-.drawer-overlay {
+/* --------------------------------------------------------------------------
+   5. DRAWERS & SHORTCUT OVERLAYS (COMPOSITOR HARDENED)
+   -------------------------------------------------------------------------- */
+.drawer-overlay,
+.mobile-drawer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 3000;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.8);
+  z-index: calc(var(--z-drawer) - 1);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.35s var(--modal-ease), visibility 0.35s ease;
-}
-
-.drawer-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.watchlist-drawer {
-  position: fixed;
-  top: 0;
-  right: -100%;
-  bottom: 0;
-  width: min(440px, 92vw);
-  background: var(--modal-bg-surface);
-  border-left: 1px solid var(--modal-border-subtle);
-  z-index: 3001;
-  padding: clamp(20px, 3vw, 32px);
-  visibility: hidden;
-  opacity: 0;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
   pointer-events: none;
-  box-shadow: none;
-  transition: right 0.4s var(--modal-ease), opacity 0.3s ease, visibility 0.4s;
-  display: flex;
-  flex-direction: column;
 }
 
-.watchlist-drawer.open {
-  right: 0;
-  visibility: visible;
+.drawer-overlay.active,
+.mobile-drawer-overlay.active {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
-  box-shadow: -25px 0 70px rgba(0, 0, 0, 0.95);
 }
 
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 22px;
-  border-bottom: 1px solid var(--modal-border-subtle);
-  padding-bottom: 16px;
-}
-
-.drawer-header h3 {
-  font-size: clamp(1.2rem, 1.8vw, 1.45rem);
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  color: #fff;
-}
-
-.drawer-close-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--modal-border-subtle);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: var(--modal-text-muted);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.drawer-close-btn:hover {
-  background: var(--modal-accent-red);
-  color: #fff;
-  border-color: var(--modal-accent-red);
-}
-
-.watchlist-items-container {
-  flex: 1;
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 280px;
+  background: #0d0d16;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: var(--z-drawer);
+  padding: 18px;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-right: 4px;
+  transform: translate3d(-100%, 0, 0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.mobile-nav-drawer.open { transform: translate3d(0, 0, 0); }
 
-.empty-watchlist-state {
-  text-align: center;
-  color: var(--modal-text-muted);
-  padding: 60px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.watchlist-drawer,
+.p2p-chat-sidebar {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 100%;
+  max-width: 320px;
+  background: #0a0a12;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: var(--z-drawer);
+  padding: 16px;
+  overflow-y: auto;
+  transform: translate3d(100%, 0, 0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.watchlist-drawer.open,
+.p2p-chat-sidebar.open { transform: translate3d(0, 0, 0); }
 
-.empty-watchlist-state i,
-.empty-watchlist-state svg {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.25;
-}
-
-/* ==========================================================================
-   12. SHORTCUT MODAL OVERLAY
-   ========================================================================== */
 .shortcuts-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  z-index: 4000;
-  display: none;
+  z-index: var(--z-modal);
+  display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+.shortcuts-modal.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .shortcuts-card {
-  background: var(--modal-bg-elevated);
-  border: 1px solid var(--modal-border-glow);
-  border-radius: 20px;
-  padding: clamp(20px, 3vw, 30px);
+  background: #0d0d16;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 20px;
   width: 100%;
-  max-width: 480px;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95);
-  animation: modalScaleUp 0.35s var(--modal-ease) forwards;
+  max-width: 460px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
 }
 
-@keyframes modalScaleUp {
-  from {
-    opacity: 0;
-    transform: scale(0.94) translate3d(0, 12px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translate3d(0, 0, 0);
-  }
-}
-
-.shortcuts-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.shortcuts-header h4 {
-  font-size: 1.25rem;
-  font-weight: 800;
-  margin: 0;
-  color: #fff;
-}
-
-.shortcuts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.shortcut-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13.5px;
-  color: var(--modal-text-secondary);
-}
-
-.shortcut-row kbd {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--modal-border-glow);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-family: var(--modal-font-mono);
-  font-size: 11.5px;
-  color: #fff;
-  font-weight: 800;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
-}
 
 /* ==========================================================================
-   13. FLUID RESPONSIVE MATRIX & STICKY MOBILE CONTROLLER
+   FINAL MODAL SYNC / TOUCH / SAFE-AREA LAYER
    ========================================================================== */
-@media (max-width: 768px) {
-  /* Unified Viewport Sizing Anchor (Prevents Vertical Shifting) */
-  .modal-container {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    max-width: 100vw;
-    height: 100dvh;
-    min-height: 100dvh;
-    max-height: 100dvh;
-    padding: 0;
-    align-items: stretch;
-    display: flex;
-    overflow-x: hidden;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    transform: none !important;
+
+.modal-dialog,
+.modal-nav-strip,
+.modal-nav-left,
+.modal-now-playing-text,
+.modal-body,
+.player-action-strip,
+.player-action-left,
+.player-action-right,
+.server-controls,
+.server-info-col,
+.server-pills-scroll,
+#serverButtonsContainer,
+#serverSelectionContainer,
+.modal-tabs,
+.ep-header,
+.ep-card,
+.ep-meta-content,
+.ep-title {
+  min-width: 0;
+}
+
+.modal-nav-strip {
+  padding-left: max(14px, env(safe-area-inset-left, 0px));
+  padding-right: max(14px, env(safe-area-inset-right, 0px));
+}
+
+.player-action-right,
+.server-pills-scroll,
+#serverButtonsContainer,
+#serverSelectionContainer,
+.modal-tabs {
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+  scroll-padding-left: max(0px, env(safe-area-inset-left, 0px));
+  scroll-padding-right: max(0px, env(safe-area-inset-right, 0px));
+  overflow-y: hidden;
+}
+
+.ep-title,
+.player-current-ep-title,
+.modal-now-playing-text,
+.server-status-caption {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-player-wrap {
+  position: relative;
+  top: auto;
+  touch-action: pan-y;
+}
+
+.modal-player-wrap iframe,
+.modal-player-wrap video {
+  pointer-events: auto;
+}
+
+.modal-player-wrap.is-scrolling iframe,
+.modal-player-wrap.is-scrolling video,
+.modal-player-wrap.is-scrolling .player-cover-overlay {
+  pointer-events: none !important;
+}
+
+@media (max-width: 859px) {
+  input,
+  select,
+  textarea,
+  .ep-select {
+    font-size: 16px !important;
   }
 
-  .modal-container.active {
-    transform: none !important;
+  .modal-container {
+    overflow-x: hidden;
+    overflow-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 
   .modal-dialog {
@@ -1344,197 +523,23 @@
     max-width: 100%;
     min-width: 0;
     min-height: 100%;
-    height: auto !important;
-    margin: 0;
-    border-radius: 0;
-    border: none;
-    overflow: visible !important;
-    display: flex;
-    flex-direction: column;
   }
 
-  /* Pinned Sticky Video Viewport Anchor */
-  .modal-player-wrap {
-    position: sticky !important;
-    top: 0;
-    z-index: 50;
-    width: 100% !important;
-    aspect-ratio: 16 / 9 !important;
-    background: #000;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95);
-    flex-shrink: 0;
-  }
-
-  /* Body Flows Natively Underneath */
-  .modal-body {
-    position: relative;
-    z-index: 10;
-    overflow-y: visible !important;
-    height: auto !important;
-    flex: none !important;
-    padding: 14px;
-    background: var(--modal-bg-surface);
-  }
-
-  .overview-grid {
-    grid-template-columns: 1fr;
-    gap: 22px;
-  }
-
-  .side-info-card {
-    order: 2;
-  }
-
-  .player-action-strip {
-    padding: 12px 14px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  /* Horizontal Action Deck Slider */
-  .player-action-right {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 8px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    padding: 4px 2px !important;
-    scroll-snap-type: x proximity !important;
-  }
-
-  .modal-pill-btn {
-    flex: 0 0 auto !important;
-    min-width: max-content !important;
-    min-height: 40px !important;
-    padding: 7px 14px !important;
-    font-size: 11.5px !important;
-    scroll-snap-align: start !important;
-  }
-
-  /* Horizontal Server Switcher */
-  .server-controls {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 12px 14px;
-  }
-
-  .server-info-col {
-    width: 100%;
-    margin-bottom: 2px;
-  }
-
-  .server-pills-scroll,
-  #serverButtonsContainer,
-  #serverSelectionContainer {
-    width: 100%;
-    max-width: 100%;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 4px 2px 8px 2px !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x proximity !important;
-  }
-
-  .server-pills-scroll::-webkit-scrollbar,
-  #serverButtonsContainer::-webkit-scrollbar,
-  #serverSelectionContainer::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .server-btn,
-  .server-node-btn {
-    flex: 0 0 auto !important;
-    min-width: 135px !important;
-    max-width: 200px !important;
-    scroll-snap-align: start !important;
-    padding: 8px 14px !important;
-    font-size: 11.5px !important;
-  }
-}
-
-@media (max-width: 480px) {
   .modal-nav-strip {
-    padding: 10px 14px;
-  }
-
-  .player-cover-overlay {
-    padding: 14px;
-  }
-
-  .cast-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  }
-
-  .recommendations-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    padding-top: max(10px, env(safe-area-inset-top, 0px));
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
   }
 }
 
-@media (min-width: 1920px) {
-  .modal-dialog {
-    max-width: 1380px;
-  }
-  
-  .modal-player-wrap {
-    max-height: 720px;
-  }
-}
-
-/* ==========================================================================
-   14. ACCESSIBILITY & PERFORMANCE HARDENING
-   ========================================================================== */
-@media (hover: none) and (pointer: coarse) {
-  .btn-close-modal,
-  .modal-pill-btn,
-  .server-btn,
-  .server-node-btn,
-  .tab-btn,
-  .ep-card,
-  .drawer-close-btn {
-    min-height: 42px;
-  }
-
-  .btn-close-modal {
-    min-width: 42px;
+@media (hover: none), (pointer: coarse) {
+  .anime-card:hover,
+  .chip:hover,
+  .modal-pill-btn:hover,
+  .server-btn:hover,
+  .server-node-btn:hover,
+  .ep-card:hover {
+    transform: none !important;
   }
 }
 
-.modal-pill-btn:focus-visible,
-.server-btn:focus-visible,
-.server-node-btn:focus-visible,
-.ep-card:focus-visible,
-.ep-select:focus-visible,
-.btn-close-modal:focus-visible,
-.tab-btn:focus-visible {
-  outline: 2px solid var(--modal-accent-cyan);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .modal-container,
-  .modal-dialog,
-  .modal-overlay,
-  .modal-pill-btn,
-  .server-btn,
-  .server-node-btn,
-  .ep-card,
-  .ep-thumb-box img,
-  .btn-close-modal,
-  .tab-content.active,
-  .shortcuts-card,
-  .server-status-dot.online,
-  .server-dot.online {
-    animation: none !important;
-    transition: none !important;
-  }
-}
