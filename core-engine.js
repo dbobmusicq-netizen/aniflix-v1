@@ -1,6 +1,6 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Production-Grade JavaScript Controller (Version 32.0 Enterprise Resilient Architecture)
+ * Production-Grade JavaScript Controller (Version 35.0 Enterprise Resilient Architecture)
  *
  * Architecture & Features:
  *  - Anti-Wipe DOM Protection Shield (blocks malicious overwrites).
@@ -9,11 +9,13 @@
  *  - Anti-Rate Limit Staggering: 429 backoff pause with exponential jitter.
  *  - Complete Multi-Server Stream Routing Matrix (NxSha, Filmu, VidCore, VidFast).
  *  - AniList & TMDB Synchronous Dual-Universe Discovery (Anime & Live-Action Netflix).
- *  - Multi-Season Hydration Engine with Automatic Season/Episode Detection.
+ *  - Multi-Season Hydration Engine with Dynamic Route Verification.
  *  - Safe Bi-directional History State Router with URL Synchronization.
  *  - IndexedDB Persistence Layer with Schema Upgrade Handlers.
  *  - Real-time Sub-pixel Canvas Chroma Extraction & Ambilight Engine.
  *  - Keyboard Accessibility & Fullscreen/Theater Modes.
+ *  - Native AniList GraphQL Airing Schedule Engine (Direct replacement for deprecated Jikan API).
+ *  - Clean CSS-DOM Handshake (Zero inline layout conflicts, interactive iframe delegation).
  */
 
 // ============================================================================
@@ -51,7 +53,6 @@
 const CONFIG = {
   APIS: {
     ANILIST: 'https://graphql.anilist.co',
-    JIKAN: 'https://api.jikan.moe/v4',
     KITSU: 'https://kitsu.io/api/edge',
     ANISKIP: 'https://api.aniskip.com/v2/skip-times',
     TMDB_BASE: 'https://db.speedracelight.com/3'
@@ -109,7 +110,6 @@ window.CONFIG = CONFIG;
   function isProtectedAPI(url) {
     return (
       url.includes('graphql.anilist.co') ||
-      url.includes('api.jikan.moe') ||
       url.includes('kitsu.io/api') ||
       url.includes('api.aniskip.com') ||
       url.includes('db.speedracelight.com')
@@ -207,12 +207,10 @@ window.CONFIG = CONFIG;
         try {
           const response = await nativeFetch(input, init);
 
-          // Permanent client errors must never trigger retries
           if (response.status === 400 || response.status === 404) {
             return response;
           }
 
-          // Respect Rate Limits (HTTP 429) & Trip Circuit Breaker
           if (response.status === 429) {
             let retryAfterMs = Number(response.headers.get('Retry-After')) * 1000;
             if (!Number.isFinite(retryAfterMs) || retryAfterMs <= 0) {
@@ -228,7 +226,6 @@ window.CONFIG = CONFIG;
             continue;
           }
 
-          // Retry transient 5xx server issues with exponential delay
           if (response.status >= 500 && attempt < GUARD.maxRetries) {
             const retryDelay = Math.min(10000, 2000 * Math.pow(2, attempt));
             await sleep(retryDelay);
@@ -351,6 +348,7 @@ const animeCache = new Map();
 const episodeDataCache = new Map();
 const seriesSeasonsCache = new Map();
 const tmdbResolvedIdCache = new Map();
+const scheduleCache = new Map();
 
 window.animeCache = animeCache;
 window.episodeDataCache = episodeDataCache;
@@ -632,7 +630,7 @@ window.extractChromaAmbilight = function(imageUrl) {
 };
 
 // ============================================================================
-// 8. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION
+// 8. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION (TOUCH-PASSTHROUGH PATCH)
 // ============================================================================
 window.resolveActiveStreamUrl = function() {
   const isMovie = STATE.currentAnime?.format === 'MOVIE';
@@ -660,8 +658,9 @@ window.executeStream = function(seekTimestamp = 0) {
     if (playerStreamTitle) playerStreamTitle.innerText = `Season ${STATE.season} • Episode ${STATE.episode}`;
   }
 
+  // FIX A: Added onclick="this.classList.add('is-interacting')" to enable iframe pointer events on user tap
   wrap.innerHTML = `
-    <div class="stream-frame-container" id="streamContainer" style="position:relative; width:100%; height:100%; background:#000;">
+    <div class="stream-frame-container" id="streamContainer" onclick="this.classList.add('is-interacting')" style="position:relative; width:100%; height:100%; background:#000;">
       <iframe 
         id="streamFrame" 
         src="${streamUrl}" 
@@ -896,28 +895,6 @@ window.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
       return parsed;
     }
   } catch (err) {}
-
-  if (STATE.currentAnime?.idMal && !STATE.isNetflixMode) {
-    try {
-      const jikanEndpoint = `${CONFIG.APIS.JIKAN}/anime/${STATE.currentAnime.idMal}/episodes?page=1`;
-      const jRes = await fetch(jikanEndpoint);
-      if (jRes.ok) {
-        const jData = await jRes.json();
-        if (jData.data?.length > 0) {
-          const jikanParsed = jData.data.map(jEp => ({
-            number: jEp.mal_id,
-            title: jEp.title || jEp.title_romanji || `Episode ${jEp.mal_id}`,
-            overview: 'Tap to stream this anime episode in high definition.',
-            still: null,
-            runtime: null,
-            airDate: jEp.aired ? jEp.aired.slice(0, 4) : ''
-          }));
-          episodeDataCache.set(cacheKey, jikanParsed);
-          return jikanParsed;
-        }
-      }
-    } catch (jErr) {}
-  }
 
   return null;
 };
@@ -1210,6 +1187,7 @@ window.updateHeroBillboard = function(item) {
   }
 };
 
+// FIX B: Stripped hardcoded inline flex/width/height !important so theme-base.css and mobile.css control responsive layout cleanly
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
     const displayTitle = item.title?.english || item.title?.romaji || 'Title';
@@ -1219,7 +1197,7 @@ window.generateRowHTML = function(title, items, rowIndex) {
 
     return `
       <div class="anime-card" 
-           style="flex: 0 0 176px !important; max-width: 176px !important; width: 176px !important; height: 265px !important; position: relative !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer !important; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important; user-select: none !important; background: #16161c !important; box-sizing: border-box !important;"
+           style="position: relative; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease; user-select: none; background: #16161c; box-sizing: border-box;"
            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 12px 28px rgba(0,0,0,0.75)';"
            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"
            onclick="if(typeof window.openModalById === 'function') window.openModalById(${item.id});">
@@ -1227,23 +1205,23 @@ window.generateRowHTML = function(title, items, rowIndex) {
         <img src="${poster}" 
              alt="${displayTitle}" 
              loading="lazy" 
-             style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; border-radius: 12px !important;" />
+             style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12px;" />
              
         <div class="card-badge-top" 
-             style="position: absolute !important; top: 8px !important; right: 8px !important; background: rgba(0, 0, 0, 0.78) !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 3 !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;">
+             style="position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, 0.78); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; z-index: 3; border: 1px solid rgba(255, 255, 255, 0.12);">
           ${format}
         </div>
         
         <div class="card-overlay" 
-             style="position: absolute !important; inset: auto 0 0 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; margin: 0 !important; padding: 42px 12px 10px 12px !important; box-sizing: border-box !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.7) 62%, transparent 100%) !important; display: flex !important; flex-direction: column !important; justify-content: flex-end !important; z-index: 2 !important; pointer-events: none !important;">
+             style="position: absolute; inset: auto 0 0 0; left: 0; right: 0; bottom: 0; width: 100%; margin: 0; padding: 42px 12px 10px 12px; box-sizing: border-box; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.7) 62%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; z-index: 2; pointer-events: none;">
           <div class="card-title" 
-               style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95) !important; width: 100% !important; text-align: left !important; margin: 0 !important; padding: 0 !important; display: block !important;">
+               style="font-size: 13px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95); width: 100%; text-align: left; margin: 0; padding: 0; display: block;">
             ${displayTitle}
           </div>
           <div class="card-meta" 
-               style="font-size: 11px !important; color: #a1a1aa !important; display: flex !important; gap: 8px !important; align-items: center !important; margin-top: 4px !important; width: 100% !important; text-align: left !important;">
-            <span class="card-score" style="color: #46d369 !important; font-weight: 700 !important; display: inline-flex !important; align-items: center !important; gap: 3px !important;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span>
-            <span class="card-year" style="color: #a1a1aa !important;">${item.year || '2026'}</span>
+               style="font-size: 11px; color: #a1a1aa; display: flex; gap: 8px; align-items: center; margin-top: 4px; width: 100%; text-align: left;">
+            <span class="card-score" style="color: #46d369; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span>
+            <span class="card-year" style="color: #a1a1aa;">${item.year || '2026'}</span>
           </div>
         </div>
       </div>
@@ -1547,7 +1525,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
 };
 
 // ============================================================================
-// 14. MODAL, DRAWER & WATCHLIST MANAGERS
+// 14. MODAL, DRAWER & WATCHLIST MANAGERS (SAFE SCROLL-LOCK HANDSHAKE)
 // ============================================================================
 window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
   const drawer = document.getElementById('mobileNavDrawer');
@@ -1559,14 +1537,16 @@ window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
   if (shouldOpen) {
     drawer.classList.add('open');
     overlay.classList.add('active');
-    document.documentElement.style.overflowY = 'hidden';
+    document.body.classList.add('scroll-locked');
+    document.documentElement.classList.add('scroll-locked');
     if (!skipUrlSync && window.Router && typeof window.Router.set === 'function') {
       window.Router.set({ drawer: 'menu' }, true);
     }
   } else {
     drawer.classList.remove('open');
     overlay.classList.remove('active');
-    document.documentElement.style.overflowY = 'scroll';
+    document.body.classList.remove('scroll-locked');
+    document.documentElement.classList.remove('scroll-locked');
     if (!skipUrlSync && window.Router && typeof window.Router.get === 'function') {
       if (window.Router.get('drawer') === 'menu') {
         window.Router.set({ drawer: null });
@@ -1584,7 +1564,8 @@ window.openWatchlistModal = function(skipUrlSync = false) {
   if (drawer && overlay) {
     drawer.classList.add('open');
     overlay.classList.add('active');
-    document.documentElement.style.overflowY = 'hidden';
+    document.body.classList.add('scroll-locked');
+    document.documentElement.classList.add('scroll-locked');
     if (!skipUrlSync && window.Router && typeof window.Router.set === 'function') {
       window.Router.set({ drawer: 'watchlist' }, true);
     }
@@ -1624,7 +1605,8 @@ window.closeWatchlistModal = function(skipUrlSync = false) {
   if (drawer && overlay) {
     drawer.classList.remove('open');
     overlay.classList.remove('active');
-    document.documentElement.style.overflowY = 'scroll';
+    document.body.classList.remove('scroll-locked');
+    document.documentElement.classList.remove('scroll-locked');
     if (!skipUrlSync && window.Router && typeof window.Router.get === 'function') {
       if (window.Router.get('drawer') === 'watchlist') {
         window.Router.set({ drawer: null });
@@ -1686,7 +1668,191 @@ window.updateWatchlistBadge = function() {
 };
 
 // ============================================================================
-// 15. KEYBOARD ACCESSIBILITY & SHORTCUT ENGINE
+// 15. NATIVE ANILIST AIRING SCHEDULE ENGINE (JIKAN ALTERNATIVE)
+// ============================================================================
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+window.openScheduleModal = function(skipUrlSync = false) {
+  const modal = document.getElementById('scheduleModal');
+  const overlay = document.getElementById('scheduleModalOverlay');
+  if (!modal || !overlay) return;
+
+  modal.classList.add('open');
+  overlay.classList.add('active');
+  document.body.classList.add('scroll-locked');
+  document.documentElement.classList.add('scroll-locked');
+
+  if (!skipUrlSync && window.Router) {
+    Router.set({ modal: 'schedule' }, true);
+  }
+
+  const todayIndex = new Date().getDay();
+  window.renderScheduleDayTabs(todayIndex);
+  window.fetchAiringScheduleForDay(todayIndex);
+};
+
+window.closeScheduleModal = function(skipUrlSync = false) {
+  const modal = document.getElementById('scheduleModal');
+  const overlay = document.getElementById('scheduleModalOverlay');
+  if (!modal || !overlay) return;
+
+  modal.classList.remove('open');
+  overlay.classList.remove('active');
+  document.body.classList.remove('scroll-locked');
+  document.documentElement.classList.remove('scroll-locked');
+
+  if (!skipUrlSync && window.Router && window.Router.get('modal') === 'schedule') {
+    Router.set({ modal: null });
+  }
+};
+
+window.renderScheduleDayTabs = function(activeDayIndex) {
+  const tabsContainer = document.getElementById('scheduleDayTabs');
+  if (!tabsContainer) return;
+
+  tabsContainer.innerHTML = DAYS_OF_WEEK.map((day, idx) => `
+    <button type="button" 
+            class="chip ${idx === activeDayIndex ? 'active' : ''}" 
+            onclick="window.onScheduleDayTabClick(${idx})">
+      ${day}
+    </button>
+  `).join('');
+};
+
+window.onScheduleDayTabClick = function(dayIndex) {
+  window.renderScheduleDayTabs(dayIndex);
+  window.fetchAiringScheduleForDay(dayIndex);
+};
+
+window.fetchAiringScheduleForDay = async function(dayIndex) {
+  const container = document.getElementById('scheduleItemsContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="text-align:center; padding:30px; color:var(--text-muted);">
+      <i class="fas fa-spinner fa-spin"></i> Loading schedule from AniList...
+    </div>
+  `;
+
+  // Calculate timestamp boundaries for chosen day in local timezone
+  const now = new Date();
+  const currentDayIndex = now.getDay();
+  const distance = dayIndex - currentDayIndex;
+
+  const targetDate = new Date(now);
+  targetDate.setDate(now.getDate() + distance);
+  targetDate.setHours(0, 0, 0, 0);
+
+  const startTimestamp = Math.floor(targetDate.getTime() / 1000);
+  const endTimestamp = startTimestamp + 86400;
+
+  const cacheKey = `schedule_${startTimestamp}_${endTimestamp}`;
+  if (scheduleCache.has(cacheKey)) {
+    window.renderScheduleList(scheduleCache.get(cacheKey));
+    return;
+  }
+
+  const query = `
+    query ($airingAt_greater: Int, $airingAt_lesser: Int) {
+      Page(page: 1, perPage: 40) {
+        airingSchedules(airingAt_greater: $airingAt_greater, airingAt_lesser: $airingAt_lesser, sort: TIME) {
+          id
+          airingAt
+          episode
+          media {
+            id
+            idMal
+            format
+            title {
+              english
+              romaji
+            }
+            coverImage {
+              large
+              extraLarge
+            }
+            genres
+            averageScore
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const res = await fetch(CONFIG.APIS.ANILIST, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        query: query,
+        variables: {
+          airingAt_greater: startTimestamp,
+          airingAt_lesser: endTimestamp
+        }
+      })
+    });
+
+    if (!res.ok) throw new Error('AniList Airing Schedule fetch rejected.');
+
+    const data = await res.json();
+    const items = data.data?.Page?.airingSchedules || [];
+    scheduleCache.set(cacheKey, items);
+    window.renderScheduleList(items);
+  } catch (err) {
+    console.error('[AniFlix Schedule] Failed:', err);
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:var(--text-muted);">
+        <i class="fas fa-triangle-exclamation" style="font-size:22px; margin-bottom:8px; color:var(--accent-red);"></i>
+        <p>Could not fetch airing broadcast schedule. Please try again later.</p>
+      </div>
+    `;
+  }
+};
+
+window.renderScheduleList = function(items) {
+  const container = document.getElementById('scheduleItemsContainer');
+  if (!container) return;
+
+  if (!items.length) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; color:var(--text-muted);">
+        <i class="fas fa-tv" style="font-size:32px; margin-bottom:12px; opacity:0.4;"></i>
+        <p style="font-weight:700; color:#fff;">No Simulcast Airing Streams Scheduled</p>
+        <small>Check back tomorrow for the latest broadcast lineups.</small>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = items.map(entry => {
+    const media = entry.media;
+    if (!media) return '';
+
+    animeCache.set(media.id, media);
+    const title = media.title?.english || media.title?.romaji || 'Upcoming Title';
+    const poster = media.coverImage?.large || media.coverImage?.extraLarge || '';
+    const airTime = new Date(entry.airingAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const score = media.averageScore ? `${media.averageScore}%` : 'N/A';
+
+    return `
+      <div class="search-item" onclick="window.closeScheduleModal(); if (typeof window.openModalById === 'function') window.openModalById(${media.id});" style="cursor:pointer; display:flex; gap:12px; padding:10px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); align-items:center;">
+        <img src="${poster}" alt="${title}" style="width:48px; height:68px; object-fit:cover; border-radius:6px; flex-shrink:0;" />
+        <div class="search-info" style="flex:1; min-width:0;">
+          <div class="search-title" style="font-size:13px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+          <div class="search-meta" style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+            <span style="color:var(--accent-cyan); font-weight:700;">${airTime}</span> &bull; <span>Episode ${entry.episode}</span> &bull; <span style="color:#46d369;"><i class="fas fa-star" style="font-size:9px;"></i> ${score}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+// ============================================================================
+// 16. KEYBOARD ACCESSIBILITY & SHORTCUT ENGINE
 // ============================================================================
 function initKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
@@ -1749,7 +1915,7 @@ window.toggleTheaterMode = function() {
 };
 
 // ============================================================================
-// 16. RUNTIME UTILITIES & TELEMETRY LISTENERS
+// 17. RUNTIME UTILITIES & TELEMETRY LISTENERS
 // ============================================================================
 window.showToast = function(msg) {
   const container = document.getElementById('toastContainer');
@@ -1810,11 +1976,24 @@ window.addEventListener('message', (e) => {
 });
 
 // ============================================================================
-// 17. BOOTSTRAP ORCHESTRATOR
+// 18. BOOTSTRAP ORCHESTRATOR (WITH LOW-RAM KEYBOARD FALLBACK)
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
   initKeyboardShortcuts();
+
+  // FIX C: Virtual Keyboard Fallback for older mobile browsers lacking CSS :has()
+  document.body.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      document.body.classList.add('keyboard-open');
+    }
+  });
+
+  document.body.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      document.body.classList.remove('keyboard-open');
+    }
+  });
 
   try {
     const isPwaInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
