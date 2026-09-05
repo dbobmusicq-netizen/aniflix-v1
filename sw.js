@@ -1,28 +1,29 @@
 /**
- * AniFlix Ultra - Advanced Production Service Worker Engine
- * Version: 30.4.0 Enterprise Hybrid Offline/Real-Time Sync
- * 
- * Key Upgrades:
- * - Direct cache synchronization with index.html version (?v=30.4.0).
- * - Instant Lifecycle Takeover: self.skipWaiting() on install and clients.claim() on activate.
- * - Robust query-string agnostic matching for versioned assets (ignores ?v= hashes in CacheStorage).
- * - Multi-Tier Cache Layer (Static Shell, Dynamic Responses, Media Cache, Image Engine).
- * - Intelligent Stream Bypass (NxSha, Filmu, VidCore, VidFast, Range Requests, HLS/DASH Chunks).
- * - Automated FIFO Cache Pruning Engine & Stale Cache Eviction.
- * - Background Sync Engine for Watch Progress (IndexedDB bridge).
- * - Bi-directional Web Push Notifications & Deep-Link Dispatchers.
+ * AnimeDrift - High-Performance Production Service Worker Engine
+ * Version: 39.0.0 Enterprise Hybrid Offline & Edge Synchronizer
+ * Host: https://animedrift.vercel.app
+ *
+ * Core Upgrades:
+ * - Direct brand transition to AnimeDrift (animedrift.vercel.app).
+ * - Crawler Neutrality: Unrestricted pass-through for major search engine bots (prevents stale SEO indexing).
+ * - Multi-Tier Cache Layer (Static Shell, Dynamic Responses, Image Engine).
+ * - Complete Stream & API Bypass (NxSha, Filmu, VidCore, VidFast, WebRTC PeerJS, HLS/DASH Chunks).
+ * - Stale-While-Revalidate with Query-Agnostic Cache Matching (eliminates cache busting collision).
+ * - Deep-link Navigation Fallback with Offline JSON Support.
+ * - Automatic FIFO Cache Pruning Engine & Versioned Eviction.
+ * - Bi-directional Web Push Notifications & Deep-Link Action Dispatchers.
  */
 
-const VERSION = '30.4.0';
-const STATIC_CACHE = `aniflix-static-v${VERSION}`;
-const DYNAMIC_CACHE = `aniflix-dynamic-v${VERSION}`;
-const IMAGE_CACHE = `aniflix-images-v${VERSION}`;
+const VERSION = '39.0.0';
+const STATIC_CACHE = `animedrift-static-v${VERSION}`;
+const DYNAMIC_CACHE = `animedrift-dynamic-v${VERSION}`;
+const IMAGE_CACHE = `animedrift-images-v${VERSION}`;
 
 const MAX_IMAGE_ENTRIES = 90;
 const MAX_DYNAMIC_ENTRIES = 75;
 const NETWORK_TIMEOUT_MS = 4500;
 
-// Core Critical App Shell Assets (Static Pre-caching)
+// Immutable App Shell Assets (Static Pre-caching)
 const IMMUTABLE_APP_SHELL = [
   '/',
   '/index.html',
@@ -79,6 +80,21 @@ const STREAM_EXTENSIONS = [
   '.aac',
   '.vtt',
   '.key'
+];
+
+// Major search engine bot signatures (Bypass SW to deliver pure live HTML and headers)
+const SEARCH_BOT_SIGNATURES = [
+  'googlebot',
+  'bingbot',
+  'yandex',
+  'duckduckbot',
+  'slurp',
+  'baiduspider',
+  'facebot',
+  'facebookexternalhit',
+  'twitterbot',
+  'linkedinbot',
+  'applebot'
 ];
 
 /**
@@ -166,28 +182,32 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+  const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
 
-  // 1. Hard Bypass Criteria
-  // - Non-GET requests (POST GraphQL, WebSockets)
-  // - Chrome extensions and internal protocols
-  // - PeerJS WebRTC signaling channels
-  // - Media Byte-Range scrubbing requests (206 Partial Content breaks inside CacheStorage)
-  // - Video Stream chunks (.ts, .m4s, .m3u8, .mpd) and Video Proxy Relay (/api/proxy)
-  // - Live Stream Servers (NxSha, Filmu, VidCore, VidFast, etc.)
+  // 1. SEO Crawler Pass-Through: Never intercept search engine bots with stale SW caches
+  if (SEARCH_BOT_SIGNATURES.some((bot) => userAgent.includes(bot))) {
+    return;
+  }
+
+  // 2. Hard Bypass Criteria
+  // - Non-GET requests (POST GraphQL queries, WebSockets)
+  // - Chrome extensions and browser internal protocols
+  // - Media Byte-Range scrubbing requests (206 Partial Content crashes inside CacheStorage)
+  // - Video Stream chunks (.ts, .m4s, .m3u8, .mpd)
+  // - Live Stream Servers & WebRTC Signaling (PeerJS, NxSha, Filmu, VidCore, VidFast)
   if (
     request.method !== 'GET' ||
     url.protocol.startsWith('ws') ||
     url.protocol.startsWith('chrome-extension') ||
     request.headers.has('range') ||
-    url.pathname.includes('/api/proxy') ||
     url.pathname.includes('/peerjs') ||
     STREAM_EXTENSIONS.some((ext) => url.pathname.toLowerCase().endsWith(ext)) ||
     BYPASS_DOMAINS.some((domain) => url.hostname.toLowerCase().includes(domain))
   ) {
-    return; // Let native browser network stack handle it directly
+    return;
   }
 
-  // 2. Image Strategy: Cache-First with Dynamic Fallback & Sizing Cap
+  // 3. Image Strategy: Cache-First with Dynamic Fallback & Sizing Cap
   if (
     request.destination === 'image' ||
     url.hostname.includes('image.tmdb.org') ||
@@ -207,7 +227,6 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         } catch (err) {
-          // Return lightweight placeholder vector when device is offline
           return new Response(
             '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450" fill="%230e0e16"><rect width="100%" height="100%" fill="%230e0e16"/><text x="50%" y="50%" fill="%235e5e7a" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700">Offline Poster</text></svg>',
             { headers: { 'Content-Type': 'image/svg+xml' } }
@@ -218,8 +237,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static App Shell Strategy: Stale-While-Revalidate with Query-Agnostic Cache Match
-  // CSS, JS, Fonts, and Local Navigation Shell Assets
+  // 4. Static App Shell Strategy: Stale-While-Revalidate with Query-Agnostic Matching
   if (
     request.destination === 'style' ||
     request.destination === 'script' ||
@@ -248,7 +266,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. API & External Meta Strategy: Network-First with Fallback to Dynamic Cache
+  // 5. API & External Meta Strategy: Network-First with Fallback to Dynamic Cache
   event.respondWith(
     fetchWithTimeout(request, NETWORK_TIMEOUT_MS)
       .then(async (networkResponse) => {
@@ -287,7 +305,7 @@ self.addEventListener('fetch', (event) => {
 // ===============================================================
 self.addEventListener('push', (event) => {
   let payload = {
-    title: 'AniFlix Ultra',
+    title: 'AnimeDrift',
     body: 'New simulcast episode streaming now or watch party active!',
     icon: '/android-chrome-192x192.png',
     badge: '/favicon-32x32.png',
