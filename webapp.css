@@ -1,8 +1,8 @@
 /* ==========================================================================
    ANIMEDRIFT - PROGRESSIVE WEB APP CAPABILITIES & CONVERTING INSTALL ENGINE
    File: webapp.css
-   Version: 6.0.0
-   Architecture: Hardware-Accelerated, Notch & Safe-Area Aware, PWA Standalone
+   Version: 6.1.0
+   Architecture: Hardware-Accelerated, Safe-Area Integrated, Zero-Lock Scroll
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -38,19 +38,24 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. APP SHELL IMMERSION & TEXT-SELECTION SUPPRESSION
+   2. APP SHELL IMMERSION & MOMENTUM SCROLL PRESERVATION (PWA FIX)
    -------------------------------------------------------------------------- */
 body.pwa-standalone {
+  /* Restores native vertical momentum scrolling in standalone PWA mode */
+  touch-action: pan-y !important;
+  overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+
+  /* Suppresses long-press text selection popups on touch without freezing scroll */
   user-select: none;
   -webkit-user-select: none;
-  overscroll-behavior-y: none;
-  touch-action: pan-x pan-y;
 }
 
 body.pwa-standalone input,
 body.pwa-standalone textarea {
   user-select: text;
   -webkit-user-select: text;
+  touch-action: manipulation;
 }
 
 /* --------------------------------------------------------------------------
