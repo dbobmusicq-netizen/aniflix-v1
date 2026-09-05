@@ -1,7 +1,7 @@
 /**
- * AnimeDrift - Enterprise Anti-Inspection & DevTools Guard
+ * AnimeDrift - Precision Anti-DevTools Guard
  * File: secure.js
- * Version: 9.0.0 Multi-Vector Defense
+ * Version: 10.0.0 High-Precision Detection Engine
  * Host: https://animedrift.vercel.app
  */
 
@@ -30,23 +30,18 @@
   }
 
   // ===============================================================
-  // 1. HARDENED INPUT & SHORTCUT INTERCEPTOR
+  // 1. HARDWARE KEYBOARD SHORTCUTS & INPUT GUARDS
   // ===============================================================
-  // Block Right-Click & Auxiliary Clicks
-  ['contextmenu', 'auxclick'].forEach((evt) => {
-    window.addEventListener(
-      evt,
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return false;
-      },
-      { capture: true, passive: false }
-    );
-  });
+  window.addEventListener(
+    'contextmenu',
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    },
+    { capture: true }
+  );
 
-  // Block Keyboard Combinations (Windows, Linux, macOS)
   window.addEventListener(
     'keydown',
     (e) => {
@@ -66,121 +61,78 @@
       if (isF12 || isDevToolsCombo || isMacInspector || isViewSource || isSavePage) {
         e.preventDefault();
         e.stopPropagation();
-        e.stopImmediatePropagation();
         triggerLockdown();
         return false;
       }
     },
-    { capture: true, passive: false }
+    { capture: true }
   );
 
   // ===============================================================
-  // 2. CONSOLE FORMATTER & REGEX GETTER TRAPS
+  // 2. STABLE DOCKED DEVTOOLS DETECTION (WITH VIEWPORT SANITY CHECKS)
   // ===============================================================
-  const regexTrap = /./;
-  regexTrap.toString = function () {
-    triggerLockdown();
-    return '';
-  };
+  let dockViolations = 0;
 
-  const objTrap = {};
-  Object.defineProperty(objTrap, 'id', {
-    get: function () {
-      triggerLockdown();
-      return 'trap';
-    }
-  });
-
-  // Table formatter probe (Chromium triggers getters immediately when table view opens)
-  const tableTrap = [{ a: 1 }];
-  Object.defineProperty(tableTrap[0], 'a', {
-    get: function () {
-      triggerLockdown();
-      return 1;
-    }
-  });
-
-  function fireConsoleProbes() {
-    if (!document.hasFocus()) return;
-    console.log('%c', regexTrap);
-    console.dir(objTrap);
-    console.table(tableTrap);
-    if (typeof console.clear === 'function') {
-      console.clear();
-    }
-  }
-
-  setInterval(fireConsoleProbes, 1500);
-
-  // ===============================================================
-  // 3. BACKGROUND WEB WORKER HEARTBEAT (STALL DETECTION)
-  // ===============================================================
-  // Spawns an isolated background worker thread to monitor main thread stalls caused by DevTools breakpoints
-  try {
-    const workerScript = `
-      let lastPing = Date.now();
-      self.onmessage = function(e) {
-        if (e.data === 'pong') {
-          lastPing = Date.now();
-        }
-      };
-      setInterval(function() {
-        self.postMessage('ping');
-        if (Date.now() - lastPing > 3500) {
-          self.postMessage('trigger_lockdown');
-        }
-      }, 1000);
-    `;
-
-    const blob = new Blob([workerScript], { type: 'application/javascript' });
-    const worker = new Worker(URL.createObjectURL(blob));
-
-    worker.onmessage = function (e) {
-      if (e.data === 'ping') {
-        worker.postMessage('pong');
-      } else if (e.data === 'trigger_lockdown') {
-        triggerLockdown();
-      }
-    };
-  } catch (_) {}
-
-  // ===============================================================
-  // 4. DEVTOOLS WINDOW PROPORTION DETECTOR
-  // ===============================================================
-  function evaluateWindowDimensions() {
-    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  function checkDockedDevTools() {
+    // Exclude mobile viewports and soft keyboard expansion
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile) return;
 
-    const threshold = 160;
+    // Outer dimensions represent full OS window; inner represents client viewport
     const widthDiff = window.outerWidth - window.innerWidth;
     const heightDiff = window.outerHeight - window.innerHeight;
 
-    // Checks for dock attachment (right, bottom, or left)
-    if (widthDiff > threshold || heightDiff > threshold) {
-      triggerLockdown();
+    // Threshold high enough to ignore browser sidebars, scrollbars, and bookmarks bar
+    const threshold = 180;
+    const isDocked = widthDiff > threshold || heightDiff > threshold;
+
+    if (isDocked) {
+      dockViolations++;
+      // Require 2 consecutive checks to prevent false triggers during window restore/resize
+      if (dockViolations >= 2) {
+        triggerLockdown();
+      }
+    } else {
+      dockViolations = 0;
     }
   }
 
-  setInterval(evaluateWindowDimensions, 1000);
+  setInterval(checkDockedDevTools, 1000);
 
   // ===============================================================
-  // 5. EXTENSION TAMPER DEFENSE
+  // 3. TARGETED CONSOLE FORMATTER DETECTION (UNDOCKED / DETACHED)
   // ===============================================================
-  // Overrides oncontextmenu so external scripts cannot unset it without alerting the engine
-  try {
-    Object.defineProperty(document, 'oncontextmenu', {
-      get: () => (e) => { e.preventDefault(); return false; },
-      set: () => triggerLockdown(),
-      configurable: false
-    });
+  // Chromium triggers the toString/getter property when an object is printed to an OPEN console
+  let consoleViolations = 0;
+  const detector = {
+    isOpen: false
+  };
 
-    Object.defineProperty(window, 'oncontextmenu', {
-      get: () => (e) => { e.preventDefault(); return false; },
-      set: () => triggerLockdown(),
-      configurable: false
-    });
-  } catch (_) {}
+  const devtoolsElement = new Image();
+  Object.defineProperty(devtoolsElement, 'id', {
+    get: function () {
+      consoleViolations++;
+      if (consoleViolations >= 2) {
+        triggerLockdown();
+      }
+      return 'devtools-active';
+    }
+  });
 
+  // Delay startup by 2.5s to let initial scripts, P2P, and stylesheets load smoothly
+  setTimeout(() => {
+    setInterval(() => {
+      // Evaluate only when page has active user focus to avoid background tab throttling
+      if (document.hasFocus()) {
+        console.dir(devtoolsElement);
+        if (typeof console.clear === 'function') {
+          console.clear();
+        }
+      }
+    }, 2000);
+  }, 2500);
+
+  // Prevent overriding the lockdown trigger
   try {
     Object.freeze(triggerLockdown);
   } catch (_) {}
