@@ -15,7 +15,7 @@
  * - Bi-directional Push Notification & Background Watch Sync Bridge.
  */
 
-const VERSION = '43.0.0';
+const VERSION = '43.1.0';
 const STATIC_CACHE = `animedrift-static-v${VERSION}`;
 const DYNAMIC_CACHE = `animedrift-dynamic-v${VERSION}`;
 const IMAGE_CACHE = `animedrift-images-v${VERSION}`;
