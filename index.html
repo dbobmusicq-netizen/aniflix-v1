@@ -840,7 +840,7 @@
   <!-- RUNTIME LINK INTERCEPTOR: Automatically upgrades ?v=32.0.0 calls to v42.0.0 without editing core-engine.js -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '43.1.1';
+      const CURRENT_APP_VERSION = '43.1.2';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
