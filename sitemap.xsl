@@ -8,7 +8,7 @@
   <xsl:template match="/">
     <html xmlns="http://www.w3.org/1999/xhtml">
       <head>
-        <title>AniFlix Ultra • Advanced XML Sitemap Index &amp; NxSha Node Matrix</title>
+        <title>AnimeDrift • Advanced XML Sitemap Index &amp; Edge Node Matrix</title>
         <style type="text/css">
           :root {
             --bg-base: #040406;
@@ -20,9 +20,9 @@
             --text-main: #ffffff;
             --text-secondary: #c4c4d4;
             --text-muted: #7e7e94;
-            --glass-bg: rgba(14, 14, 20, 0.92);
+            --glass-bg: rgba(14, 14, 20, 0.94);
             --glass-border: 1px solid rgba(255, 255, 255, 0.12);
-            --nxsha-glow: rgba(0, 242, 254, 0.45);
+            --edge-glow: rgba(0, 242, 254, 0.45);
           }
 
           body {
@@ -34,7 +34,7 @@
             background-image: 
               radial-gradient(circle at 10% 0%, rgba(255, 8, 68, 0.08) 0%, transparent 45%),
               radial-gradient(circle at 90% 35%, rgba(0, 242, 254, 0.06) 0%, transparent 45%);
-            background-attachment: fixed;
+            background-attachment: scroll;
           }
 
           .container {
@@ -42,11 +42,9 @@
             margin: 0 auto;
             background: var(--glass-bg);
             border: var(--glass-border);
-            border-radius: 24px;
-            padding: 35px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 30px rgba(0, 242, 254, 0.08);
-            backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95);
           }
 
           .header-flex {
@@ -55,9 +53,9 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 20px;
+            padding-bottom: 18px;
           }
 
           h1 {
@@ -67,7 +65,7 @@
             margin: 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             letter-spacing: -0.5px;
           }
 
@@ -75,41 +73,40 @@
             color: var(--accent-red);
           }
 
-          .nxsha-status-pill {
+          .status-pill {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(0, 114, 255, 0.15));
-            border: 1px solid rgba(0, 242, 254, 0.4);
+            background: rgba(0, 242, 254, 0.12);
+            border: 1px solid rgba(0, 242, 254, 0.35);
             color: var(--accent-cyan);
             padding: 6px 14px;
             border-radius: 30px;
             font-size: 11.5px;
             font-weight: 800;
             letter-spacing: 0.5px;
-            box-shadow: 0 0 16px var(--nxsha-glow);
           }
 
-          .nxsha-dot {
+          .status-dot {
             width: 7px;
             height: 7px;
             background: var(--accent-emerald);
             border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent-emerald);
+            box-shadow: 0 0 6px var(--accent-emerald);
           }
 
           p.subtitle {
             color: var(--text-secondary);
-            font-size: 14px;
+            font-size: 13.5px;
             line-height: 1.6;
-            margin: 0 0 28px 0;
+            margin: 0 0 24px 0;
           }
 
           .table-wrapper {
             width: 100%;
             overflow-x: auto;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
           }
 
           table {
@@ -119,10 +116,10 @@
           }
 
           th, td {
-            padding: 14px 18px;
+            padding: 12px 16px;
             text-align: left;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 13.5px;
+            font-size: 13px;
           }
 
           th {
@@ -131,7 +128,7 @@
             font-weight: 800;
             text-transform: uppercase;
             font-size: 11px;
-            letter-spacing: 0.9px;
+            letter-spacing: 0.8px;
           }
 
           tr:last-child td {
@@ -139,7 +136,7 @@
           }
 
           tr:hover {
-            background: rgba(255, 255, 255, 0.035);
+            background: rgba(255, 255, 255, 0.04);
           }
 
           a {
@@ -147,7 +144,7 @@
             text-decoration: none;
             font-weight: 600;
             word-break: break-all;
-            transition: color 0.2s ease;
+            transition: color 0.15s ease;
           }
 
           a:hover {
@@ -158,39 +155,39 @@
           .badge {
             background: rgba(70, 211, 105, 0.15);
             color: var(--accent-emerald);
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 6px;
-            font-size: 11.5px;
+            font-size: 11px;
             font-weight: 700;
             font-family: ui-monospace, monospace;
           }
 
           .meta-info {
-            margin-top: 24px;
+            margin-top: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 11.5px;
             color: var(--text-muted);
             border-top: 1px solid rgba(255, 255, 255, 0.06);
-            padding-top: 16px;
+            padding-top: 14px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
           }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header-flex">
-            <h1>AniFlix <span>Ultra</span> Sitemap Index</h1>
-            <div class="nxsha-status-pill">
-              <span class="nxsha-dot"></span>
-              <span>NxSha Ultra Engine Active</span>
+            <h1>Anime<span>Drift</span> Sitemap Index</h1>
+            <div class="status-pill">
+              <span class="status-dot"></span>
+              <span>Edge Delivery Pipeline Active</span>
             </div>
           </div>
           
           <p class="subtitle">
-            This human-readable XML sitemap index optimizes crawling efficiency for search engines, indexing core streaming endpoints, deep-linked episode nodes, and high-performance NxSha multi-server routes.
+            This human-readable XML sitemap index optimizes crawling efficiency for search engines, indexing canonical streaming discovery endpoints, deep-linked catalog nodes, and high-performance server routes.
           </p>
 
           <div class="table-wrapper">
@@ -198,7 +195,7 @@
               <thead>
                 <tr>
                   <th>Index URL Location</th>
-                  <th>Priority Matrix</th>
+                  <th>Priority</th>
                   <th>Change Frequency</th>
                   <th>Last Modified</th>
                 </tr>
@@ -222,8 +219,8 @@
           </div>
 
           <div class="meta-info">
-            <span>Powered by AniFlix Ultra Enterprise Architecture</span>
-            <span>Zero-Ad DASH/HLS Extractor &amp; Proxy Pipeline</span>
+            <span>Powered by AnimeDrift Ultra-Performance Architecture</span>
+            <span>Edge-Cached Web Standards Protocol</span>
           </div>
         </div>
       </body>
