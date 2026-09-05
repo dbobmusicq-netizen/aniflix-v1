@@ -10,12 +10,12 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="favicon.ico?v=41.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=41.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=41.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=41.0.0" />
-  <link rel="manifest" href="manifest.json?v=41.0.0" />
+  <!-- Favicon Suite & Multi-Platform PWA Branding[cite: 1] -->
+  <link rel="shortcut icon" href="favicon.ico?v=42.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=42.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=42.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=42.0.0" />
+  <link rel="manifest" href="manifest.json?v=42.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -41,22 +41,22 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Version Controlled) -->
-  <link rel="stylesheet" href="theme-base.css?v=41.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=41.0.0">
-  <link rel="stylesheet" href="p2p.css?v=41.0.0">
-  <link rel="stylesheet" href="webapp.css?v=41.0.0">
-  <link rel="stylesheet" href="mobile.css?v=41.0.0">
+  <!-- Modular Stylesheets (Version Controlled to v42.0.0) -->
+  <link rel="stylesheet" href="theme-base.css?v=42.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=42.0.0">
+  <link rel="stylesheet" href="p2p.css?v=42.0.0">
+  <link rel="stylesheet" href="webapp.css?v=42.0.0">
+  <link rel="stylesheet" href="mobile.css?v=42.0.0">
 
   <style>
     /* ==========================================================================
-       AESTHETIC SPLASH PRELOADER & UPDATE HUD
+       AESTHETIC SPLASH PRELOADER & HUD
        ========================================================================== */
     #siteSplashPreloader {
       position: fixed;
       inset: 0;
       z-index: 999999;
-      background: #040406;
+      background: radial-gradient(circle at center, #0a0b12 0%, #030305 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -73,23 +73,25 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 18px;
     }
     .aesthetic-brand-title {
       font-family: 'Outfit', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
+      font-size: 30px;
+      font-weight: 900;
       letter-spacing: 6px;
       text-transform: uppercase;
       color: #fff;
       position: relative;
+      text-shadow: 0 0 25px rgba(255, 8, 68, 0.35);
     }
     .aesthetic-brand-title span {
       color: #ff0844;
+      text-shadow: 0 0 30px rgba(255, 8, 68, 0.7);
     }
     .aesthetic-line-track {
-      width: 120px;
-      height: 2px;
+      width: 180px;
+      height: 3px;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 99px;
       overflow: hidden;
@@ -100,21 +102,20 @@
       left: 0;
       top: 0;
       height: 100%;
-      width: 40%;
-      background: linear-gradient(90deg, transparent, #ff0844, transparent);
-      animation: aestheticFlow 1.6s ease-in-out infinite;
+      width: 0%;
+      background: linear-gradient(90deg, #ff0844, #00f0ff);
+      box-shadow: 0 0 12px rgba(255, 8, 68, 0.8);
+      transition: width 0.1s linear;
     }
     .aesthetic-status-text {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 10.5px;
+      font-size: 11px;
+      font-weight: 700;
       letter-spacing: 2px;
-      color: rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.6);
       text-transform: uppercase;
-    }
-
-    @keyframes aestheticFlow {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(300%); }
+      min-height: 16px;
+      transition: opacity 0.25s ease;
     }
 
     /* Interactive Update Available Notification Pill */
@@ -185,15 +186,15 @@
       transform: translate3d(-50%, -15px, 0);
       z-index: 99990;
       background: rgba(14, 14, 22, 0.94);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 8, 68, 0.3);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
-      padding: 6px 16px;
+      padding: 8px 18px;
       border-radius: 9999px;
       display: none;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-family: 'Outfit', sans-serif;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #fff;
       transition: transform 0.25s ease, opacity 0.2s ease;
@@ -206,9 +207,9 @@
       transform: translate3d(-50%, 0, 0);
     }
     .mini-spinner-quantum {
-      width: 12px;
-      height: 12px;
-      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
       border-top-color: #ff0844;
       border-radius: 50%;
       animation: spinLoader 0.75s linear infinite;
@@ -303,14 +304,14 @@
 </head>
 <body class="theme-dark">
 
-  <!-- AESTHETIC SPLASH PRELOADER -->
+  <!-- AESTHETIC SPLASH PRELOADER (4-SECOND TIMED SEQUENCE) -->
   <div id="siteSplashPreloader" aria-hidden="false">
     <div class="aesthetic-loader">
       <div class="aesthetic-brand-title">Anime<span>Drift</span></div>
       <div class="aesthetic-line-track">
-        <div class="aesthetic-line-fill"></div>
+        <div class="aesthetic-line-fill" id="splashFillBar"></div>
       </div>
-      <span class="aesthetic-status-text">Loading catalog</span>
+      <span class="aesthetic-status-text" id="splashStatusLabel">Initializing Core Network...</span>
     </div>
   </div>
 
@@ -836,54 +837,139 @@
     </div>
   </div>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized)[cite: 1] -->
-  <script src="core-engine.js?v=41.0.0"></script>
-  <script src="dash-player.js?v=41.0.0"></script>
-  <script src="streaming-ui.js?v=41.0.0"></script>
-  <script src="p2p.js?v=41.0.0"></script>
-  <script src="webapp.js?v=41.0.0"></script>
-  <script src="adblock-engine.js?v=41.0.0"></script>
-
-  <!-- APP LIFECYCLE & UPDATE MANAGER -->
+  <!-- RUNTIME LINK INTERCEPTOR: Automatically upgrades ?v=32.0.0 calls to v42.0.0 without editing core-engine.js -->
   <script>
-    // Smooth Category Transition Loader
+    (function() {
+      const CURRENT_APP_VERSION = '42.0.0';
+      const origSetAttribute = Element.prototype.setAttribute;
+      Element.prototype.setAttribute = function(name, val) {
+        if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
+          val = val.replace(/\?v=[^&]+/, `?v=${CURRENT_APP_VERSION}`);
+        }
+        return origSetAttribute.apply(this, [name, val]);
+      };
+      const desc = Object.getOwnPropertyDescriptor(HTMLLinkElement.prototype, 'href');
+      if (desc && desc.set) {
+        Object.defineProperty(HTMLLinkElement.prototype, 'href', {
+          set: function(v) {
+            if (typeof v === 'string') v = v.replace(/\?v=[^&]+/, `?v=${CURRENT_APP_VERSION}`);
+            return desc.set.call(this, v);
+          },
+          get: desc.get
+        });
+      }
+    })();
+  </script>
+
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v42.0.0)[cite: 1] -->
+  <script src="core-engine.js?v=42.0.0"></script>
+  <script src="dash-player.js?v=42.0.0"></script>
+  <script src="streaming-ui.js?v=42.0.0"></script>
+  <script src="p2p.js?v=42.0.0"></script>
+  <script src="webapp.js?v=42.0.0"></script>
+  <script src="adblock-engine.js?v=42.0.0"></script>
+
+  <!-- APP LIFECYCLE, 4-SECOND PRELOADER & UPDATE ENGINE -->
+  <script>
+    // =========================================================================
+    // 1. 4-SECOND TRANSITION & BACKGROUND PRELOADER CONTROLLER
+    // =========================================================================
+    let globalLoaderTimeout = null;
+
     window.triggerNavWithLoader = function(label, callback) {
       const loader = document.getElementById('globalTransitionLoader');
       const text = document.getElementById('globalTransitionText');
       if (loader && text) {
-        text.innerText = label ? `Loading ${label}...` : 'Loading...';
+        text.innerText = label ? `Preparing ${label}...` : 'Preparing Stream Universe...';
         loader.classList.add('active');
       }
+
+      // Execute target navigation immediately to trigger background fetch
       try {
         if (typeof callback === 'function') callback();
-      } finally {
-        setTimeout(() => {
-          if (loader) loader.classList.remove('active');
-        }, 500);
+      } catch (e) {
+        console.warn('[Nav Callback Notice]:', e);
       }
+
+      // Enforce 4-second loading window for transition completeness
+      if (globalLoaderTimeout) clearTimeout(globalLoaderTimeout);
+      globalLoaderTimeout = setTimeout(() => {
+        if (loader) loader.classList.remove('active');
+      }, 4000);
     };
 
-    // Preloader Dismissal
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const preloader = document.getElementById('siteSplashPreloader');
-        if (preloader) {
-          preloader.classList.add('preloader-hidden');
-          setTimeout(() => preloader.remove(), 800);
+    // Card Click Interceptor (4-second buffer on anime info modals)
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('.anime-card, .btn-play, .hero-btns .btn-info, .ep-badge-btn');
+      if (card && !e.target.closest('#modalContainer')) {
+        const loader = document.getElementById('globalTransitionLoader');
+        const text = document.getElementById('globalTransitionText');
+        if (loader && text) {
+          text.innerText = 'Synchronizing Episode Nodes & Streams...';
+          loader.classList.add('active');
+          setTimeout(() => {
+            if (loader) loader.classList.remove('active');
+          }, 4000);
         }
-        checkAndShowAdblockNotice();
-      }, 400);
+      }
     });
 
-    // Device-Aware Adblock Advisory (Single Display per 24h, zero reload loop)
+    // 4-Second Initial Site Opening Splash Sequence & Asset Preload
+    window.addEventListener('DOMContentLoaded', () => {
+      const fillBar = document.getElementById('splashFillBar');
+      const statusLabel = document.getElementById('splashStatusLabel');
+      const startTime = Date.now();
+      const TOTAL_DURATION = 4000;
+
+      // Background warm-up during the 4-second splash
+      const preloadCandidates = [
+        'theme-base.css?v=42.0.0',
+        'components-modal.css?v=42.0.0',
+        'p2p.css?v=42.0.0',
+        'webapp.css?v=42.0.0',
+        'mobile.css?v=42.0.0'
+      ];
+      preloadCandidates.forEach(url => {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        document.head.appendChild(link);
+      });
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(100, Math.floor((elapsed / TOTAL_DURATION) * 100));
+
+        if (fillBar) fillBar.style.width = `${progress}%`;
+
+        if (statusLabel) {
+          if (progress < 25) statusLabel.innerText = 'Connecting Edge Mesh...';
+          else if (progress < 55) statusLabel.innerText = 'Syncing Anime & Catalog Buffers...';
+          else if (progress < 85) statusLabel.innerText = 'Pre-caching Interface Components...';
+          else statusLabel.innerText = 'Launching Universe...';
+        }
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            const splash = document.getElementById('siteSplashPreloader');
+            if (splash) {
+              splash.classList.add('preloader-hidden');
+              setTimeout(() => splash.remove(), 800);
+            }
+            checkAndShowAdblockNotice();
+          }, 300);
+        }
+      }, 50);
+    });
+
+    // Device-Aware Adblock Advisory (Single Display per 24h)
     function checkAndShowAdblockNotice() {
       const STORAGE_KEY = 'animedrift_adblock_notice_date';
       const todayStr = new Date().toISOString().slice(0, 10);
       const lastShownDate = localStorage.getItem(STORAGE_KEY);
 
-      if (lastShownDate === todayStr) {
-        return;
-      }
+      if (lastShownDate === todayStr) return;
 
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
       const isMobile = /android|iphone|ipad|ipod/i.test(userAgent);
@@ -895,14 +981,14 @@
           box.innerHTML = `
             <strong><i class="fas fa-mobile-screen"></i> Mobile Tip:</strong>
             <p style="margin: 4px 0 0 0; color: #a3a3c2;">
-              Use <b>Brave Browser</b> or configure your Private DNS to <code style="color:#00f2fe; background:rgba(255,255,255,0.05); padding:2px 5px; border-radius:4px;">dns.adguard-dns.com</code> to neutralize redirects.
+              Use <b>Brave Browser</b> or set Private DNS to <code style="color:#00f2fe; background:rgba(255,255,255,0.05); padding:2px 5px; border-radius:4px;">dns.adguard-dns.com</code> to eliminate stream redirects.
             </p>
           `;
         } else {
           box.innerHTML = `
             <strong><i class="fas fa-desktop"></i> Desktop Tip:</strong>
             <p style="margin: 4px 0 0 0; color: #a3a3c2;">
-              Install <b>uBlock Origin</b> or use <b>Brave Browser</b> for popup-free playback.
+              Install <b>uBlock Origin</b> or use <b>Brave Browser</b> for seamless ad-free streaming.
             </p>
           `;
         }
@@ -918,7 +1004,7 @@
     }
 
     // =========================================================================
-    // UPDATE NOTIFICATION ENGINE (Controls SW Transition Cleanly)
+    // 2. ACTIVE UPDATE DETECTION & HUD ENGINE (Pushes prompt to web & PWA users)
     // =========================================================================
     let newWorkerWaiting = null;
 
@@ -934,7 +1020,7 @@
       const banner = document.getElementById('updateNotificationBar');
       if (banner) banner.classList.remove('visible');
 
-      // Purge client CacheStorage to prevent mixing stale assets with new bundles
+      // Purge client CacheStorage so old bundles are dropped
       if ('caches' in window) {
         try {
           const keys = await caches.keys();
@@ -944,6 +1030,7 @@
         }
       }
 
+      // Tell waiting worker to take control
       if (newWorkerWaiting) {
         newWorkerWaiting.postMessage({ type: 'SKIP_WAITING' });
       } else {
@@ -956,33 +1043,42 @@
       if (banner) banner.classList.remove('visible');
     });
 
-    // Register Service Worker and track lifecycle updates safely
+    // Register Service Worker with forced server verification
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=41.0.0').then(reg => {
-          // Check if an update is already standing by
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register('sw.js?v=42.0.0', {
+            updateViaCache: 'none'
+          });
+
+          // Check if an updated worker is already waiting
           if (reg.waiting) {
             showUpdateAvailableUI(reg.waiting);
-            return;
           }
 
-          // Listen for an incoming update
+          // Listen for new updates
           reg.addEventListener('updatefound', () => {
             const installingWorker = reg.installing;
             if (!installingWorker) return;
 
             installingWorker.addEventListener('statechange', () => {
               if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New worker is ready and waiting for user confirmation
                 showUpdateAvailableUI(installingWorker);
               }
             });
           });
-        }).catch(err => {
-          console.warn('[PWA] Service Worker registration skipped:', err);
-        });
 
-        // Trigger reload strictly on user-initiated activation, never on initial controller attachment
+          // Active check on page load and periodic poll every 60 seconds
+          reg.update().catch(() => {});
+          setInterval(() => {
+            reg.update().catch(() => {});
+          }, 60000);
+
+        } catch (err) {
+          console.warn('[PWA] Service Worker registration skipped:', err);
+        }
+
+        // Reload once the user clicks "Update Now" and new worker claims clients
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing && newWorkerWaiting) {
