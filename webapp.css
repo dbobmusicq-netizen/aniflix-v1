@@ -1,7 +1,7 @@
 /* ==========================================================================
-   ANIFLIX ULTRA - PROGRESSIVE WEB APP EXCLUSIVE CAPABILITIES STYLESHEET
+   ANIMEDRIFT - PROGRESSIVE WEB APP CAPABILITIES & CONVERTING INSTALL ENGINE
    File: webapp.css
-   Version: 1.0.0
+   Version: 6.0.0
    Architecture: Hardware-Accelerated, Notch & Safe-Area Aware, PWA Standalone
    ========================================================================== */
 
@@ -18,8 +18,8 @@
 
   body.pwa-standalone .header {
     top: env(safe-area-inset-top);
-    padding-left: max(var(--page-padding), env(safe-area-inset-left));
-    padding-right: max(var(--page-padding), env(safe-area-inset-right));
+    padding-left: max(var(--page-padding, 16px), env(safe-area-inset-left));
+    padding-right: max(var(--page-padding, 16px), env(safe-area-inset-right));
   }
 
   body.pwa-standalone .floating-quick-dock {
@@ -54,7 +54,328 @@ body.pwa-standalone textarea {
 }
 
 /* --------------------------------------------------------------------------
-   3. PWA STATUS BADGES & STANDALONE VISUAL INDICATORS
+   3. HIGH-CONVERSION PWA INSTALL TRIGGERS & PROMPTS
+   -------------------------------------------------------------------------- */
+/* Dynamic Header & Drawer CTA Buttons */
+.pwa-install-trigger,
+#pwaInstallBtn,
+#headerInstallBtn,
+#drawerInstallBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, rgba(255, 8, 68, 0.95), rgba(184, 7, 16, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  color: #ffffff;
+  font-family: var(--font-stack, inherit);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(255, 8, 68, 0.4), 0 0 10px rgba(255, 8, 68, 0.2);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease, filter 0.2s ease;
+  z-index: 10;
+}
+
+/* Radiant Prismatic Shimmer across the Button */
+.pwa-install-trigger::after,
+#pwaInstallBtn::after,
+#headerInstallBtn::after,
+#drawerInstallBtn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-22deg);
+  animation: pwaBtnShimmer 3.2s infinite ease-in-out;
+}
+
+.pwa-install-trigger:hover,
+#pwaInstallBtn:hover,
+#headerInstallBtn:hover,
+#drawerInstallBtn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 26px rgba(255, 8, 68, 0.6), 0 0 16px rgba(255, 8, 68, 0.4);
+  filter: brightness(1.08);
+}
+
+.pwa-install-trigger:active,
+#pwaInstallBtn:active,
+#headerInstallBtn:active,
+#drawerInstallBtn:active {
+  transform: translateY(0) scale(0.96);
+  filter: brightness(0.95);
+}
+
+.pwa-install-trigger i,
+#pwaInstallBtn i,
+#headerInstallBtn i,
+#drawerInstallBtn i {
+  font-size: 13px;
+  color: #fff;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+  animation: pwaIconBounce 2s infinite ease-in-out;
+}
+
+/* Floating Interactive Bottom Sheet / Banner */
+.aniflix-install-card {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(140%);
+  width: calc(100% - 32px);
+  max-width: 500px;
+  background: rgba(16, 18, 28, 0.94);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 8, 68, 0.35);
+  border-radius: 18px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  z-index: 10000;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 8, 68, 0.2);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.aniflix-install-card.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.aniflix-install-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.aniflix-install-icon {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 8, 68, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+}
+
+.aniflix-install-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.aniflix-install-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.aniflix-install-title {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aniflix-install-desc {
+  color: var(--text-secondary, #c3c7db);
+  font-size: 11.5px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.aniflix-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-primary-compact {
+  background: linear-gradient(135deg, var(--accent-red, #ff0844), #b80710);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 8, 68, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-primary-compact:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 8, 68, 0.6);
+}
+
+.btn-primary-compact:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.btn-ghost-compact {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted, #747994);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-ghost-compact:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   4. APPLE SAFARI / IOS INTERACTIVE INSTALL SHEET
+   -------------------------------------------------------------------------- */
+.ios-install-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 10002;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.ios-install-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ios-install-sheet {
+  background: #141622;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  width: 100%;
+  max-width: 480px;
+  padding: 24px 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  border-radius: 24px 24px 0 0;
+  color: #fff;
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.95);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-install-backdrop.active .ios-install-sheet {
+  transform: translateY(0);
+}
+
+.ios-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ios-sheet-header h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.ios-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ios-sheet-subtitle {
+  color: var(--text-secondary, #c3c7db);
+  font-size: 13px;
+  margin: 14px 0 16px;
+  line-height: 1.5;
+}
+
+.ios-steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ios-steps-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  color: #e2e8f0;
+}
+
+.ios-steps-list svg {
+  flex-shrink: 0;
+  color: var(--accent-cyan, #00f2fe);
+}
+
+.ios-confirm-btn {
+  width: 100%;
+  margin-top: 18px;
+  background: var(--accent-red, #ff0844);
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(255, 8, 68, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   5. STANDALONE STATUS BADGES & HAPTIC PHYSICAL RESPONSE
    -------------------------------------------------------------------------- */
 .pwa-badge {
   display: none;
@@ -65,8 +386,8 @@ body.pwa-standalone .pwa-badge {
   align-items: center;
   gap: 5px;
   background: rgba(0, 242, 254, 0.15);
-  border: 1px solid var(--accent-cyan);
-  color: var(--accent-cyan);
+  border: 1px solid var(--accent-cyan, #00f2fe);
+  color: var(--accent-cyan, #00f2fe);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -75,9 +396,6 @@ body.pwa-standalone .pwa-badge {
   text-transform: uppercase;
 }
 
-/* --------------------------------------------------------------------------
-   4. TACTILE HAPTIC ACTIVE FEEDBACK (MICRO-BOUNCE PHYSICS)
-   -------------------------------------------------------------------------- */
 body.pwa-standalone .btn:active,
 body.pwa-standalone .dock-btn:active,
 body.pwa-standalone .p2p-emote-btn:active,
@@ -88,7 +406,7 @@ body.pwa-standalone .chip:active {
 }
 
 /* --------------------------------------------------------------------------
-   5. SCREEN WAKE LOCK HUD INDICATOR
+   6. SCREEN WAKE LOCK HUD INDICATOR
    -------------------------------------------------------------------------- */
 .wake-lock-indicator {
   position: absolute;
@@ -97,9 +415,9 @@ body.pwa-standalone .chip:active {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(10, 10, 16, 0.85);
+  background: rgba(10, 10, 16, 0.88);
   border: 1px solid rgba(70, 211, 105, 0.4);
-  color: var(--accent-emerald);
+  color: var(--accent-emerald, #00ff88);
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 11px;
@@ -110,7 +428,7 @@ body.pwa-standalone .chip:active {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);
-  transition: all 0.3s var(--ease-smooth);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .wake-lock-indicator.active {
@@ -124,13 +442,13 @@ body.pwa-standalone .chip:active {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent-emerald);
-  box-shadow: 0 0 8px var(--accent-emerald);
+  background: var(--accent-emerald, #00ff88);
+  box-shadow: 0 0 8px var(--accent-emerald, #00ff88);
   animation: pwaPulse 1.8s infinite;
 }
 
 /* --------------------------------------------------------------------------
-   6. FLOATING MINI-PLAYER & PICTURE-IN-PICTURE (PIP) CONTROL BUTTON
+   7. FLOATING MINI-PLAYER & PICTURE-IN-PICTURE BUTTON
    -------------------------------------------------------------------------- */
 .pip-trigger-btn {
   display: inline-flex;
@@ -146,14 +464,14 @@ body.pwa-standalone .chip:active {
   cursor: pointer;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transition: all 0.25s var(--ease-smooth);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pip-trigger-btn:hover {
-  background: var(--accent-cyan);
-  border-color: var(--accent-cyan);
+  background: var(--accent-cyan, #00f2fe);
+  border-color: var(--accent-cyan, #00f2fe);
   color: #000;
-  box-shadow: 0 0 16px var(--accent-cyan-glow);
+  box-shadow: 0 0 16px rgba(0, 242, 254, 0.45);
   transform: translateY(-1px);
 }
 
@@ -161,21 +479,20 @@ body.pwa-standalone .chip:active {
   font-size: 12px;
 }
 
-/* Style overrides when PiP window is rendered detached */
 .pip-mode-active #modalPlayerWrap {
   border-radius: 0 !important;
   box-shadow: none !important;
 }
 
 /* --------------------------------------------------------------------------
-   7. OFFLINE BACKGROUND SYNC STATUS CHIP
+   8. OFFLINE BACKGROUND SYNC STATUS CHIP
    -------------------------------------------------------------------------- */
 .sync-status-pill {
   position: fixed;
   bottom: 80px;
   left: 20px;
   background: rgba(14, 14, 22, 0.94);
-  border: 1px solid var(--accent-gold);
+  border: 1px solid var(--accent-gold, #ffb800);
   color: #fff;
   font-size: 11.5px;
   font-weight: 700;
@@ -185,11 +502,11 @@ body.pwa-standalone .chip:active {
   align-items: center;
   gap: 8px;
   z-index: 2000;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 15px var(--accent-gold-glow);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 184, 0, 0.45);
   opacity: 0;
   pointer-events: none;
   transform: translateY(12px);
-  transition: all 0.3s var(--ease-elastic);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .sync-status-pill.syncing {
@@ -199,13 +516,23 @@ body.pwa-standalone .chip:active {
 }
 
 .sync-status-pill i {
-  color: var(--accent-gold);
+  color: var(--accent-gold, #ffb800);
   animation: pwaSpin 1s linear infinite;
 }
 
 /* --------------------------------------------------------------------------
-   8. KEYFRAME ANIMATIONS
+   9. KEYFRAME ANIMATIONS
    -------------------------------------------------------------------------- */
+@keyframes pwaBtnShimmer {
+  0% { left: -120%; }
+  35%, 100% { left: 180%; }
+}
+
+@keyframes pwaIconBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+
 @keyframes pwaPulse {
   0%, 100% {
     transform: scale(1);
@@ -218,10 +545,6 @@ body.pwa-standalone .chip:active {
 }
 
 @keyframes pwaSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
