@@ -840,7 +840,7 @@
   <!-- RUNTIME LINK INTERCEPTOR: Automatically upgrades ?v=32.0.0 calls to v42.0.0 without editing core-engine.js -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '43.0.0';
+      const CURRENT_APP_VERSION = '43.1.0';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -868,7 +868,7 @@
   <script src="p2p.js?v=42.0.0"></script>
   <script src="webapp.js?v=42.0.0"></script>
   <script src="adblock-engine.js?v=43.0.0"></script>
-   <script src="secure.js?v=42.0.0"></script>
+   <script src="secure.js?v=42.1.0"></script>
 
   <!-- APP LIFECYCLE, 4-SECOND PRELOADER & UPDATE ENGINE -->
   <script>
