@@ -1,20 +1,8 @@
 /**
- * AnimeDrift - Enterprise Anti-Inspection & Tamper-Defense Kernel
+ * AnimeDrift - Enterprise Anti-Inspection & DevTools Guard
  * File: secure.js
- * Version: 8.5.0 Hardened Security Suite
+ * Version: 9.0.0 Multi-Vector Defense
  * Host: https://animedrift.vercel.app
- *
- * Capabilities:
- * - Zero False Positives: Completely removes CPU timing/debugger pauses and viewport dimension
- *   traps that cause false redirects on page refresh, mode changes (Netflix mode), or DOM re-renders.
- * - Hardware Shortcut Neutralizer: Traps Windows/Linux (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
- *   and macOS (Cmd+Opt+I/J/C/U, Cmd+S, Cmd+Shift+C).
- * - Context Menu & Auxiliary Click Traps: Blocks right-clicks and auxiliary mouse triggers without
- *   interfering with normal touch gestures or taps.
- * - Extension-Resistant oncontextmenu Protection: Detects extensions attempting to overwrite
- *   the native contextmenu blocker.
- * - AdBlocker Compatibility: Does not flag element removals or style adjustments made by ad blockers.
- * - Selective Console Inspection Probe: Only triggers when DevTools actively evaluates console elements.
  */
 
 (function () {
@@ -42,61 +30,40 @@
   }
 
   // ===============================================================
-  // 1. CONTEXT MENU & EXTENSION TAMPER DEFENSE
+  // 1. HARDENED INPUT & SHORTCUT INTERCEPTOR
   // ===============================================================
-  ['contextmenu', 'auxclick'].forEach((eventType) => {
+  // Block Right-Click & Auxiliary Clicks
+  ['contextmenu', 'auxclick'].forEach((evt) => {
     window.addEventListener(
-      eventType,
+      evt,
       (e) => {
-        if (e.button === 2 || eventType === 'contextmenu') {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          return false;
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
       },
       { capture: true, passive: false }
     );
   });
 
-  // Guard against extensions that attempt to reassign oncontextmenu to null/undefined
-  try {
-    Object.defineProperty(document, 'oncontextmenu', {
-      get: () => (e) => { e.preventDefault(); return false; },
-      set: () => { triggerLockdown(); },
-      configurable: false
-    });
-
-    Object.defineProperty(window, 'oncontextmenu', {
-      get: () => (e) => { e.preventDefault(); return false; },
-      set: () => { triggerLockdown(); },
-      configurable: false
-    });
-  } catch (_) {}
-
-  // ===============================================================
-  // 2. HARDWARE KEYBOARD SHORTCUT TRAP (WINDOWS, LINUX & MACOS)
-  // ===============================================================
+  // Block Keyboard Combinations (Windows, Linux, macOS)
   window.addEventListener(
     'keydown',
     (e) => {
       const key = (e.key || '').toLowerCase();
       const code = e.keyCode || e.which;
-
       const ctrl = e.ctrlKey;
-      const meta = e.metaKey; // Cmd on macOS
+      const meta = e.metaKey; // Command on macOS
       const shift = e.shiftKey;
       const alt = e.altKey;
 
       const isF12 = code === 123 || key === 'f12';
-      const isCtrlShiftI = (ctrl || meta) && shift && (key === 'i' || code === 73);
-      const isCtrlShiftJ = (ctrl || meta) && shift && (key === 'j' || code === 74);
-      const isCtrlShiftC = (ctrl || meta) && shift && (key === 'c' || code === 67);
-      const isCtrlU = (ctrl || meta) && (key === 'u' || code === 85);
-      const isCtrlS = (ctrl || meta) && (key === 's' || code === 83);
-      const isMacDevTools = meta && alt && (key === 'i' || key === 'j' || key === 'c' || key === 'u');
+      const isDevToolsCombo = (ctrl || meta) && shift && ['i', 'j', 'c'].includes(key);
+      const isMacInspector = meta && alt && ['i', 'j', 'c', 'u'].includes(key);
+      const isViewSource = (ctrl || meta) && key === 'u';
+      const isSavePage = (ctrl || meta) && key === 's';
 
-      if (isF12 || isCtrlShiftI || isCtrlShiftJ || isCtrlShiftC || isCtrlU || isCtrlS || isMacDevTools) {
+      if (isF12 || isDevToolsCombo || isMacInspector || isViewSource || isSavePage) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -108,32 +75,112 @@
   );
 
   // ===============================================================
-  // 3. TARGETED CONSOLE INSPECTION PROBE (ZERO CPU LAG)
+  // 2. CONSOLE FORMATTER & REGEX GETTER TRAPS
   // ===============================================================
-  // Triggers lockdown strictly when DevTools actively renders and accesses element getters
-  const probeElement = new Image();
-  Object.defineProperty(probeElement, 'id', {
+  const regexTrap = /./;
+  regexTrap.toString = function () {
+    triggerLockdown();
+    return '';
+  };
+
+  const objTrap = {};
+  Object.defineProperty(objTrap, 'id', {
     get: function () {
       triggerLockdown();
-      return 'secured-node';
+      return 'trap';
     }
   });
 
-  let probeCycle = 0;
-  setInterval(() => {
-    // Only inspect when window is active to avoid false positives in background tabs
-    if (document.hasFocus()) {
-      probeCycle++;
-      if (probeCycle % 4 === 0) {
-        console.dir(probeElement);
-        if (typeof console.clear === 'function') {
-          console.clear();
-        }
-      }
+  // Table formatter probe (Chromium triggers getters immediately when table view opens)
+  const tableTrap = [{ a: 1 }];
+  Object.defineProperty(tableTrap[0], 'a', {
+    get: function () {
+      triggerLockdown();
+      return 1;
     }
-  }, 2500);
+  });
 
-  // Freeze lockdown reference to prevent script override
+  function fireConsoleProbes() {
+    if (!document.hasFocus()) return;
+    console.log('%c', regexTrap);
+    console.dir(objTrap);
+    console.table(tableTrap);
+    if (typeof console.clear === 'function') {
+      console.clear();
+    }
+  }
+
+  setInterval(fireConsoleProbes, 1500);
+
+  // ===============================================================
+  // 3. BACKGROUND WEB WORKER HEARTBEAT (STALL DETECTION)
+  // ===============================================================
+  // Spawns an isolated background worker thread to monitor main thread stalls caused by DevTools breakpoints
+  try {
+    const workerScript = `
+      let lastPing = Date.now();
+      self.onmessage = function(e) {
+        if (e.data === 'pong') {
+          lastPing = Date.now();
+        }
+      };
+      setInterval(function() {
+        self.postMessage('ping');
+        if (Date.now() - lastPing > 3500) {
+          self.postMessage('trigger_lockdown');
+        }
+      }, 1000);
+    `;
+
+    const blob = new Blob([workerScript], { type: 'application/javascript' });
+    const worker = new Worker(URL.createObjectURL(blob));
+
+    worker.onmessage = function (e) {
+      if (e.data === 'ping') {
+        worker.postMessage('pong');
+      } else if (e.data === 'trigger_lockdown') {
+        triggerLockdown();
+      }
+    };
+  } catch (_) {}
+
+  // ===============================================================
+  // 4. DEVTOOLS WINDOW PROPORTION DETECTOR
+  // ===============================================================
+  function evaluateWindowDimensions() {
+    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isMobile) return;
+
+    const threshold = 160;
+    const widthDiff = window.outerWidth - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+
+    // Checks for dock attachment (right, bottom, or left)
+    if (widthDiff > threshold || heightDiff > threshold) {
+      triggerLockdown();
+    }
+  }
+
+  setInterval(evaluateWindowDimensions, 1000);
+
+  // ===============================================================
+  // 5. EXTENSION TAMPER DEFENSE
+  // ===============================================================
+  // Overrides oncontextmenu so external scripts cannot unset it without alerting the engine
+  try {
+    Object.defineProperty(document, 'oncontextmenu', {
+      get: () => (e) => { e.preventDefault(); return false; },
+      set: () => triggerLockdown(),
+      configurable: false
+    });
+
+    Object.defineProperty(window, 'oncontextmenu', {
+      get: () => (e) => { e.preventDefault(); return false; },
+      set: () => triggerLockdown(),
+      configurable: false
+    });
+  } catch (_) {}
+
   try {
     Object.freeze(triggerLockdown);
   } catch (_) {}
