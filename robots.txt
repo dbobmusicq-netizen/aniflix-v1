@@ -1,20 +1,86 @@
-# AniFlix Ultra Robots.txt Directive
+# ==============================================================================
+# AnimeDrift Enterprise Robots.txt Directive
+# Host: animedrift.vercel.app
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. PRIMARY SEARCH ENGINE DIRECTIVE (Google, Bing, DuckDuckGo, Yandex, Yahoo)
+# ------------------------------------------------------------------------------
 User-agent: *
+
+# Priority Indexing Surfaces (Content Pages, Mode States, Canonical URLs)
 Allow: /
 Allow: /?watch=*
 Allow: /?mode=*
 Allow: /?q=*
-Allow: /api/stream-provider
-Allow: /api/proxy
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.svg$
+Allow: /*.ico$
 
-# Disallow sensitive system paths, headless extraction endpoints, debug endpoints, and modal states
-Disallow: /api/extract
+# Disallow Internal Modals, Ephemeral Session States, and Private Routes
 Disallow: /private/
 Disallow: /debug/
 Disallow: /*?modal=*
+Disallow: /*&modal=*
+Disallow: /*?party=*
+Disallow: /*&party=*
+Disallow: /*?drawer=*
+Disallow: /*&drawer=*
 
-# Optimized Search Engine Crawling Speed & NxSha CDN Node Access
+# ------------------------------------------------------------------------------
+# 2. GOOGLEBOT OPTIMIZATION (Unrestricted Asset Crawling for Core Web Vitals)
+# ------------------------------------------------------------------------------
+User-agent: Googlebot
+User-agent: Googlebot-Mobile
+User-agent: Googlebot-Image
+Allow: /
+Allow: /?watch=*
+Allow: /?mode=*
+Allow: /?q=*
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.webp$
+Allow: /*.png$
+Allow: /*.jpg$
+Disallow: /private/
+Disallow: /debug/
+Disallow: /*?modal=*
+Disallow: /*?party=*
+Disallow: /*?drawer=*
+
+# ------------------------------------------------------------------------------
+# 3. BINGBOT CRAWL MANAGEMENT
+# ------------------------------------------------------------------------------
+User-agent: Bingbot
+Allow: /
+Allow: /?watch=*
+Allow: /?mode=*
+Allow: /?q=*
+Disallow: /private/
+Disallow: /debug/
+Disallow: /*?modal=*
+Disallow: /*?party=*
+Disallow: /*?drawer=*
 Crawl-delay: 1
 
-# Sitemaps Declaration
-Sitemap: https://aniflix-sage.vercel.app/sitemap.xml
+# ------------------------------------------------------------------------------
+# 4. SCRAPERS & AI CRAWLER GOVERNANCE (Resource Protection for Vercel Bandwidth)
+# ------------------------------------------------------------------------------
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: CCBot
+User-agent: Bytespider
+User-agent: anthropic-ai
+User-agent: Claude-Web
+Disallow: /
+
+# ------------------------------------------------------------------------------
+# 5. SITEMAP & HOST SPECIFICATION
+# ------------------------------------------------------------------------------
+Host: https://animedrift.vercel.app
+Sitemap: https://animedrift.vercel.app/sitemap.xml
