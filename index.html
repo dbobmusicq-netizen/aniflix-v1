@@ -10,12 +10,12 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Favicon Suite & Multi-Platform PWA Branding[cite: 1] -->
-  <link rel="shortcut icon" href="favicon.ico?v=40.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=40.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=40.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=40.0.0" />
-  <link rel="manifest" href="manifest.json?v=40.0.0" />
+  <!-- Favicon Suite & Multi-Platform PWA Branding -->
+  <link rel="shortcut icon" href="favicon.ico?v=41.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=41.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=41.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=41.0.0" />
+  <link rel="manifest" href="manifest.json?v=41.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -41,16 +41,16 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets -->
-  <link rel="stylesheet" href="theme-base.css?v=40.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=40.0.0">
-  <link rel="stylesheet" href="p2p.css?v=40.0.0">
+  <!-- Modular Stylesheets (Version Controlled) -->
+  <link rel="stylesheet" href="theme-base.css?v=41.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=41.0.0">
+  <link rel="stylesheet" href="p2p.css?v=41.0.0">
   <link rel="stylesheet" href="webapp.css?v=41.0.0">
-  <link rel="stylesheet" href="mobile.css?v=40.0.0">
+  <link rel="stylesheet" href="mobile.css?v=41.0.0">
 
   <style>
     /* ==========================================================================
-       AESTHETIC SPLASH PRELOADER & HUD
+       AESTHETIC SPLASH PRELOADER & UPDATE HUD
        ========================================================================== */
     #siteSplashPreloader {
       position: fixed;
@@ -115,6 +115,66 @@
     @keyframes aestheticFlow {
       0% { transform: translateX(-100%); }
       100% { transform: translateX(300%); }
+    }
+
+    /* Interactive Update Available Notification Pill */
+    #updateNotificationBar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translate3d(-50%, -100px, 0);
+      z-index: 1000000;
+      background: rgba(14, 15, 24, 0.96);
+      border: 1px solid rgba(255, 8, 68, 0.4);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 8, 68, 0.25);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 10px 18px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #updateNotificationBar.visible {
+      transform: translate3d(-50%, 0, 0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #updateNotificationBar .update-action-btn {
+      background: #ff0844;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: transform 0.15s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+    #updateNotificationBar .update-action-btn:hover {
+      background: #ff2a5f;
+      transform: scale(1.04);
+    }
+    #updateNotificationBar .update-dismiss-btn {
+      color: #747994;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s ease;
+    }
+    #updateNotificationBar .update-dismiss-btn:hover {
+      color: #fff;
     }
 
     /* Mode Transition Subtle Banner */
@@ -254,6 +314,13 @@
     </div>
   </div>
 
+  <!-- INTERACTIVE UPDATE HUD -->
+  <aside id="updateNotificationBar" role="alert" aria-live="assertive">
+    <span><i class="fas fa-sparkles" style="color: #00f0ff; margin-right: 6px;"></i> An update is available!</span>
+    <button class="update-action-btn" type="button" id="applyUpdateBtn">Update Now</button>
+    <div class="update-dismiss-btn" id="dismissUpdateBtn" title="Dismiss"><i class="fas fa-xmark"></i></div>
+  </aside>
+
   <!-- MODE TRANSITION HUD LOADER -->
   <div id="globalTransitionLoader" role="status" aria-live="polite">
     <div class="mini-spinner-quantum"></div>
@@ -285,7 +352,7 @@
   <!-- MULTIPLAYER VIRTUAL CURSOR LAYER -->
   <div id="p2pCursorLayer"></div>
 
-  <!-- AMBIENT LIGHTING GLOW & OFSCREEN CHROMA CANVAS -->
+  <!-- AMBIENT LIGHTING GLOW & OFFSCREEN CHROMA CANVAS -->
   <div class="ambient-glow" id="ambientGlow"></div>
   <canvas id="chromaCanvas" width="32" height="32" style="display:none;" aria-hidden="true"></canvas>
 
@@ -769,15 +836,15 @@
     </div>
   </div>
 
-  <!-- CORE SCRIPTS[cite: 1] -->
-  <script src="core-engine.js?v=40.0.0"></script>
-  <script src="dash-player.js?v=40.0.0"></script>
-  <script src="streaming-ui.js?v=40.0.0"></script>
-  <script src="p2p.js?v=40.0.0"></script>
-  <script src="webapp.js?v=40.0.0"></script>
-  <script src="adblock-engine.js?v=40.0.0"></script>
+  <!-- CORE SCRIPT ENGINES (Version Synchronized)[cite: 1] -->
+  <script src="core-engine.js?v=41.0.0"></script>
+  <script src="dash-player.js?v=41.0.0"></script>
+  <script src="streaming-ui.js?v=41.0.0"></script>
+  <script src="p2p.js?v=41.0.0"></script>
+  <script src="webapp.js?v=41.0.0"></script>
+  <script src="adblock-engine.js?v=41.0.0"></script>
 
-  <!-- APP LIFECYCLE & CRITICAL EVENT LOGIC -->
+  <!-- APP LIFECYCLE & UPDATE MANAGER -->
   <script>
     // Smooth Category Transition Loader
     window.triggerNavWithLoader = function(label, callback) {
@@ -808,7 +875,7 @@
       }, 400);
     });
 
-    // Device-Aware Adblock Recommender (Runs Once Daily Without Reload Loops)
+    // Device-Aware Adblock Advisory (Single Display per 24h, zero reload loop)
     function checkAndShowAdblockNotice() {
       const STORAGE_KEY = 'animedrift_adblock_notice_date';
       const todayStr = new Date().toISOString().slice(0, 10);
@@ -828,7 +895,7 @@
           box.innerHTML = `
             <strong><i class="fas fa-mobile-screen"></i> Mobile Tip:</strong>
             <p style="margin: 4px 0 0 0; color: #a3a3c2;">
-              Use <b>Brave Browser</b> or configure Private DNS to <code style="color:#00f2fe; background:rgba(255,255,255,0.05); padding:2px 5px; border-radius:4px;">dns.adguard-dns.com</code> to neutralize redirects.
+              Use <b>Brave Browser</b> or configure your Private DNS to <code style="color:#00f2fe; background:rgba(255,255,255,0.05); padding:2px 5px; border-radius:4px;">dns.adguard-dns.com</code> to neutralize redirects.
             </p>
           `;
         } else {
@@ -850,11 +917,78 @@
       if (modal) modal.style.display = 'none';
     }
 
-    // Service Worker Registration: Self-Contained without Disruptive Automatic Reloads
+    // =========================================================================
+    // UPDATE NOTIFICATION ENGINE (Controls SW Transition Cleanly)
+    // =========================================================================
+    let newWorkerWaiting = null;
+
+    function showUpdateAvailableUI(worker) {
+      newWorkerWaiting = worker;
+      const banner = document.getElementById('updateNotificationBar');
+      if (banner) {
+        banner.classList.add('visible');
+      }
+    }
+
+    document.getElementById('applyUpdateBtn')?.addEventListener('click', async () => {
+      const banner = document.getElementById('updateNotificationBar');
+      if (banner) banner.classList.remove('visible');
+
+      // Purge client CacheStorage to prevent mixing stale assets with new bundles
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        } catch (e) {
+          console.warn('[Cache Purge Error]:', e);
+        }
+      }
+
+      if (newWorkerWaiting) {
+        newWorkerWaiting.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        window.location.reload(true);
+      }
+    });
+
+    document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {
+      const banner = document.getElementById('updateNotificationBar');
+      if (banner) banner.classList.remove('visible');
+    });
+
+    // Register Service Worker and track lifecycle updates safely
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=40.0.0').catch(err => {
+        navigator.serviceWorker.register('sw.js?v=41.0.0').then(reg => {
+          // Check if an update is already standing by
+          if (reg.waiting) {
+            showUpdateAvailableUI(reg.waiting);
+            return;
+          }
+
+          // Listen for an incoming update
+          reg.addEventListener('updatefound', () => {
+            const installingWorker = reg.installing;
+            if (!installingWorker) return;
+
+            installingWorker.addEventListener('statechange', () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New worker is ready and waiting for user confirmation
+                showUpdateAvailableUI(installingWorker);
+              }
+            });
+          });
+        }).catch(err => {
           console.warn('[PWA] Service Worker registration skipped:', err);
+        });
+
+        // Trigger reload strictly on user-initiated activation, never on initial controller attachment
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing && newWorkerWaiting) {
+            refreshing = true;
+            window.location.reload(true);
+          }
         });
       });
     }
