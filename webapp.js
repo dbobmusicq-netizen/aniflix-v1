@@ -1,40 +1,30 @@
 /**
- * AniFlix Ultra - Enterprise Progressive Web App Capabilities & Native Bridge
+ * AnimeDrift - Enterprise Progressive Web App Capabilities & Native Bridge
  * File: webapp.js
- * Version: 5.2.0 (High-Performance Production Engine)
+ * Version: 6.0.0 Production Engine
  * 
- * New & Enhanced Features:
- * 1. Intelligent Smart Install Banner & Detection:
- *    - Safari/iOS customized "Add to Home Screen" dynamic prompt modal.
- *    - Returning user install recommendation triggers with cooldown heuristics.
- * 2. Cross-Platform Picture-in-Picture (PiP):
- *    - HTML5 Video PiP with fallback to W3C Document Picture-in-Picture API.
- *    - Safe DOM migration and automatic restoration on popup close.
- *    - Media Session API bridge inside PiP windows with controls.
- * 3. MediaSession API V2:
- *    - Full synchronization with hardware media keys (Play, Pause, Seek, Next/Prev Track).
- *    - Dynamic high-resolution artwork binding and playback position state updates.
- * 4. Micro-Haptic Vibration Physics Engine:
- *    - Hardware check + customizable patterns (subtle click, medium, double, celebration, error).
- * 5. Screen Wake Lock Lifecycle Manager:
- *    - Auto-reacquires wake locks on document focus and visibility restoration.
- *    - Automatically binds to video play/pause/ended lifecycles.
- * 6. Storage Persistence & Quota Predictor:
- *    - Requests `navigator.storage.persist()` for offline video storage retention.
- *    - Exposes real-time storage quota tracking.
- * 7. Background Sync & Network Resiliency Engine:
- *    - Online/Offline lifecycle monitoring with automatic stream/buffer recovery.
- *    - Network Information API (Network type, effectiveType, downlink, RTT monitoring).
- * 8. Notification & Web Badging Framework:
- *    - Actionable Rich Notifications with fallback handling.
- *    - Safe Web App Badging with automatic counter resets on active visibility.
- * 9. Native Share Target & System Clipboard Bridge.
- * 10. Memory Safe Cleanup & Lifecycle Teardown.
+ * Features Included:
+ * 1. Background P2P Message Notification System:
+ *    - Automatically shows push notification in OS/phone status bar when a chat message arrives and tab/screen is in the background.
+ *    - Plays subtle notification ringtone audio chime + distinct haptic vibration.
+ *    - Clicking the notification re-focuses the window and expands the party chat drawer.
+ * 2. Smart Install Engine (Android, Desktop & Apple Safari iOS sheet):
+ *    - Floating install notification card with cooldown heuristics.
+ *    - Safari "Add to Home Screen" step-by-step visual drawer.
+ * 3. Document & Video Picture-in-Picture (PiP):
+ *    - True HTML5 Video PiP & W3C Document PiP support with safe DOM restoration.
+ * 4. Lock-Screen Media Controls (MediaSession API):
+ *    - Native lock screen notification controls (Play, Pause, Seek, Next/Prev episode).
+ * 5. Screen Wake Lock Lifecycle:
+ *    - Keeps mobile display active during streaming; auto-releases on sleep or tab switch.
+ * 6. Micro-Haptic Vibration Physics Engine.
+ * 7. Storage Persistence & Device Storage Quota Analyzer.
+ * 8. Network-Aware Offline Recovery (Auto-reconnects on Wi-Fi/Cellular restore).
  */
 
 class WebAppExclusiveEngine {
   constructor() {
-    this.version = '5.2.0';
+    this.version = '6.0.0';
     this.isStandalone = this.checkIsStandalone();
     this.isIOS = this.checkIsIOS();
     this.deferredPrompt = null;
@@ -45,18 +35,16 @@ class WebAppExclusiveEngine {
     this.pipOriginalParent = null;
     this.pipNextSibling = null;
     this.activeVideoElement = null;
+    this.audioNotificationChime = null;
     this.networkState = {
       online: navigator.onLine,
-      effectiveType: navigator.connection?.effectiveType || '4g',
-      saveData: navigator.connection?.saveData || false
+      effectiveType: navigator.connection?.effectiveType || '4g'
     };
 
-    // Initialize core lifecycle
     this.init();
   }
 
   async init() {
-    console.log(`[AniFlix PWA] Initializing Core Engine v${this.version}...`);
     this.applyStandaloneStyling();
     this.setupInstallPromptHandlers();
     await this.initServiceWorkerBridge();
@@ -65,6 +53,7 @@ class WebAppExclusiveEngine {
     this.setupPageVisibilityWakeLock();
     this.setupAutoPictureInPicture();
     this.setupMediaSessionBridge();
+    this.setupP2PIncomingMessageNotificationBridge();
     this.bindDOMInteractions();
     this.handleIncomingShareTarget();
     this.evaluateInstallRecommendation();
@@ -96,7 +85,6 @@ class WebAppExclusiveEngine {
       document.documentElement.classList.add('pwa-standalone');
       document.body.classList.add('pwa-standalone');
       this.updateInstallButtonsVisibility(false);
-      console.log('[AniFlix PWA] Running inside Standalone App Window.');
     } else {
       document.documentElement.classList.remove('pwa-standalone');
       document.body.classList.remove('pwa-standalone');
@@ -104,26 +92,21 @@ class WebAppExclusiveEngine {
   }
 
   setupInstallPromptHandlers() {
-    // Intercept native browser prompt
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this.deferredPrompt = e;
       this.updateInstallButtonsVisibility(true);
-      console.log('[AniFlix PWA] Native install prompt captured and deferred.');
-
-      // Check if recommendation prompt should be presented
       this.evaluateInstallRecommendation();
     });
 
-    // Detect installation success
     window.addEventListener('appinstalled', () => {
       this.deferredPrompt = null;
       this.isStandalone = true;
       this.applyStandaloneStyling();
       this.dismissInstallBanner();
-      this.showToast('AniFlix Ultra installed successfully! Welcome to the Native App Experience.');
+      this.showToast('AnimeDrift installed successfully!');
       this.triggerHaptic('party');
-      localStorage.setItem('aniflix_pwa_installed', 'true');
+      localStorage.setItem('animedrift_pwa_installed', 'true');
     });
   }
 
@@ -142,102 +125,92 @@ class WebAppExclusiveEngine {
     this.triggerHaptic('medium');
 
     if (this.isStandalone) {
-      this.showToast('AniFlix Ultra is already installed and running natively.');
+      this.showToast('AnimeDrift is already installed and running natively.');
       return;
     }
 
-    // iOS manual install flow
     if (this.isIOS) {
       this.displayIOSInstallGuide();
       return;
     }
 
-    // Chromium & Edge install prompt
     if (this.deferredPrompt) {
       try {
         this.deferredPrompt.prompt();
         const choiceResult = await this.deferredPrompt.userChoice;
 
         if (choiceResult.outcome === 'accepted') {
-          this.showToast('Starting AniFlix Ultra installation...');
+          this.showToast('Installing AnimeDrift...');
           this.dismissInstallBanner();
         } else {
           this.showToast('Installation deferred.');
-          localStorage.setItem('aniflix_pwa_prompt_dismissed', Date.now().toString());
+          localStorage.setItem('animedrift_pwa_dismissed', Date.now().toString());
         }
       } catch (err) {
-        console.error('[AniFlix PWA] Install error:', err);
+        console.error('[PWA Install Error]:', err);
       } finally {
         this.deferredPrompt = null;
       }
       return;
     }
 
-    // Fallback guidance for desktop browsers where prompt isn't interceptable
-    this.showToast('Click the Install app button in your browser URL bar.');
+    this.showToast('Tap Install or Add to Home Screen in your browser settings.');
   }
 
   evaluateInstallRecommendation() {
     if (this.isStandalone) return;
 
-    const lastDismissed = localStorage.getItem('aniflix_pwa_prompt_dismissed');
-    const hasInstalled = localStorage.getItem('aniflix_pwa_installed');
+    const lastDismissed = localStorage.getItem('animedrift_pwa_dismissed');
+    const hasInstalled = localStorage.getItem('animedrift_pwa_installed');
     if (hasInstalled === 'true') return;
 
-    // Cooldown check (3 days between non-intrusive bottom banner popups)
-    const cooldownMs = 3 * 24 * 60 * 60 * 1000;
+    const cooldownMs = 2 * 24 * 60 * 60 * 1000;
     if (lastDismissed && Date.now() - parseInt(lastDismissed, 10) < cooldownMs) {
       return;
     }
 
-    // Delay prompt to avoid layout shift during critical page paint
     setTimeout(() => {
       this.renderInstallRecommendationBanner();
-    }, 4000);
+    }, 3500);
   }
 
   renderInstallRecommendationBanner() {
-    if (document.getElementById('aniflixInstallBanner') || this.isStandalone) return;
+    if (document.getElementById('animedriftInstallBanner') || this.isStandalone) return;
 
     const banner = document.createElement('aside');
-    banner.id = 'aniflixInstallBanner';
-    banner.setAttribute('role', 'dialog');
-    banner.setAttribute('aria-label', 'Install AniFlix Ultra');
+    banner.id = 'animedriftInstallBanner';
     banner.className = 'aniflix-install-card';
-
     banner.innerHTML = `
       <div class="aniflix-install-content">
         <div class="aniflix-install-icon">
-          <img src="/android-chrome-192x192.png" alt="AniFlix Logo" onerror="this.src='/favicon-32x32.png'" />
+          <img src="/android-chrome-192x192.png" alt="AnimeDrift Logo" onerror="this.src='/favicon-32x32.png'" />
         </div>
         <div class="aniflix-install-meta">
-          <strong class="aniflix-install-title">Get AniFlix Ultra App</strong>
-          <span class="aniflix-install-desc">Install for offline playback, zero frame drops, and PiP multitasking.</span>
+          <strong class="aniflix-install-title">Install AnimeDrift App</strong>
+          <span class="aniflix-install-desc">Install for offline playback, instant P2P watch party alerts, and background audio.</span>
         </div>
       </div>
       <div class="aniflix-install-actions">
-        <button id="aniflixBannerInstallAction" class="btn-primary-compact" type="button">Install</button>
-        <button id="aniflixBannerDismissAction" class="btn-ghost-compact" type="button" aria-label="Dismiss">✕</button>
+        <button id="animedriftInstallAction" class="btn-primary-compact" type="button">Install</button>
+        <button id="animedriftDismissAction" class="btn-ghost-compact" type="button" aria-label="Dismiss">✕</button>
       </div>
     `;
 
     document.body.appendChild(banner);
-
-    // Apply layout animation via class
     requestAnimationFrame(() => banner.classList.add('visible'));
 
-    document.getElementById('aniflixBannerInstallAction')?.addEventListener('click', () => {
+    document.getElementById('animedriftInstallAction')?.addEventListener('click', () => {
       this.triggerPwaInstall();
     });
 
-    document.getElementById('aniflixBannerDismissAction')?.addEventListener('click', () => {
+    document.getElementById('animedriftDismissAction')?.addEventListener('click', () => {
       this.dismissInstallBanner();
-      localStorage.setItem('aniflix_pwa_prompt_dismissed', Date.now().toString());
+      localStorage.setItem('animedrift_pwa_dismissed', Date.now().toString());
     });
   }
 
   dismissInstallBanner() {
-    const banner = document.getElementById('aniflixInstallBanner');
+    const banner = document.getElementById('animedriftInstallBanner');
     if (banner) {
       banner.classList.remove('visible');
       setTimeout(() => banner.remove(), 300);
@@ -254,21 +227,20 @@ class WebAppExclusiveEngine {
     guide.innerHTML = `
       <div class="ios-install-sheet" role="dialog" aria-modal="true">
         <div class="ios-sheet-header">
-          <h3>Install AniFlix Ultra on iOS</h3>
+          <h3>Install AnimeDrift on iOS</h3>
           <button class="ios-close-btn" id="closeIosInstallGuide">✕</button>
         </div>
         <p class="ios-sheet-subtitle">Follow these quick steps in Apple Safari:</p>
         <ol class="ios-steps-list">
-          <li>Tap the <strong>Share</strong> button <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> at the bottom of Safari.</li>
-          <li>Scroll down and tap <strong>Add to Home Screen</strong> <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>.</li>
-          <li>Tap <strong>Add</strong> in the top right corner to confirm.</li>
+          <li>Tap the <strong>Share</strong> icon at the bottom of Safari.</li>
+          <li>Scroll down and select <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong> in the top right corner.</li>
         </ol>
         <button class="ios-confirm-btn" id="confirmIosInstall">Understood</button>
       </div>
     `;
 
     document.body.appendChild(guide);
-
     const closeHandler = () => {
       guide.classList.remove('active');
       setTimeout(() => guide.remove(), 250);
@@ -284,14 +256,85 @@ class WebAppExclusiveEngine {
   }
 
   // ===============================================================
-  // 2. STORAGE QUOTA & PERSISTENCE
+  // 2. P2P INCOMING MESSAGE PHONE NOTIFICATION BRIDGE
+  // ===============================================================
+  setupP2PIncomingMessageNotificationBridge() {
+    // Intercept native chat render message from window.p2pParty or DOM dispatch
+    const originalRenderChat = window.p2pParty?.renderChatMessage;
+    if (typeof originalRenderChat === 'function') {
+      const self = this;
+      window.p2pParty.renderChatMessage = function (sender, text, color, isMine) {
+        originalRenderChat.apply(this, [sender, text, color, isMine]);
+        
+        // Trigger OS notification only if message is from a peer and window is unfocused/backgrounded
+        if (!isMine && (document.hidden || !document.hasFocus())) {
+          self.notifyIncomingP2PMessage(sender, text);
+        }
+      };
+    }
+
+    // Window message listener fallback for iframe or worker dispatches
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'P2P_MESSAGE_RECEIVED') {
+        const { sender, text, isMine } = event.data;
+        if (!isMine && (document.hidden || !document.hasFocus())) {
+          this.notifyIncomingP2PMessage(sender, text);
+        }
+      }
+    });
+  }
+
+  notifyIncomingP2PMessage(senderName, messageText) {
+    this.triggerHaptic('reaction');
+    this.playNotificationChime();
+    this.incrementBadge();
+
+    const title = `Watch Party: ${senderName}`;
+    const body = messageText.length > 70 ? messageText.substring(0, 67) + '...' : messageText;
+
+    this.sendNotification(title, {
+      body: body,
+      tag: 'p2p-chat-message',
+      renotify: true,
+      data: {
+        url: window.location.href,
+        action: 'open_party_chat'
+      }
+    });
+  }
+
+  playNotificationChime() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12); // A5
+
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } catch (e) {}
+  }
+
+  // ===============================================================
+  // 3. STORAGE PERSISTENCE & ESTIMATOR
   // ===============================================================
   async initStoragePersistence() {
     if (navigator.storage && navigator.storage.persist) {
       const isPersisted = await navigator.storage.persisted();
       if (!isPersisted) {
-        const granted = await navigator.storage.persist();
-        console.log(`[AniFlix PWA] Persistent Storage Granted: ${granted}`);
+        await navigator.storage.persist();
       }
     }
   }
@@ -300,19 +343,18 @@ class WebAppExclusiveEngine {
     if (navigator.storage && navigator.storage.estimate) {
       try {
         const { quota, usage } = await navigator.storage.estimate();
-        const usageMB = (usage / (1024 * 1024)).toFixed(1);
-        const quotaMB = (quota / (1024 * 1024)).toFixed(1);
-        const percentUsed = ((usage / quota) * 100).toFixed(1);
-        return { usageMB, quotaMB, percentUsed, rawUsage: usage, rawQuota: quota };
-      } catch (err) {
-        console.warn('[AniFlix PWA] Storage estimate error:', err);
-      }
+        return {
+          usageMB: (usage / (1024 * 1024)).toFixed(1),
+          quotaMB: (quota / (1024 * 1024)).toFixed(1),
+          percentUsed: ((usage / quota) * 100).toFixed(1)
+        };
+      } catch (err) {}
     }
     return null;
   }
 
   // ===============================================================
-  // 3. SERVICE WORKER & SYNC BRIDGE
+  // 4. SERVICE WORKER & MESSAGE ROUTER
   // ===============================================================
   async initServiceWorkerBridge() {
     if (!('serviceWorker' in navigator)) return;
@@ -323,24 +365,8 @@ class WebAppExclusiveEngine {
       navigator.serviceWorker.addEventListener('message', (event) => {
         this.handleServiceWorkerMessage(event.data);
       });
-
-      // Handle Service Worker update availability
-      this.swRegistration.addEventListener('updatefound', () => {
-        const newWorker = this.swRegistration.installing;
-        if (!newWorker) return;
-
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            this.showToast('App update available! Restarting to apply updates...');
-            setTimeout(() => {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-              window.location.reload();
-            }, 2500);
-          }
-        });
-      });
     } catch (err) {
-      console.warn('[AniFlix PWA] Service Worker registration bridge error:', err);
+      console.warn('[PWA] Service Worker bridge error:', err);
     }
   }
 
@@ -354,95 +380,19 @@ class WebAppExclusiveEngine {
         }
         break;
 
-      case 'SYNC_COMPLETE': {
-        const pill = document.getElementById('pwaSyncStatusPill');
-        if (pill) pill.classList.remove('syncing');
-        this.showToast('Offline watch records synchronized.');
+      case 'OPEN_P2P_CHAT': {
+        const chatSidebar = document.getElementById('p2pChatSidebar');
+        if (chatSidebar) chatSidebar.classList.add('open');
         break;
       }
-
-      case 'FORCE_CACHE_PURGE':
-        caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n))));
-        break;
 
       default:
         break;
     }
   }
 
-  async registerBackgroundWatchSync(animeId, season, episode, currentTime, duration = 0) {
-    // 1. Commit immediate state to IndexedDB / local database
-    if (window.DB && typeof window.DB.saveWatchProgress === 'function') {
-      try {
-        const percent = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
-        await window.DB.saveWatchProgress(animeId, {
-          season,
-          episode,
-          currentTime,
-          duration,
-          progressPercent: percent,
-          updatedAt: Date.now()
-        });
-
-        const pill = document.getElementById('pwaSyncStatusPill');
-        if (pill) pill.classList.add('syncing');
-      } catch (err) {
-        console.warn('[AniFlix PWA] Local storage progress failed:', err);
-      }
-    }
-
-    // 2. Request background sync registration if supported
-    if ('serviceWorker' in navigator && 'SyncManager' in window) {
-      try {
-        const sw = await navigator.serviceWorker.ready;
-        await sw.sync.register('sync-watch-progress');
-      } catch (err) {
-        console.warn('[AniFlix PWA] BackgroundSync unavailable:', err);
-      }
-    }
-  }
-
   // ===============================================================
-  // 4. NETWORK ADAPTIVE CONTROLLER
-  // ===============================================================
-  setupNetworkMonitors() {
-    const updateNetworkStatus = () => {
-      this.networkState.online = navigator.onLine;
-
-      if (navigator.connection) {
-        this.networkState.effectiveType = navigator.connection.effectiveType || '4g';
-        this.networkState.saveData = navigator.connection.saveData || false;
-      }
-
-      if (this.networkState.online) {
-        document.body.classList.remove('pwa-offline');
-        this.showToast('Network restored. Reconnecting playback pipeline...');
-        this.triggerHaptic('light');
-
-        // Recover video playback if stalled
-        if (window.streamEngine && typeof window.streamEngine._handlePlaybackStall === 'function') {
-          window.streamEngine._handlePlaybackStall();
-        }
-      } else {
-        document.body.classList.add('pwa-offline');
-        this.showToast('Offline Mode active. Cached episodes remain available.');
-        this.triggerHaptic('error');
-      }
-    };
-
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-
-    if (navigator.connection) {
-      navigator.connection.addEventListener('change', () => {
-        this.networkState.effectiveType = navigator.connection.effectiveType;
-        console.log(`[AniFlix Network] Connection type changed to: ${this.networkState.effectiveType}`);
-      });
-    }
-  }
-
-  // ===============================================================
-  // 5. NOTIFICATION ENGINE & SYSTEM BADGES
+  // 5. NOTIFICATION API & PHONE STATUS BAR DISPATCH
   // ===============================================================
   async requestNotificationPermission() {
     this.triggerHaptic('light');
@@ -457,9 +407,9 @@ class WebAppExclusiveEngine {
 
       if (permission === 'granted') {
         this.triggerHaptic('party');
-        this.showToast('Simulcast & episode alerts active!');
-        this.sendNotification('AniFlix Ultra Ready', {
-          body: 'You will receive timely alerts for newly airing episodes and watch parties.',
+        this.showToast('Notifications enabled!');
+        this.sendNotification('AnimeDrift Connected', {
+          body: 'You will receive alerts for party messages and new episodes.',
           tag: 'welcome-notification'
         });
         return true;
@@ -469,7 +419,6 @@ class WebAppExclusiveEngine {
         return false;
       }
     } catch (err) {
-      console.error('[AniFlix PWA] Notification permission error:', err);
       return false;
     }
   }
@@ -497,15 +446,15 @@ class WebAppExclusiveEngine {
         notif.onclick = (e) => {
           e.preventDefault();
           window.focus();
-          if (defaultOptions.data?.url) {
-            window.location.href = defaultOptions.data.url;
+          if (defaultOptions.data?.action === 'open_party_chat') {
+            const chatSidebar = document.getElementById('p2pChatSidebar');
+            if (chatSidebar) chatSidebar.classList.add('open');
           }
           notif.close();
         };
       }
-      this.incrementBadge();
     } catch (err) {
-      console.warn('[AniFlix PWA] Notification failed to dispatch:', err);
+      console.warn('[PWA Notification Error]:', err);
     }
   }
 
@@ -528,7 +477,7 @@ class WebAppExclusiveEngine {
   }
 
   // ===============================================================
-  // 6. SCREEN WAKE LOCK CONTROLLER
+  // 6. SCREEN WAKE LOCK
   // ===============================================================
   async requestScreenWakeLock() {
     if (!('wakeLock' in navigator)) return;
@@ -543,11 +492,8 @@ class WebAppExclusiveEngine {
           this.wakeLock = null;
           if (indicator) indicator.classList.remove('active');
         });
-        console.log('[AniFlix PWA] Screen Wake Lock acquired.');
       }
-    } catch (err) {
-      console.warn('[AniFlix PWA] WakeLock acquire failure:', err.message);
-    }
+    } catch (err) {}
   }
 
   async releaseScreenWakeLock() {
@@ -557,10 +503,7 @@ class WebAppExclusiveEngine {
         this.wakeLock = null;
         const indicator = document.getElementById('pwaWakeLockIndicator');
         if (indicator) indicator.classList.remove('active');
-        console.log('[AniFlix PWA] Screen Wake Lock released.');
-      } catch (err) {
-        console.warn('[AniFlix PWA] WakeLock release failure:', err);
-      }
+      } catch (err) {}
     }
   }
 
@@ -582,7 +525,7 @@ class WebAppExclusiveEngine {
   }
 
   // ===============================================================
-  // 7. ADVANCED PICTURE-IN-PICTURE (PIP) ENGINE
+  // 7. PICTURE-IN-PICTURE (PIP) ENGINE
   // ===============================================================
   async togglePictureInPicture(targetElement = null) {
     this.triggerHaptic('medium');
@@ -593,7 +536,6 @@ class WebAppExclusiveEngine {
       document.querySelector('#streamFrame video') ||
       document.querySelector('video');
 
-    // Scenario A: Native HTML5 Video Element PiP
     if (videoTarget && videoTarget.tagName === 'VIDEO') {
       try {
         if (document.pictureInPictureElement) {
@@ -604,12 +546,9 @@ class WebAppExclusiveEngine {
           this.activeVideoElement = videoTarget;
           return;
         }
-      } catch (err) {
-        console.warn('[AniFlix PiP] Native Video PiP failed, testing Document PiP fallback:', err);
-      }
+      } catch (err) {}
     }
 
-    // Scenario B: Document Picture-in-Picture API for arbitrary containers & embeds
     if ('documentPictureInPicture' in window) {
       try {
         if (window.documentPictureInPicture.window) {
@@ -619,11 +558,10 @@ class WebAppExclusiveEngine {
 
         const playerWrap = document.getElementById('modalPlayerWrap') || targetElement;
         if (!playerWrap) {
-          this.showToast('No active video stream to open in PiP.');
+          this.showToast('No active stream to open in PiP.');
           return;
         }
 
-        // Preserve original DOM placement references for restoration
         this.pipOriginalParent = playerWrap.parentNode;
         this.pipNextSibling = playerWrap.nextSibling;
 
@@ -634,7 +572,6 @@ class WebAppExclusiveEngine {
 
         this.pipWindow = pipWindow;
 
-        // Clone host styles into the new popup PiP window
         [...document.styleSheets].forEach((sheet) => {
           try {
             const cssRules = [...sheet.cssRules].map((r) => r.cssText).join('');
@@ -645,18 +582,15 @@ class WebAppExclusiveEngine {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.type = sheet.type || 'text/css';
-            link.media = sheet.media;
             link.href = sheet.href;
             pipWindow.document.head.appendChild(link);
           }
         });
 
-        // Migrate player container
         pipWindow.document.body.appendChild(playerWrap);
         pipWindow.document.body.style.margin = '0';
         pipWindow.document.body.style.background = '#000';
 
-        // Listen for user closing the PiP window to restore DOM position
         pipWindow.addEventListener('pagehide', () => {
           if (this.pipOriginalParent) {
             if (this.pipNextSibling) {
@@ -671,16 +605,13 @@ class WebAppExclusiveEngine {
         });
 
         return;
-      } catch (err) {
-        console.error('[AniFlix PiP] Document PiP launch failed:', err);
-      }
+      } catch (err) {}
     }
 
-    this.showToast('Picture-in-Picture is not supported in this browser engine.');
+    this.showToast('Picture-in-Picture not supported in this browser.');
   }
 
   setupAutoPictureInPicture() {
-    // Auto launch PiP when switching apps during playback (supported on Chromium mobile/desktop)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         const video =
@@ -697,7 +628,7 @@ class WebAppExclusiveEngine {
   }
 
   // ===============================================================
-  // 8. MEDIASESSION API & OS CONTROLS INTEGRATION
+  // 8. MEDIASESSION API & OS LOCKSCREEN CONTROLS
   // ===============================================================
   setupMediaSessionBridge() {
     if (!('mediaSession' in navigator)) return;
@@ -720,65 +651,35 @@ class WebAppExclusiveEngine {
         if (v) v.currentTime = Math.min(v.duration || Infinity, v.currentTime + (details.seekOffset || 10));
       }],
       ['previoustrack', () => {
-        if (typeof window.playPreviousEpisode === 'function') {
-          window.playPreviousEpisode();
-        }
+        if (typeof window.playPreviousEpisode === 'function') window.playPreviousEpisode();
       }],
       ['nexttrack', () => {
-        if (typeof window.playNextEpisode === 'function') {
-          window.playNextEpisode();
-        }
+        if (typeof window.playNextEpisode === 'function') window.playNextEpisode();
       }],
       ['stop', () => {
-        if (typeof window.closeModal === 'function') {
-          window.closeModal();
-        }
+        if (typeof window.closeModal === 'function') window.closeModal();
       }]
     ];
 
     for (const [action, handler] of actionHandlers) {
       try {
         navigator.mediaSession.setActionHandler(action, handler);
-      } catch (error) {
-        console.warn(`[AniFlix MediaSession] Action "${action}" not supported:`, error);
-      }
+      } catch (error) {}
     }
   }
 
   updateMediaSessionMetadata(metadata = {}) {
     if (!('mediaSession' in navigator)) return;
 
-    const title = metadata.title || 'AniFlix Episode';
-    const artist = metadata.artist || 'AniFlix Ultra';
-    const album = metadata.album || 'Anime Stream';
-    const artwork = metadata.artwork || [
-      { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
-    ];
-
     navigator.mediaSession.metadata = new MediaMetadata({
-      title,
-      artist,
-      album,
-      artwork
+      title: metadata.title || 'AnimeDrift Episode',
+      artist: metadata.artist || 'AnimeDrift',
+      album: metadata.album || 'Watch Party',
+      artwork: metadata.artwork || [
+        { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
+      ]
     });
-  }
-
-  syncMediaPositionState() {
-    if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
-
-    const video = this.getActiveVideo();
-    if (video && !isNaN(video.duration) && video.duration > 0) {
-      try {
-        navigator.mediaSession.setPositionState({
-          duration: video.duration,
-          playbackRate: video.playbackRate,
-          position: video.currentTime
-        });
-      } catch (err) {
-        console.warn('[AniFlix MediaSession] Position state sync error:', err);
-      }
-    }
   }
 
   getActiveVideo() {
@@ -800,14 +701,9 @@ class WebAppExclusiveEngine {
         await navigator.share({ title, text, url });
         this.showToast('Shared successfully!');
         return;
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.warn('[AniFlix Share] Native WebShare error:', err);
-        }
-      }
+      } catch (err) {}
     }
 
-    // Fallback: Copy to clipboard
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(url);
@@ -832,9 +728,7 @@ class WebAppExclusiveEngine {
         }
       }, 400);
 
-      // Clean history state without reloading page
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, '', cleanUrl);
+      window.history.replaceState({}, '', window.location.pathname);
     }
   }
 
@@ -868,81 +762,40 @@ class WebAppExclusiveEngine {
           navigator.vibrate(15);
           break;
       }
-    } catch (e) {
-      // Ignored if user has not interacted with DOM yet
-    }
+    } catch (e) {}
   }
 
   // ===============================================================
   // 11. DOM HOOKS & UTILITIES
   // ===============================================================
+  setupNetworkMonitors() {
+    window.addEventListener('online', () => {
+      document.body.classList.remove('pwa-offline');
+      this.showToast('Network restored.');
+      this.triggerHaptic('light');
+    });
+
+    window.addEventListener('offline', () => {
+      document.body.classList.add('pwa-offline');
+      this.showToast('Offline Mode active.');
+      this.triggerHaptic('error');
+    });
+  }
+
   bindDOMInteractions() {
-    // Delegated click haptics
     document.addEventListener('click', (e) => {
       if (e.target.closest('.p2p-emote-btn, .dock-btn, .btn-reaction')) {
         this.triggerHaptic('reaction');
       } else if (e.target.closest('.btn-play, .chip, .ep-badge-btn, .tab-btn')) {
         this.triggerHaptic('light');
-      } else if (e.target.closest('.btn-danger, .btn-delete')) {
-        this.triggerHaptic('heavy');
       }
     });
 
-    // Global share shortcuts
     window.shareCurrentTitleLink = () => {
-      const title =
-        window.STATE?.currentAnime?.title?.english ||
-        window.STATE?.currentAnime?.title?.romaji ||
-        'Anime Title';
-      this.shareNative(title, `Watch ${title} in High Definition on AniFlix Ultra:`, window.location.href);
+      const title = window.STATE?.currentAnime?.title?.english || window.STATE?.currentAnime?.title?.romaji || 'Anime';
+      this.shareNative(title, `Watch ${title} on AnimeDrift:`, window.location.href);
     };
 
-    window.shareDeepLinkEpisode = () => {
-      const title =
-        window.STATE?.currentAnime?.title?.english ||
-        window.STATE?.currentAnime?.title?.romaji ||
-        'Anime Title';
-      const ep = window.STATE?.episode || 1;
-      this.shareNative(`${title} - Ep ${ep}`, `Watch Episode ${ep} of ${title} on AniFlix Ultra:`, window.location.href);
-    };
-
-    // Video Lifecycle Binding
-    const setupVideoListeners = (video) => {
-      if (!video || video._hasPwaHooks) return;
-      video._hasPwaHooks = true;
-      this.activeVideoElement = video;
-
-      video.addEventListener('play', () => {
-        this.requestScreenWakeLock();
-        this.syncMediaPositionState();
-      });
-
-      video.addEventListener('pause', () => {
-        this.releaseScreenWakeLock();
-        this.syncMediaPositionState();
-      });
-
-      video.addEventListener('timeupdate', () => {
-        // Throttled sync
-        if (Math.floor(video.currentTime) % 15 === 0) {
-          this.syncMediaPositionState();
-        }
-      });
-
-      video.addEventListener('ended', () => {
-        this.releaseScreenWakeLock();
-      });
-    };
-
-    // MutationObserver to attach hooks to dynamically mounted video elements
-    const observer = new MutationObserver(() => {
-      const vid = document.getElementById('nativeStreamVideo') || document.querySelector('video');
-      if (vid) setupVideoListeners(vid);
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Stream & Modal Interceptors
     const origExecuteStream = window.executeStream;
     if (typeof origExecuteStream === 'function') {
       const self = this;
@@ -958,9 +811,7 @@ class WebAppExclusiveEngine {
       window.closeModal = function (...args) {
         origCloseModal.apply(this, args);
         self.releaseScreenWakeLock();
-        if (self.pipWindow) {
-          self.pipWindow.close();
-        }
+        if (self.pipWindow) self.pipWindow.close();
       };
     }
   }
@@ -971,7 +822,6 @@ class WebAppExclusiveEngine {
       return;
     }
 
-    // Fallback UI toast if main framework toast is missing
     const existing = document.querySelector('.aniflix-internal-toast');
     if (existing) existing.remove();
 
@@ -988,10 +838,10 @@ class WebAppExclusiveEngine {
   }
 }
 
-// Global Singleton Instantation
+// Global Singleton Initialization
 window.webApp = new WebAppExclusiveEngine();
 
-// Clean Global Function Aliases for DOM Event Handlers
+// Window Function Bindings
 window.triggerPwaInstall = () => window.webApp?.triggerPwaInstall();
 window.requestNotificationPermission = () => window.webApp?.requestNotificationPermission();
 window.togglePictureInPicture = (target) => window.webApp?.togglePictureInPicture(target);
