@@ -1,8 +1,6 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized P2P Watch Party Engine
- * Version 11.0 - Production-Grade WebRTC Mesh & Star Relay Controller
- * Solves: Connection lifecycle races, unhandled teardowns, signaling disconnect cascades,
- * full mesh synchronization, latency compensation, and iframe player state dispatching.
+ * Version 12.0 - High-Resilience WebRTC Mesh, Audio VoIP & Precision Time Controller
  */
 
 class P2PWatchPartyEngine {
@@ -13,19 +11,22 @@ class P2PWatchPartyEngine {
     this.userName = 'User_' + Math.random().toString(36).substring(2, 6);
     this.userColor = this.generateRandomColor();
 
-    // Peer & Mesh Topology Collections
+    // Peer Mesh Collections
     this.connections = new Map();     // peerId -> DataConnection
     this.audioCalls = new Map();       // peerId -> MediaConnection
     this.members = new Map();          // peerId -> MemberData
     this.latencyMap = new Map();       // peerId -> Half-RTT (ms)
     this.timeOffsets = new Map();      // peerId -> Clock Offset (ms)
-    this.seenPacketIds = new Set();    // Packet Deduplication Cache
+    this.seenPacketIds = new Set();
 
-    // VoIP Stream Management
+    // VoIP & Web Audio Graph
     this.localStream = null;
+    this.audioCtx = null;
     this.isMicMuted = true;
+    this.remoteAudioElements = new Map(); // peerId -> HTMLAudioElement
+    this.audioMeterInterval = null;
 
-    // Room Roles & Flow Control
+    // Room Roles & Control
     this.isHost = false;
     this.controlMode = 'HOST_ONLY';    // 'HOST_ONLY' | 'DEMOCRATIC'
     this.sharedQueue = [];
@@ -38,8 +39,9 @@ class P2PWatchPartyEngine {
     this.remoteBufferingPeers = new Set();
     this.catchUpInterval = null;
     this.heartbeatInterval = null;
+    this.reconnectAttempts = 0;
 
-    // Emotes Physics & Canvas
+    // Visuals & Cursors
     this.canvas = null;
     this.ctx = null;
     this.particles = [];
@@ -52,15 +54,16 @@ class P2PWatchPartyEngine {
   init() {
     this.setupEmoteCanvas();
     this.setupCursorTracking();
+    this.setupAudioUnlockTrigger();
   }
 
   generateRandomColor() {
-    const colors = ['#00f2fe', '#ff0844', '#46d369', '#ffb703', '#9d4edd', '#ff007f', '#00e5ff', '#ff3366'];
+    const colors = ['#00f0ff', '#ff0844', '#00ff88', '#ffb800', '#9d4edd', '#ff007f', '#38ef7d', '#f107a3'];
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
   generatePacketId() {
-    return `${this.myPeerId || 'anon'}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    return `${this.myPeerId || 'peer'}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
   }
 
   getIceServers() {
@@ -78,7 +81,6 @@ class P2PWatchPartyEngine {
   // 1. CONNECTION & MESH NETWORK INITIALIZATION
   // ===============================================================
   startHosting() {
-    // If already active as host on an existing peer ID, reuse it
     if (this.peer && !this.peer.destroyed && this.myPeerId && this.isHost) {
       const input = document.getElementById('partyMyPeerId');
       if (input) input.value = this.myPeerId;
@@ -93,23 +95,15 @@ class P2PWatchPartyEngine {
     const cleanTarget = targetHostId.trim();
 
     if (cleanTarget === this.myPeerId) {
-      if (typeof showToast === 'function') {
-        showToast('You cannot join your own room code.');
-      }
+      if (typeof showToast === 'function') showToast('You cannot join your own room code.');
       return;
     }
 
     this.isHost = false;
     this.hostPeerId = cleanTarget;
 
-    // Cleanly reuse existing Peer connection if already open
     if (this.peer && !this.peer.destroyed && this.myPeerId) {
-      this.connections.forEach(conn => conn.close());
-      this.connections.clear();
-      this.audioCalls.forEach(call => call.close());
-      this.audioCalls.clear();
-
-      this.members.clear();
+      this.disconnectMesh();
       this.members.set(this.myPeerId, {
         id: this.myPeerId,
         name: this.userName + ' (You)',
@@ -118,26 +112,16 @@ class P2PWatchPartyEngine {
         isMicMuted: this.isMicMuted,
         isHost: false
       });
-
       this.renderRoster();
       this.connectToPeer(cleanTarget);
-
-      if (typeof showToast === 'function') {
-        showToast('Connecting to Room Host...');
-      }
+      if (typeof showToast === 'function') showToast('Connecting to Watch Party...');
     } else {
       this.initPeer(null, false, cleanTarget);
     }
   }
 
   initPeer(preferredId, asHost, targetHostId = null) {
-    if (this.peer) {
-      this.peer.removeAllListeners();
-      if (!this.peer.destroyed) {
-        this.peer.destroy();
-      }
-      this.peer = null;
-    }
+    this.disconnectPeer();
 
     const peerConfig = {
       config: {
@@ -153,6 +137,7 @@ class P2PWatchPartyEngine {
 
     this.peer.on('open', (id) => {
       this.myPeerId = id;
+      this.reconnectAttempts = 0;
       const input = document.getElementById('partyMyPeerId');
       if (input) input.value = id;
 
@@ -174,7 +159,7 @@ class P2PWatchPartyEngine {
       }
 
       if (typeof showToast === 'function') {
-        showToast(asHost ? 'Party Room Ready! Share code with friends.' : 'Connecting to Room Host...');
+        showToast(asHost ? 'Party Room Ready! Share code with friends.' : 'Connected to Network.');
       }
     });
 
@@ -195,7 +180,7 @@ class P2PWatchPartyEngine {
     this.peer.on('error', (err) => {
       console.warn('[P2P WebRTC Error]:', err);
       if (err.type === 'peer-unavailable') {
-        if (typeof showToast === 'function') showToast('Room host not found or session closed.');
+        if (typeof showToast === 'function') showToast('Target host unavailable or session ended.');
       } else if (err.type === 'unavailable-id') {
         this.startHosting();
       } else if (typeof showToast === 'function') {
@@ -214,16 +199,16 @@ class P2PWatchPartyEngine {
     conn.on('open', () => {
       this.connections.set(conn.peer, conn);
 
-      // Latency calibration handshake
+      // 1. Initial Ping for clock alignment
       conn.send({
         packetId: this.generatePacketId(),
         type: 'TIME_PING',
         t0: Date.now()
       });
 
+      // 2. Announce join state
       setTimeout(() => {
         if (!conn.open) return;
-
         conn.send({
           packetId: this.generatePacketId(),
           type: 'MEMBER_JOIN',
@@ -236,7 +221,7 @@ class P2PWatchPartyEngine {
           }
         });
 
-        // Host synchronizes room state immediately to the newly joined peer
+        // 3. Synchronize Room Playback State if Host
         if (this.isHost) {
           if (typeof STATE !== 'undefined' && STATE.currentAnime) {
             conn.send({
@@ -256,17 +241,11 @@ class P2PWatchPartyEngine {
           }
           this.broadcastRoster();
         }
-      }, 250);
+      }, 150);
 
-      // Bridge voice mesh if local mic is unmuted
-      if (!this.isMicMuted && this.localStream) {
-        const call = this.peer.call(conn.peer, this.localStream);
-        this.handleVoiceCallStream(call);
-      }
+      // 4. Initiate voice mesh stream if local stream is already active
+      this.bridgeVoiceToPeer(conn.peer);
 
-      if (typeof showToast === 'function') {
-        showToast('Participant connected to party');
-      }
       this.renderRoster();
     });
 
@@ -284,6 +263,31 @@ class P2PWatchPartyEngine {
     });
   }
 
+  disconnectMesh() {
+    this.connections.forEach(conn => {
+      try { conn.close(); } catch(e) {}
+    });
+    this.connections.clear();
+
+    this.audioCalls.forEach(call => {
+      try { call.close(); } catch(e) {}
+    });
+    this.audioCalls.clear();
+
+    this.remoteAudioElements.forEach(el => el.remove());
+    this.remoteAudioElements.clear();
+    this.members.clear();
+  }
+
+  disconnectPeer() {
+    this.disconnectMesh();
+    if (this.peer) {
+      this.peer.removeAllListeners();
+      if (!this.peer.destroyed) this.peer.destroy();
+      this.peer = null;
+    }
+  }
+
   cleanupPeerResources(peerId) {
     this.connections.delete(peerId);
     this.members.delete(peerId);
@@ -292,11 +296,16 @@ class P2PWatchPartyEngine {
     this.remoteBufferingPeers.delete(peerId);
     this.removeCursorElement(peerId);
 
-    const audioElem = document.getElementById(`audio_${peerId}`);
-    if (audioElem) audioElem.remove();
+    const audioElem = this.remoteAudioElements.get(peerId);
+    if (audioElem) {
+      audioElem.pause();
+      audioElem.srcObject = null;
+      audioElem.remove();
+      this.remoteAudioElements.delete(peerId);
+    }
 
     if (this.audioCalls.has(peerId)) {
-      this.audioCalls.get(peerId).close();
+      try { this.audioCalls.get(peerId).close(); } catch(e) {}
       this.audioCalls.delete(peerId);
     }
 
@@ -307,32 +316,25 @@ class P2PWatchPartyEngine {
     }
 
     this.renderRoster();
-    if (typeof showToast === 'function') {
-      showToast('A participant left the session');
-    }
   }
 
   handleHostFailover() {
-    const remainingPeers = Array.from(this.members.keys()).sort();
-    if (remainingPeers.length === 0) return;
+    const remaining = Array.from(this.members.keys()).sort();
+    if (remaining.length === 0) return;
 
-    const nextHostId = remainingPeers[0];
+    const nextHostId = remaining[0];
     this.hostPeerId = nextHostId;
 
     if (this.myPeerId === nextHostId) {
       this.isHost = true;
       const me = this.members.get(this.myPeerId);
       if (me) me.isHost = true;
-      if (typeof showToast === 'function') {
-        showToast('Room host disconnected. You are now the host!');
-      }
+      if (typeof showToast === 'function') showToast('Room Host left. You are now the Host!');
       this.broadcastRoster();
     } else {
       const newHost = this.members.get(nextHostId);
       if (newHost) newHost.isHost = true;
-      if (typeof showToast === 'function') {
-        showToast(`Host transferred to ${newHost ? newHost.name : 'peer'}`);
-      }
+      if (typeof showToast === 'function') showToast(`Host migrated to ${newHost ? newHost.name : 'Peer'}`);
     }
   }
 
@@ -353,7 +355,7 @@ class P2PWatchPartyEngine {
       if (this.seenPacketIds.size > 2000) {
         this.seenPacketIds.clear();
       }
-    }, 5000);
+    }, 4000);
   }
 
   // ===============================================================
@@ -367,7 +369,11 @@ class P2PWatchPartyEngine {
 
     this.connections.forEach((conn, peerId) => {
       if (conn.open && peerId !== excludePeerId) {
-        conn.send(data);
+        try {
+          conn.send(data);
+        } catch (e) {
+          console.warn(`[Broadcast Send Error -> ${peerId}]:`, e);
+        }
       }
     });
   }
@@ -375,13 +381,12 @@ class P2PWatchPartyEngine {
   handleIncomingData(data, conn) {
     if (!data || !data.type) return;
 
-    // Deduplication check
     if (data.packetId) {
       if (this.seenPacketIds.has(data.packetId)) return;
       this.seenPacketIds.add(data.packetId);
     }
 
-    // Host Mesh Re-broadcast Relay
+    // Host acts as relay node in Star / Hybrid Mesh
     if (this.isHost && data.senderId !== this.myPeerId) {
       this.broadcast(data, conn.peer);
     }
@@ -412,6 +417,7 @@ class P2PWatchPartyEngine {
           status: 'playing'
         });
         this.renderRoster();
+
         if (this.isHost) {
           this.connections.forEach((_, existingPeerId) => {
             if (existingPeerId !== conn.peer) {
@@ -479,7 +485,7 @@ class P2PWatchPartyEngine {
       case 'REMOTE_MODE_SWITCH':
         this.controlMode = data.mode;
         if (typeof showToast === 'function') {
-          showToast(`Control Mode set to: ${this.controlMode}`);
+          showToast(`Control Mode changed: ${this.controlMode}`);
         }
         this.renderRoster();
         break;
@@ -499,12 +505,8 @@ class P2PWatchPartyEngine {
     });
   }
 
-  broadcastMemberList() {
-    this.broadcastRoster();
-  }
-
   // ===============================================================
-  // 3. SYNCHRONIZED STREAM PLAYBACK & ENGINE CONTROLS
+  // 3. SYNCHRONIZED STREAM PLAYBACK & PRECISION TIME ENGINE
   // ===============================================================
   canControlPlayback() {
     return this.isHost || this.controlMode === 'DEMOCRATIC';
@@ -616,7 +618,7 @@ class P2PWatchPartyEngine {
   }
 
   // ===============================================================
-  // 4. BUFFER SYNC (SMART AUTO-PAUSE & RESUME)
+  // 4. BUFFER & DRIFT MANAGEMENT
   // ===============================================================
   notifyBufferStatus(isBuffering) {
     if (this.isLocalBuffering === isBuffering) return;
@@ -668,9 +670,6 @@ class P2PWatchPartyEngine {
     }
   }
 
-  // ===============================================================
-  // 5. AFK DRIFT CALIBRATOR & CATCH-UP SPEED ENGINE
-  // ===============================================================
   checkDriftAndEvaluateCatchUp(localSeconds, hostSeconds) {
     this.lastKnownTime = localSeconds;
     this.lastHostTime = hostSeconds;
@@ -678,13 +677,13 @@ class P2PWatchPartyEngine {
     const pill = document.getElementById('p2pCatchUpPill');
     const drift = hostSeconds - localSeconds;
 
-    if (drift > 6 && !this.isHost) {
+    if (drift > 4 && !this.isHost) {
       if (pill) {
         pill.classList.add('visible');
         pill.innerText = `Catch Up (${Math.round(drift)}s behind) 1.5x`;
         pill.onclick = () => this.engageCatchUpSpeed();
       }
-    } else if (drift <= 1.5) {
+    } else if (drift <= 1.2) {
       if (pill) pill.classList.remove('visible');
     }
   }
@@ -692,150 +691,236 @@ class P2PWatchPartyEngine {
   engageCatchUpSpeed() {
     const iframe = document.getElementById('streamFrame');
     iframe?.contentWindow?.postMessage({ type: 'SET_PLAYBACK_RATE', rate: 1.5 }, '*');
-    if (typeof showToast === 'function') {
-      showToast('Catch-up speed active (1.5x)');
-    }
+    if (typeof showToast === 'function') showToast('Catch-up speed active (1.5x)');
 
     if (this.catchUpInterval) clearInterval(this.catchUpInterval);
 
     this.catchUpInterval = setInterval(() => {
-      if (Math.abs(this.lastKnownTime - this.lastHostTime) <= 1.2) {
+      if (Math.abs(this.lastKnownTime - this.lastHostTime) <= 1.0) {
         iframe?.contentWindow?.postMessage({ type: 'SET_PLAYBACK_RATE', rate: 1.0 }, '*');
         clearInterval(this.catchUpInterval);
         this.catchUpInterval = null;
         const pill = document.getElementById('p2pCatchUpPill');
         if (pill) pill.classList.remove('visible');
-        if (typeof showToast === 'function') {
-          showToast('Synchronized with watch party timeline');
-        }
+        if (typeof showToast === 'function') showToast('Timeline Synchronized');
       }
-    }, 1000);
+    }, 800);
   }
 
   // ===============================================================
-  // 6. SERVERLESS VOIP VOICE CHAT (FULL-MESH WEBRTC)
+  // 5. BULLETPROOF WEBRTC AUDIO & VOIP ENGINE
   // ===============================================================
-  async toggleMicrophone() {
-    const micBtn = document.getElementById('p2pMicToggleBtn');
-
-    if (this.isMicMuted) {
-      try {
-        if (!this.localStream) {
-          this.localStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true
-            },
-            video: false
-          });
-        }
-        this.localStream.getAudioTracks()[0].enabled = true;
-        this.isMicMuted = false;
-
-        this.connections.forEach((_, peerId) => {
-          if (!this.audioCalls.has(peerId)) {
-            const call = this.peer.call(peerId, this.localStream);
-            this.handleVoiceCallStream(call);
-          }
-        });
-
-        const myMember = this.members.get(this.myPeerId);
-        if (myMember) myMember.isMicMuted = false;
-        this.broadcastRoster();
-
-        if (micBtn) {
-          micBtn.innerHTML = '<i class="fas fa-microphone" style="color:var(--accent-emerald, #46d369);"></i> Mic On';
-        }
-        if (typeof showToast === 'function') {
-          showToast('Voice Chat Connected');
-        }
-      } catch (e) {
-        console.error('[WebRTC Audio Track Error]:', e);
-        if (typeof showToast === 'function') {
-          showToast('Microphone access denied or hardware busy');
+  setupAudioUnlockTrigger() {
+    const unlockAudio = () => {
+      if (!this.audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          this.audioCtx = new AudioContextClass();
         }
       }
-    } else {
-      if (this.localStream) {
-        this.localStream.getAudioTracks()[0].enabled = false;
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
       }
-      this.isMicMuted = true;
+      // Re-trigger remote audio elements paused by policy
+      this.remoteAudioElements.forEach(audio => {
+        if (audio.paused) {
+          audio.play().catch(() => {});
+        }
+      });
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
 
-      const myMember = this.members.get(this.myPeerId);
-      if (myMember) myMember.isMicMuted = true;
-      this.broadcastRoster();
+    window.addEventListener('click', unlockAudio, { once: false });
+    window.addEventListener('keydown', unlockAudio, { once: false });
+  }
 
-      if (micBtn) {
-        micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i> Mic Muted';
-      }
-      if (typeof showToast === 'function') {
-        showToast('Microphone Muted');
-      }
+  async createSilentAudioTrack() {
+    if (!this.audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      this.audioCtx = new AudioContextClass();
     }
-    this.renderRoster();
+    await this.audioCtx.resume();
+    const osc = this.audioCtx.createOscillator();
+    const dst = osc.connect(this.audioCtx.createMediaStreamDestination());
+    osc.start();
+    const track = dst.stream.getAudioTracks()[0];
+    track.enabled = false;
+    return track;
   }
 
-  handleIncomingVoiceCall(call) {
-    if (this.localStream) {
-      call.answer(this.localStream);
-    } else {
-      navigator.mediaDevices.getUserMedia({
+  async getOrCreateLocalStream() {
+    if (this.localStream) return this.localStream;
+
+    try {
+      this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true
         },
         video: false
-      })
-      .then((stream) => {
-        this.localStream = stream;
-        if (this.isMicMuted) this.localStream.getAudioTracks()[0].enabled = false;
-        call.answer(this.localStream);
-      })
-      .catch(() => {
-        call.answer();
       });
+      this.localStream.getAudioTracks().forEach(t => t.enabled = !this.isMicMuted);
+    } catch (err) {
+      console.warn('[Microphone Fallback to Silent Track]:', err);
+      const silentTrack = await this.createSilentAudioTrack();
+      this.localStream = new MediaStream([silentTrack]);
+      this.isMicMuted = true;
     }
-    this.handleVoiceCallStream(call);
+    return this.localStream;
+  }
+
+  bridgeVoiceToPeer(peerId) {
+    if (!this.peer || this.audioCalls.has(peerId) || peerId === this.myPeerId) return;
+
+    this.getOrCreateLocalStream().then(stream => {
+      const call = this.peer.call(peerId, stream);
+      if (call) {
+        this.handleVoiceCallStream(call);
+      }
+    }).catch(e => console.error('[Voice Call Bridge Error]:', e));
+  }
+
+  async toggleMicrophone() {
+    const micBtn = document.getElementById('p2pMicToggleBtn');
+
+    if (this.isMicMuted) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          },
+          video: false
+        });
+
+        const activeTrack = stream.getAudioTracks()[0];
+
+        if (this.localStream) {
+          const oldTrack = this.localStream.getAudioTracks()[0];
+          if (oldTrack) {
+            this.localStream.removeTrack(oldTrack);
+            oldTrack.stop();
+          }
+          this.localStream.addTrack(activeTrack);
+        } else {
+          this.localStream = stream;
+        }
+
+        activeTrack.enabled = true;
+        this.isMicMuted = false;
+
+        // Upgrade tracks across all active media call senders
+        this.audioCalls.forEach((call) => {
+          const sender = call.peerConnection?.getSenders()?.find(s => s.track && s.track.kind === 'audio');
+          if (sender) {
+            sender.replaceTrack(activeTrack).catch(() => {});
+          } else {
+            call.close();
+            const newCall = this.peer.call(call.peer, this.localStream);
+            this.handleVoiceCallStream(newCall);
+          }
+        });
+
+        // Bridge any unconnected peers
+        this.connections.forEach((_, peerId) => {
+          if (!this.audioCalls.has(peerId)) {
+            this.bridgeVoiceToPeer(peerId);
+          }
+        });
+
+        const me = this.members.get(this.myPeerId);
+        if (me) me.isMicMuted = false;
+        this.broadcastRoster();
+
+        if (micBtn) {
+          micBtn.innerHTML = '<i class="fas fa-microphone" style="color:var(--accent-emerald, #00ff88);"></i> Mic On';
+          micBtn.classList.add('active');
+        }
+        if (typeof showToast === 'function') showToast('Voice Connected');
+      } catch (e) {
+        console.error('[WebRTC Mic Permission Denied]:', e);
+        if (typeof showToast === 'function') showToast('Microphone access blocked or unavailable');
+      }
+    } else {
+      if (this.localStream) {
+        this.localStream.getAudioTracks().forEach(track => { track.enabled = false; });
+      }
+      this.isMicMuted = true;
+
+      const me = this.members.get(this.myPeerId);
+      if (me) me.isMicMuted = true;
+      this.broadcastRoster();
+
+      if (micBtn) {
+        micBtn.innerHTML = '<i class="fas fa-microphone-slash"></i> Mic Muted';
+        micBtn.classList.remove('active');
+      }
+      if (typeof showToast === 'function') showToast('Microphone Muted');
+    }
+    this.renderRoster();
+  }
+
+  handleIncomingVoiceCall(call) {
+    this.getOrCreateLocalStream().then(stream => {
+      call.answer(stream);
+      this.handleVoiceCallStream(call);
+    }).catch(() => {
+      call.answer();
+      this.handleVoiceCallStream(call);
+    });
   }
 
   handleVoiceCallStream(call) {
     this.audioCalls.set(call.peer, call);
 
     call.on('stream', (remoteStream) => {
-      let audio = document.getElementById(`audio_${call.peer}`);
+      let audio = this.remoteAudioElements.get(call.peer);
       if (!audio) {
         audio = document.createElement('audio');
         audio.id = `audio_${call.peer}`;
         audio.autoplay = true;
+        audio.playsInline = true;
         document.body.appendChild(audio);
+        this.remoteAudioElements.set(call.peer, audio);
       }
       audio.srcObject = remoteStream;
-      audio.play().catch(e => console.warn('[Audio AutoPlay Policy Intercept]:', e));
+      audio.play().catch(e => {
+        console.warn(`[Audio Autoplay Waiting for Click - Peer ${call.peer}]:`, e);
+      });
     });
 
     call.on('close', () => {
-      const audio = document.getElementById(`audio_${call.peer}`);
-      if (audio) audio.remove();
+      const audio = this.remoteAudioElements.get(call.peer);
+      if (audio) {
+        audio.pause();
+        audio.srcObject = null;
+        audio.remove();
+        this.remoteAudioElements.delete(call.peer);
+      }
       this.audioCalls.delete(call.peer);
     });
 
     call.on('error', (err) => {
-      console.warn('[VoIP Call Error]:', err);
-      const audio = document.getElementById(`audio_${call.peer}`);
-      if (audio) audio.remove();
+      console.warn('[VoIP Session Closed with Error]:', err);
+      const audio = this.remoteAudioElements.get(call.peer);
+      if (audio) {
+        audio.remove();
+        this.remoteAudioElements.delete(call.peer);
+      }
       this.audioCalls.delete(call.peer);
     });
   }
 
   // ===============================================================
-  // 7. MULTIPLAYER VIRTUAL CURSORS
+  // 6. MULTIPLAYER CURSORS & LIVE EMOTES
   // ===============================================================
   setupCursorTracking() {
     window.addEventListener('mousemove', (e) => {
       const now = performance.now();
-      if (now - this.lastMouseBroadcast > 40 && this.connections.size > 0) {
+      if (now - this.lastMouseBroadcast > 35 && this.connections.size > 0) {
         this.lastMouseBroadcast = now;
         this.broadcast({
           type: 'CURSOR_MOVE',
@@ -860,12 +945,11 @@ class P2PWatchPartyEngine {
       cursor = document.createElement('div');
       cursor.id = `cursor_${peerId}`;
       cursor.className = 'p2p-cursor';
-      cursor.style.cssText = 'position:fixed; top:0; left:0; pointer-events:none; z-index:99999; will-change:transform; transition:transform 0.08s linear;';
       cursor.innerHTML = `
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="${data.color}" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+        <svg viewBox="0 0 24 24" fill="${data.color}">
           <path d="M4 0l16 12.279-6.951 1.17 4.325 8.817-3.596 1.734-4.35-8.879-5.428 5.879z"/>
         </svg>
-        <span class="p2p-cursor-tag" style="background:${data.color}; color:#000; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:top; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.4);">${data.name}</span>
+        <span class="p2p-cursor-tag" style="background:var(--p2p-bg-glass); border-left:3px solid ${data.color};">${data.name}</span>
       `;
       layer.appendChild(cursor);
     }
@@ -877,9 +961,6 @@ class P2PWatchPartyEngine {
     document.getElementById(`cursor_${peerId}`)?.remove();
   }
 
-  // ===============================================================
-  // 8. CANVAS EMOTE PHYSICS ENGINE
-  // ===============================================================
   setupEmoteCanvas() {
     this.canvas = document.getElementById('p2pCanvasOverlay');
     if (!this.canvas) return;
@@ -895,7 +976,7 @@ class P2PWatchPartyEngine {
   }
 
   sendEmote(emoji) {
-    const originX = window.innerWidth - 70;
+    const originX = window.innerWidth - 75;
     const originY = window.innerHeight - 120;
     this.spawnEmoteParticles(emoji, originX, originY);
 
@@ -912,12 +993,12 @@ class P2PWatchPartyEngine {
     for (let i = 0; i < 9; i++) {
       this.particles.push({
         emoji: emoji,
-        x: x + (Math.random() * 40 - 20),
+        x: x + (Math.random() * 30 - 15),
         y: y,
         vx: (Math.random() - 0.5) * 6,
         vy: -(Math.random() * 5 + 6),
         alpha: 1.0,
-        scale: Math.random() * 0.5 + 0.8,
+        scale: Math.random() * 0.4 + 0.8,
         rotation: (Math.random() - 0.5) * 0.4
       });
     }
@@ -934,14 +1015,14 @@ class P2PWatchPartyEngine {
       const p = this.particles[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.15;
+      p.vy += 0.16;
       p.alpha -= 0.015;
 
       this.ctx.save();
       this.ctx.globalAlpha = Math.max(p.alpha, 0);
       this.ctx.translate(p.x, p.y);
       this.ctx.rotate(p.rotation);
-      this.ctx.font = `${Math.round(28 * p.scale)}px sans-serif`;
+      this.ctx.font = `${Math.round(26 * p.scale)}px sans-serif`;
       this.ctx.textAlign = 'center';
       this.ctx.fillText(p.emoji, 0, 0);
       this.ctx.restore();
@@ -957,7 +1038,7 @@ class P2PWatchPartyEngine {
   }
 
   // ===============================================================
-  // 9. LIVE CHAT & ROSTER UI
+  // 7. ROSTER, QUEUE & LIVE CHAT INTERFACE
   // ===============================================================
   sendChatMessage(text) {
     if (!text || !text.trim()) return;
@@ -1005,10 +1086,10 @@ class P2PWatchPartyEngine {
         <div class="p2p-member-left">
           <span class="p2p-status-dot ${member.status || 'playing'}"></span>
           <span style="color:${member.color}; font-weight:700;">${member.name}</span>
-          ${member.isHost ? '<i class="fas fa-crown" style="color:var(--accent-gold, #ffb703); font-size:10px; margin-left:4px;"></i>' : ''}
+          ${member.isHost ? '<i class="fas fa-crown" style="color:var(--accent-gold); font-size:11px; margin-left:4px;"></i>' : ''}
         </div>
         <div>
-          ${member.isMicMuted ? '<i class="fas fa-microphone-slash" style="color:var(--text-muted, #71717a); font-size:11px;"></i>' : '<i class="fas fa-microphone" style="color:var(--accent-emerald, #46d369); font-size:11px;"></i>'}
+          ${member.isMicMuted ? '<i class="fas fa-microphone-slash" style="color:var(--text-muted); font-size:11px;"></i>' : '<i class="fas fa-microphone" style="color:var(--accent-emerald); font-size:11px;"></i>'}
         </div>
       `;
       container.appendChild(row);
@@ -1016,7 +1097,7 @@ class P2PWatchPartyEngine {
   }
 
   // ===============================================================
-  // 10. SYNCED AUDIO BOOSTER
+  // 8. AUDIO GAIN SYNC & SHARED WATCH QUEUE
   // ===============================================================
   broadcastAudioBoost(level) {
     this.broadcast({
@@ -1031,7 +1112,7 @@ class P2PWatchPartyEngine {
     const label = document.getElementById('p2pPromptDesc');
     if (!card || !label) return;
 
-    label.innerText = `The party host activated an audio gain boost (${Math.round(level * 100)}%). Apply to your session?`;
+    label.innerText = `The party host set audio gain boost to ${Math.round(level * 100)}%. Sync to your stream?`;
     card.classList.add('visible');
 
     document.getElementById('p2pAcceptBoostBtn').onclick = () => {
@@ -1042,9 +1123,7 @@ class P2PWatchPartyEngine {
         }
         const lbl = document.getElementById('audioBoosterLabel');
         if (lbl) lbl.innerText = `${Math.round(level * 100)}% Volume`;
-        if (typeof showToast === 'function') {
-          showToast(`Synced Volume: ${Math.round(level * 100)}%`);
-        }
+        if (typeof showToast === 'function') showToast(`Volume Synced: ${Math.round(level * 100)}%`);
       }
       card.classList.remove('visible');
     };
@@ -1054,9 +1133,6 @@ class P2PWatchPartyEngine {
     };
   }
 
-  // ===============================================================
-  // 11. PASS THE REMOTE & SHARED QUEUE
-  // ===============================================================
   toggleControlMode() {
     if (!this.isHost) return;
     this.controlMode = this.controlMode === 'HOST_ONLY' ? 'DEMOCRATIC' : 'HOST_ONLY';
@@ -1081,9 +1157,7 @@ class P2PWatchPartyEngine {
       senderId: this.myPeerId,
       queue: this.sharedQueue
     });
-    if (typeof showToast === 'function') {
-      showToast('Added title to Watch Party queue');
-    }
+    if (typeof showToast === 'function') showToast('Added to Watch Party queue');
   }
 
   playNextInQueue() {
@@ -1110,7 +1184,7 @@ class P2PWatchPartyEngine {
     this.sharedQueue.forEach((item, idx) => {
       const el = document.createElement('div');
       el.className = 'p2p-queue-item';
-      el.style.cssText = 'display:flex; align-items:center; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);';
+      el.style.cssText = 'display:flex; align-items:center; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06);';
       el.innerHTML = `
         <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">
           ${idx + 1}. ${item.anime.title?.english || item.anime.title?.romaji} (Ep ${item.episode})
@@ -1142,7 +1216,7 @@ class P2PWatchPartyEngine {
 window.p2pParty = new P2PWatchPartyEngine();
 
 // ===============================================================
-// 12. GLOBAL WINDOW HOOKS FOR HTML ONCLICK BUTTONS
+// 9. UI EVENT INTEGRATIONS & WINDOW HOOKS
 // ===============================================================
 function openWatchPartyModal(skipUrlSync = false) {
   const modal = document.getElementById('watchPartyModal');
@@ -1153,7 +1227,6 @@ function openWatchPartyModal(skipUrlSync = false) {
   overlay.classList.add('active');
   document.documentElement.style.overflowY = 'hidden';
 
-  // Initialize hosting session only if peer is not already connected
   if (window.p2pParty && !window.p2pParty.myPeerId) {
     window.p2pParty.startHosting();
   } else {
@@ -1187,13 +1260,9 @@ function copyWatchPartyCode() {
   const input = document.getElementById('partyMyPeerId');
   if (input?.value && input.value !== 'Generating...' && !input.value.includes('Click Host')) {
     navigator.clipboard.writeText(input.value);
-    if (typeof showToast === 'function') {
-      showToast('Room Code copied to clipboard!');
-    }
+    if (typeof showToast === 'function') showToast('Room Code copied to clipboard!');
   } else {
-    if (window.p2pParty) {
-      window.p2pParty.startHosting();
-    }
+    if (window.p2pParty) window.p2pParty.startHosting();
   }
 }
 window.copyWatchPartyCode = copyWatchPartyCode;
@@ -1202,9 +1271,7 @@ function joinWatchPartyRoom() {
   const input = document.getElementById('partyJoinInput');
   const hostId = input?.value?.trim();
   if (!hostId) {
-    if (typeof showToast === 'function') {
-      showToast('Please enter a valid host room code.');
-    }
+    if (typeof showToast === 'function') showToast('Please enter a host room code.');
     return;
   }
   if (window.p2pParty) {
@@ -1215,7 +1282,7 @@ function joinWatchPartyRoom() {
 window.joinWatchPartyRoom = joinWatchPartyRoom;
 
 // ===============================================================
-// 13. IFRAME POSTMESSAGE EVENT LISTENER
+// 10. IFRAME POSTMESSAGE PLAYER SYNC
 // ===============================================================
 window.addEventListener('message', ({ data }) => {
   if (data && data.type === 'PLAYER_EVENT') {
