@@ -1,82 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-  
-  <?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 
-  <!-- Core Static & Dynamic Catalog Hubs -->
+  <!-- Core Static & Dynamic Discovery Hubs -->
   <url>
-    <loc>https://aniflixultra.vercel.app/</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://aniflixultra.vercel.app/?mode=anime</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/?mode=anime</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://aniflixultra.vercel.app/?mode=netflix</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/?mode=netflix</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://aniflixultra.vercel.app/hindi-dubbed-anime</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/?mode=hindi</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
-  <url>
-    <loc>https://aniflixultra.vercel.app/simulcast-schedule</loc>
-    <lastmod>2026-08-30</lastmod>
-    <changefreq>always</changefreq>
-    <priority>0.8</priority>
-  </url>
 
-  <!-- High-Priority Deep-Link Entries (Trending Titles & Masterpieces) -->
+  <!-- High-Priority Deep-Link Entries (Trending Masterpieces) -->
   <url>
-    <loc>https://aniflixultra.vercel.app/?watch=21&amp;s=1&amp;ep=1&amp;srv=1</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/?watch=21&amp;s=1&amp;ep=1&amp;srv=1</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://s4.anilist.co/file/anilistcdn/media/anime/banner/21-jZO0bXN9sP4.jpg</image:loc>
-      <image:title>One Piece - NxSha Ultra HD, Sub &amp; Hindi Dub</image:title>
+      <image:title>One Piece - AnimeDrift 4K Ultra HD, Sub &amp; Hindi Dub</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://aniflixultra.vercel.app/?watch=16498&amp;s=1&amp;ep=1&amp;srv=1</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/?watch=16498&amp;s=1&amp;ep=1&amp;srv=1</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498-i2A5g155cM4.jpg</image:loc>
-      <image:title>Attack on Titan - NxSha Ultra Stream HD</image:title>
+      <image:title>Attack on Titan - AnimeDrift 4K Ultra HD Stream</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://aniflixultra.vercel.app/?watch=11061&amp;s=1&amp;ep=1&amp;srv=1</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/?watch=11061&amp;s=1&amp;ep=1&amp;srv=1</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://s4.anilist.co/file/anilistcdn/media/anime/banner/11061-n9eW4p8yS9X.jpg</image:loc>
-      <image:title>Hunter x Hunter (2011) - NxSha Ultra Stream HD</image:title>
+      <image:title>Hunter x Hunter (2011) - AnimeDrift 4K Ultra HD Stream</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://aniflixultra.vercel.app/?watch=101922&amp;s=1&amp;ep=1&amp;srv=1</loc>
-    <lastmod>2026-08-30</lastmod>
+    <loc>https://animedrift.vercel.app/?watch=101922&amp;s=1&amp;ep=1&amp;srv=1</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
     <image:image>
       <image:loc>https://s4.anilist.co/file/anilistcdn/media/anime/banner/101922-PEn1SLRjQrY8.jpg</image:loc>
-      <image:title>Demon Slayer: Kimetsu no Yaiba - NxSha Ultra Stream HD</image:title>
+      <image:title>Demon Slayer: Kimetsu no Yaiba - AnimeDrift 4K Ultra HD Stream</image:title>
     </image:image>
   </url>
 
