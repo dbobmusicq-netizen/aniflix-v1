@@ -1,23 +1,29 @@
 /* ==========================================================================
-   P2P WATCH PARTY ENGINE - ULTRA GLASSMORPHISM & DYNAMIC HUD SUITE
-   Architecture: High-Performance GPU Composited, Hardware-Accelerated
+   ANIFLIX ULTRA - P2P WATCH PARTY & VOIP MESH ENGINE (VERSION 40.0.0)
+   Architecture: Ultra-Glassmorphism, High-Density GPU Hardware Composited,
+                 Sub-Pixel Particle Kinetics, Resilient Touch-Action Metrics
    ========================================================================== */
 
 :root {
-  --p2p-bg-glass: rgba(10, 11, 16, 0.72);
-  --p2p-bg-card: rgba(18, 20, 29, 0.75);
+  --p2p-bg-base: #06070b;
+  --p2p-bg-glass: rgba(10, 11, 16, 0.76);
+  --p2p-bg-glass-heavy: rgba(8, 9, 14, 0.94);
+  --p2p-bg-card: rgba(18, 20, 29, 0.78);
   --p2p-bg-hover: rgba(255, 255, 255, 0.08);
   --p2p-border-glass: rgba(255, 255, 255, 0.12);
   --p2p-border-highlight: rgba(255, 255, 255, 0.28);
   
   --accent-red: #ff0844;
   --accent-red-glow: rgba(255, 8, 68, 0.45);
+  --accent-red-dark: #990024;
   --accent-cyan: #00f0ff;
   --accent-cyan-glow: rgba(0, 240, 255, 0.4);
   --accent-gold: #ffb800;
   --accent-gold-glow: rgba(255, 184, 0, 0.45);
   --accent-emerald: #00ff88;
   --accent-emerald-glow: rgba(0, 255, 136, 0.45);
+  --accent-purple: #9d4edd;
+  --accent-purple-glow: rgba(157, 78, 221, 0.45);
   
   --text-primary: #ffffff;
   --text-secondary: #c3c7db;
@@ -29,7 +35,7 @@
 }
 
 /* ==========================================================================
-   MULTIPLAYER CURSORS LAYER
+   1. MULTIPLAYER CURSORS LAYER & SPATIAL TRACKING
    ========================================================================== */
 #p2pCursorLayer {
   position: fixed;
@@ -50,16 +56,17 @@
   pointer-events: none;
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  transition: transform 0.06s linear;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  transition: transform 0.05s linear;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.65));
 }
 
 .p2p-cursor svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   transform: rotate(-15deg);
   transform-origin: top left;
-  transition: transform 0.15s var(--p2p-ease-spring);
+  transition: transform 0.18s var(--p2p-ease-spring);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
 }
 
 .p2p-cursor.active svg {
@@ -70,32 +77,34 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.3px;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 8px;
   color: #fff;
   white-space: nowrap;
   background: var(--p2p-bg-glass);
   border: 1px solid var(--p2p-border-glass);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.06);
   transform-origin: left center;
-  animation: p2pTagPop 0.3s var(--p2p-ease-spring) forwards;
+  animation: p2pTagPop 0.32s var(--p2p-ease-spring) forwards;
 }
 
 /* ==========================================================================
-   CANVAS PARTICLE OVERLAY
+   2. CANVAS PARTICLE OVERLAY (EMOTE PHYSICS ENGINE)
    ========================================================================== */
 #p2pCanvasOverlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 30;
+  width: 100%;
+  height: 100%;
   mix-blend-mode: screen;
 }
 
 /* ==========================================================================
-   FLOATING REACTION BAR
+   3. FLOATING HUD REACTION BAR
    ========================================================================== */
 .p2p-reaction-bar {
   position: absolute;
@@ -103,18 +112,18 @@
   right: 24px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background: var(--p2p-bg-glass);
   border: 1px solid var(--p2p-border-glass);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  padding: 6px 10px;
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  padding: 6px 12px;
   border-radius: 999px;
   z-index: 35;
   box-shadow: 
-    0 16px 40px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  animation: p2pFloatIn 0.5s var(--p2p-ease-out) forwards;
+    0 18px 45px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  animation: p2pFloatIn 0.45s var(--p2p-ease-out) forwards;
 }
 
 .p2p-emote-btn {
@@ -130,7 +139,7 @@
   justify-content: center;
   outline: none;
   transform: translateZ(0);
-  transition: transform 0.25s var(--p2p-ease-spring), filter 0.2s ease;
+  transition: transform 0.22s var(--p2p-ease-spring), filter 0.2s ease;
 }
 
 .p2p-emote-btn::before {
@@ -138,20 +147,20 @@
   position: absolute;
   inset: 2px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.24) 0%, transparent 70%);
   opacity: 0;
   transform: scale(0.5);
-  transition: opacity 0.2s ease, transform 0.25s var(--p2p-ease-out);
+  transition: opacity 0.2s ease, transform 0.22s var(--p2p-ease-out);
 }
 
 .p2p-emote-btn:hover {
   transform: scale(1.4) translateY(-6px);
-  filter: drop-shadow(0 6px 12px rgba(255, 255, 255, 0.25));
+  filter: drop-shadow(0 6px 14px rgba(255, 255, 255, 0.3));
 }
 
 .p2p-emote-btn:hover::before {
   opacity: 1;
-  transform: scale(1.2);
+  transform: scale(1.25);
 }
 
 .p2p-emote-btn:active {
@@ -160,14 +169,14 @@
 }
 
 /* ==========================================================================
-   BUFFER STATUS BANNER
+   4. BUFFER STATUS BANNER
    ========================================================================== */
 .p2p-buffer-notice {
   position: absolute;
   top: 24px;
   left: 50%;
   transform: translate3d(-50%, -20px, 0) scale(0.95);
-  background: linear-gradient(135deg, rgba(24, 20, 10, 0.95), rgba(12, 12, 16, 0.95));
+  background: linear-gradient(135deg, rgba(24, 20, 10, 0.96), rgba(12, 12, 16, 0.96));
   border: 1px solid var(--accent-gold);
   color: #fff;
   padding: 10px 22px;
@@ -183,13 +192,13 @@
   pointer-events: none;
   visibility: hidden;
   box-shadow: 
-    0 12px 35px rgba(0, 0, 0, 0.8),
+    0 14px 38px rgba(0, 0, 0, 0.82),
     0 0 25px var(--accent-gold-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition: 
-    opacity 0.35s var(--p2p-ease-out),
+    opacity 0.32s var(--p2p-ease-out),
     transform 0.35s var(--p2p-ease-spring),
-    visibility 0.35s;
+    visibility 0.32s;
 }
 
 .p2p-buffer-notice::before {
@@ -199,7 +208,7 @@
   border: 2px solid var(--accent-gold);
   border-top-color: transparent;
   border-radius: 50%;
-  animation: p2pSpin 0.8s linear infinite;
+  animation: p2pSpin 0.75s linear infinite;
 }
 
 .p2p-buffer-notice.visible {
@@ -210,7 +219,7 @@
 }
 
 /* ==========================================================================
-   SYNCED AUDIO BOOSTER PROMPT CARD
+   5. SYNCED AUDIO BOOSTER PROMPT CARD
    ========================================================================== */
 .p2p-prompt-card {
   position: absolute;
@@ -224,7 +233,7 @@
   border-radius: 20px;
   color: #fff;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -234,13 +243,13 @@
   visibility: hidden;
   transform: translate3d(0, 20px, 0) scale(0.95);
   box-shadow: 
-    0 16px 40px rgba(0, 0, 0, 0.8),
+    0 16px 42px rgba(0, 0, 0, 0.82),
     0 0 30px var(--accent-cyan-glow),
     inset 0 1px 1px rgba(255, 255, 255, 0.2);
   transition: 
-    opacity 0.35s var(--p2p-ease-out),
-    transform 0.4s var(--p2p-ease-spring),
-    visibility 0.35s;
+    opacity 0.32s var(--p2p-ease-out),
+    transform 0.38s var(--p2p-ease-spring),
+    visibility 0.32s;
 }
 
 .p2p-prompt-card.visible {
@@ -276,7 +285,11 @@
 .p2p-btn-confirm:hover {
   transform: translateY(-2px);
   filter: brightness(1.15);
-  box-shadow: 0 6px 20px var(--accent-cyan-glow);
+  box-shadow: 0 6px 22px var(--accent-cyan-glow);
+}
+
+.p2p-btn-confirm:active {
+  transform: translateY(0) scale(0.96);
 }
 
 .p2p-btn-dismiss {
@@ -291,14 +304,18 @@
   transform: translateY(-2px);
 }
 
+.p2p-btn-dismiss:active {
+  transform: translateY(0) scale(0.96);
+}
+
 /* ==========================================================================
-   AFK CATCH-UP SPEED NOTIFICATION PILL
+   6. AFK CATCH-UP SPEED NOTIFICATION PILL
    ========================================================================== */
 .p2p-catchup-pill {
   position: absolute;
   top: 24px;
   right: 24px;
-  background: linear-gradient(135deg, var(--accent-red), #990024);
+  background: linear-gradient(135deg, var(--accent-red), var(--accent-red-dark));
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.35);
   padding: 8px 16px;
@@ -343,11 +360,11 @@
 }
 
 .p2p-catchup-pill:active {
-  transform: translate3d(0, 0, 0) scale(0.98);
+  transform: translate3d(0, 0, 0) scale(0.96);
 }
 
 /* ==========================================================================
-   SLIDE-OUT LIVE CHAT & ROOM DRAWER
+   7. SLIDE-OUT LIVE CHAT & ROOM DRAWER (GPU TRANSLATE3D ONLY)
    ========================================================================== */
 .p2p-chat-sidebar {
   position: fixed;
@@ -355,16 +372,16 @@
   right: 0;
   bottom: 0;
   width: min(360px, 88vw);
-  background: var(--p2p-bg-glass);
+  background: var(--p2p-bg-glass-heavy);
   border-left: 1px solid var(--p2p-border-glass);
   backdrop-filter: blur(35px) saturate(200%);
   -webkit-backdrop-filter: blur(35px) saturate(200%);
   z-index: 2500;
   display: flex;
   flex-direction: column;
-  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.85);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.9);
   transform: translate3d(100%, 0, 0);
-  transition: transform 0.4s var(--p2p-ease-out);
+  transition: transform 0.35s var(--p2p-ease-out);
 }
 
 .p2p-chat-sidebar.open {
@@ -401,11 +418,11 @@
 }
 
 /* ==========================================================================
-   ROSTER LIST & PRESENCE
+   8. ROSTER LIST & PRESENCE WITH AUDIO VISUALIZER
    ========================================================================== */
 .p2p-roster-box {
   padding: 12px 18px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
   border-bottom: 1px solid var(--p2p-border-glass);
   display: flex;
   flex-direction: column;
@@ -481,7 +498,7 @@
 }
 
 /* ==========================================================================
-   ROOM CONTROLS (MIC, REMOTE MODE)
+   9. ROOM CONTROLS (VOIP MIC, REMOTE MODE)
    ========================================================================== */
 .p2p-room-controls {
   padding: 10px 18px;
@@ -522,7 +539,7 @@
 }
 
 /* ==========================================================================
-   CHAT VIEWPORT & MESSAGE BUBBLES
+   10. CHAT VIEWPORT & MESSAGE BUBBLES
    ========================================================================== */
 .p2p-chat-messages {
   flex: 1;
@@ -582,12 +599,12 @@
 }
 
 /* ==========================================================================
-   CHAT INPUT INTERFACE
+   11. CHAT INPUT INTERFACE (IOS ZOOM-SAFE)
    ========================================================================== */
 .p2p-chat-form {
   padding: 14px 18px;
   border-top: 1px solid var(--p2p-border-glass);
-  background: rgba(10, 11, 16, 0.85);
+  background: rgba(10, 11, 16, 0.95);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -600,7 +617,7 @@
   border-radius: 999px;
   color: #fff;
   padding: 10px 16px;
-  font-size: 13px;
+  font-size: 16px !important; /* Strictly eliminates mobile input auto-zoom */
   font-family: inherit;
   outline: none;
   transition: all 0.25s var(--p2p-ease-out);
@@ -608,6 +625,7 @@
 
 .p2p-chat-input::placeholder {
   color: var(--text-muted);
+  font-size: 13px;
 }
 
 .p2p-chat-input:focus {
@@ -642,7 +660,7 @@
 }
 
 /* ==========================================================================
-   CUSTOM SCROLLBAR CONFIGURATION
+   12. CUSTOM SCROLLBAR CONFIGURATION
    ========================================================================== */
 .p2p-chat-messages::-webkit-scrollbar,
 .p2p-members-list::-webkit-scrollbar {
@@ -666,7 +684,7 @@
 }
 
 /* ==========================================================================
-   KEYFRAME ANIMATIONS (60FPS ACCELERATED)
+   13. KEYFRAME ANIMATIONS (60FPS ACCELERATED)
    ========================================================================== */
 @keyframes p2pFloatIn {
   from { 
@@ -705,7 +723,9 @@
   to { transform: rotate(360deg); }
 }
 
-/* Responsive adjustment */
+/* ==========================================================================
+   14. RESPONSIVE MATRIX & TOUCH CONSTRAINTS
+   ========================================================================== */
 @media (max-width: 600px) {
   .p2p-reaction-bar {
     bottom: 70px;
@@ -718,5 +738,10 @@
   }
   .p2p-chat-sidebar {
     width: 100vw;
+  }
+  .p2p-prompt-card {
+    left: 12px;
+    right: 12px;
+    bottom: 70px;
   }
 }
