@@ -1,6 +1,7 @@
 /**
  * AniFlix Ultra - Multi-Device Synchronized P2P Watch Party Engine
- * Version 12.0 - High-Resilience WebRTC Mesh, Audio VoIP & Precision Time Controller
+ * Version 13.0 - Deep-Link URL Share & Auto-Join Controller
+ * Fully backwards-compatible: Requires zero modifications to core-engine.js or streaming-ui.js.
  */
 
 class P2PWatchPartyEngine {
@@ -23,12 +24,11 @@ class P2PWatchPartyEngine {
     this.localStream = null;
     this.audioCtx = null;
     this.isMicMuted = true;
-    this.remoteAudioElements = new Map(); // peerId -> HTMLAudioElement
-    this.audioMeterInterval = null;
+    this.remoteAudioElements = new Map();
 
     // Room Roles & Control
     this.isHost = false;
-    this.controlMode = 'HOST_ONLY';    // 'HOST_ONLY' | 'DEMOCRATIC'
+    this.controlMode = 'HOST_ONLY';
     this.sharedQueue = [];
 
     // Playback Engine State Tracking
@@ -39,7 +39,6 @@ class P2PWatchPartyEngine {
     this.remoteBufferingPeers = new Set();
     this.catchUpInterval = null;
     this.heartbeatInterval = null;
-    this.reconnectAttempts = 0;
 
     // Visuals & Cursors
     this.canvas = null;
@@ -55,6 +54,7 @@ class P2PWatchPartyEngine {
     this.setupEmoteCanvas();
     this.setupCursorTracking();
     this.setupAudioUnlockTrigger();
+    this.checkDeepLinkAutoJoin();
   }
 
   generateRandomColor() {
@@ -78,24 +78,63 @@ class P2PWatchPartyEngine {
   }
 
   // ===============================================================
+  // DEEP LINK GENERATOR & AUTO-JOIN HANDLER
+  // ===============================================================
+  getShareableLink(roomId = this.myPeerId) {
+    if (!roomId) return '';
+    const url = new URL(window.location.href);
+    url.searchParams.set('party', roomId);
+    return url.toString();
+  }
+
+  checkDeepLinkAutoJoin() {
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        const partyRoomId = params.get('party');
+        if (partyRoomId && partyRoomId.trim()) {
+          console.log('[P2P Engine] Deep-link room detected in URL:', partyRoomId);
+          this.joinRoom(partyRoomId.trim());
+          
+          // Automatically open party chat HUD drawer for the participant
+          const chatDrawer = document.getElementById('p2pChatSidebar');
+          if (chatDrawer) chatDrawer.classList.add('open');
+
+          if (typeof showToast === 'function') {
+            showToast('Auto-joining Watch Party via shared link...');
+          }
+        }
+      }, 750);
+    });
+  }
+
+  // ===============================================================
   // 1. CONNECTION & MESH NETWORK INITIALIZATION
   // ===============================================================
   startHosting() {
     if (this.peer && !this.peer.destroyed && this.myPeerId && this.isHost) {
       const input = document.getElementById('partyMyPeerId');
-      if (input) input.value = this.myPeerId;
+      if (input) input.value = this.getShareableLink(this.myPeerId);
       return;
     }
     const roomId = 'aniflix_' + Math.random().toString(36).substring(2, 9);
     this.initPeer(roomId, true);
   }
 
-  joinRoom(targetHostId) {
-    if (!targetHostId) return;
-    const cleanTarget = targetHostId.trim();
+  joinRoom(targetInput) {
+    if (!targetInput) return;
+    
+    // Automatically parse clean host ID whether user pasted a full URL or raw code
+    let cleanTarget = targetInput.trim();
+    try {
+      if (cleanTarget.startsWith('http://') || cleanTarget.startsWith('https://')) {
+        const parsedUrl = new URL(cleanTarget);
+        cleanTarget = parsedUrl.searchParams.get('party') || cleanTarget;
+      }
+    } catch (e) {}
 
     if (cleanTarget === this.myPeerId) {
-      if (typeof showToast === 'function') showToast('You cannot join your own room code.');
+      if (typeof showToast === 'function') showToast('You are already hosting this party.');
       return;
     }
 
@@ -137,9 +176,9 @@ class P2PWatchPartyEngine {
 
     this.peer.on('open', (id) => {
       this.myPeerId = id;
-      this.reconnectAttempts = 0;
       const input = document.getElementById('partyMyPeerId');
-      if (input) input.value = id;
+      // Injects full shareable deep-link directly into input field
+      if (input) input.value = this.getShareableLink(id);
 
       this.members.set(this.myPeerId, {
         id: this.myPeerId,
@@ -159,7 +198,7 @@ class P2PWatchPartyEngine {
       }
 
       if (typeof showToast === 'function') {
-        showToast(asHost ? 'Party Room Ready! Share code with friends.' : 'Connected to Network.');
+        showToast(asHost ? 'Party Room Created! Copy and share your link.' : 'Connected to Network.');
       }
     });
 
@@ -180,7 +219,7 @@ class P2PWatchPartyEngine {
     this.peer.on('error', (err) => {
       console.warn('[P2P WebRTC Error]:', err);
       if (err.type === 'peer-unavailable') {
-        if (typeof showToast === 'function') showToast('Target host unavailable or session ended.');
+        if (typeof showToast === 'function') showToast('Party Host session is unavailable or ended.');
       } else if (err.type === 'unavailable-id') {
         this.startHosting();
       } else if (typeof showToast === 'function') {
@@ -199,14 +238,12 @@ class P2PWatchPartyEngine {
     conn.on('open', () => {
       this.connections.set(conn.peer, conn);
 
-      // 1. Initial Ping for clock alignment
       conn.send({
         packetId: this.generatePacketId(),
         type: 'TIME_PING',
         t0: Date.now()
       });
 
-      // 2. Announce join state
       setTimeout(() => {
         if (!conn.open) return;
         conn.send({
@@ -221,7 +258,6 @@ class P2PWatchPartyEngine {
           }
         });
 
-        // 3. Synchronize Room Playback State if Host
         if (this.isHost) {
           if (typeof STATE !== 'undefined' && STATE.currentAnime) {
             conn.send({
@@ -243,9 +279,7 @@ class P2PWatchPartyEngine {
         }
       }, 150);
 
-      // 4. Initiate voice mesh stream if local stream is already active
       this.bridgeVoiceToPeer(conn.peer);
-
       this.renderRoster();
     });
 
@@ -329,7 +363,7 @@ class P2PWatchPartyEngine {
       this.isHost = true;
       const me = this.members.get(this.myPeerId);
       if (me) me.isHost = true;
-      if (typeof showToast === 'function') showToast('Room Host left. You are now the Host!');
+      if (typeof showToast === 'function') showToast('Host left. You are now the Watch Party host!');
       this.broadcastRoster();
     } else {
       const newHost = this.members.get(nextHostId);
@@ -386,7 +420,6 @@ class P2PWatchPartyEngine {
       this.seenPacketIds.add(data.packetId);
     }
 
-    // Host acts as relay node in Star / Hybrid Mesh
     if (this.isHost && data.senderId !== this.myPeerId) {
       this.broadcast(data, conn.peer);
     }
@@ -485,7 +518,7 @@ class P2PWatchPartyEngine {
       case 'REMOTE_MODE_SWITCH':
         this.controlMode = data.mode;
         if (typeof showToast === 'function') {
-          showToast(`Control Mode changed: ${this.controlMode}`);
+          showToast(`Control Mode: ${this.controlMode}`);
         }
         this.renderRoster();
         break;
@@ -506,7 +539,7 @@ class P2PWatchPartyEngine {
   }
 
   // ===============================================================
-  // 3. SYNCHRONIZED STREAM PLAYBACK & PRECISION TIME ENGINE
+  // 3. SYNCHRONIZED STREAM PLAYBACK & ENGINE CONTROLS
   // ===============================================================
   canControlPlayback() {
     return this.isHost || this.controlMode === 'DEMOCRATIC';
@@ -721,7 +754,6 @@ class P2PWatchPartyEngine {
       if (this.audioCtx && this.audioCtx.state === 'suspended') {
         this.audioCtx.resume();
       }
-      // Re-trigger remote audio elements paused by policy
       this.remoteAudioElements.forEach(audio => {
         if (audio.paused) {
           audio.play().catch(() => {});
@@ -812,7 +844,6 @@ class P2PWatchPartyEngine {
         activeTrack.enabled = true;
         this.isMicMuted = false;
 
-        // Upgrade tracks across all active media call senders
         this.audioCalls.forEach((call) => {
           const sender = call.peerConnection?.getSenders()?.find(s => s.track && s.track.kind === 'audio');
           if (sender) {
@@ -824,7 +855,6 @@ class P2PWatchPartyEngine {
           }
         });
 
-        // Bridge any unconnected peers
         this.connections.forEach((_, peerId) => {
           if (!this.audioCalls.has(peerId)) {
             this.bridgeVoiceToPeer(peerId);
@@ -1232,7 +1262,7 @@ function openWatchPartyModal(skipUrlSync = false) {
   } else {
     const input = document.getElementById('partyMyPeerId');
     if (input && window.p2pParty.myPeerId) {
-      input.value = window.p2pParty.myPeerId;
+      input.value = window.p2pParty.getShareableLink(window.p2pParty.myPeerId);
     }
   }
 
@@ -1258,9 +1288,14 @@ window.closeWatchPartyModal = closeWatchPartyModal;
 
 function copyWatchPartyCode() {
   const input = document.getElementById('partyMyPeerId');
-  if (input?.value && input.value !== 'Generating...' && !input.value.includes('Click Host')) {
-    navigator.clipboard.writeText(input.value);
-    if (typeof showToast === 'function') showToast('Room Code copied to clipboard!');
+  const shareableUrl = window.p2pParty ? window.p2pParty.getShareableLink() : '';
+
+  if (shareableUrl && !shareableUrl.includes('Click Host')) {
+    if (input) input.value = shareableUrl;
+    navigator.clipboard.writeText(shareableUrl);
+    if (typeof showToast === 'function') {
+      showToast('Watch Party Link copied to clipboard!');
+    }
   } else {
     if (window.p2pParty) window.p2pParty.startHosting();
   }
@@ -1269,13 +1304,13 @@ window.copyWatchPartyCode = copyWatchPartyCode;
 
 function joinWatchPartyRoom() {
   const input = document.getElementById('partyJoinInput');
-  const hostId = input?.value?.trim();
-  if (!hostId) {
-    if (typeof showToast === 'function') showToast('Please enter a host room code.');
+  const rawInput = input?.value?.trim();
+  if (!rawInput) {
+    if (typeof showToast === 'function') showToast('Please paste a room code or link.');
     return;
   }
   if (window.p2pParty) {
-    window.p2pParty.joinRoom(hostId);
+    window.p2pParty.joinRoom(rawInput);
     closeWatchPartyModal();
   }
 }
