@@ -3,66 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <title>AniFlix Ultra - Stream Anime & Live-Action Across All Devices</title>
+  <title>AnimeDrift - Stream Anime & Live-Action Across All Devices</title>
   
-  <!-- 1. ZERO-CACHE HEADERS: Prevents browser from locking onto stale HTML -->
+  <!-- Zero-Cache Control Headers -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Advanced Favicon Suite & Multi-Platform PWA Branding (Relative Paths)[cite: 1] -->
-  <link rel="shortcut icon" href="favicon.ico?v=32.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=32.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=32.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=32.0.0" />
-  <link rel="manifest" href="manifest.json?v=32.0.0" />
+  <!-- Favicon Suite & Multi-Platform PWA Branding[cite: 1] -->
+  <link rel="shortcut icon" href="favicon.ico?v=40.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=40.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=40.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=40.0.0" />
+  <link rel="manifest" href="manifest.json?v=40.0.0" />
   
-  <!-- Windows Tile & Theme Color Metadata for Progressive Web App Integration -->
+  <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
   <meta name="background-color" content="#040406" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="AniFlix Ultra" />
-  <meta name="application-name" content="AniFlix Ultra" />
+  <meta name="apple-mobile-web-app-title" content="AnimeDrift" />
+  <meta name="application-name" content="AnimeDrift" />
   <meta name="msapplication-TileColor" content="#ff0844" />
   <meta name="msapplication-config" content="none" />
   
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   
-  <!-- Modern Responsive Fonts -->
+  <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   
-  <!-- External Power-User Libraries (Dexie, PeerJS, Shaka Player Engine) -->
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- 2. CACHE-BUSTED MODULAR STYLESHEETS (Updated to v32.0.0) -->
-  <link rel="stylesheet" href="theme-base.css?v=32.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=32.0.0">
-  <link rel="stylesheet" href="p2p.css?v=32.0.0">
-  <link rel="stylesheet" href="webapp.css?v=32.0.0">
-  <link rel="stylesheet" href="mobile.css?v=32.0.0">
+  <!-- Modular Stylesheets -->
+  <link rel="stylesheet" href="theme-base.css?v=40.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=40.0.0">
+  <link rel="stylesheet" href="p2p.css?v=40.0.0">
+  <link rel="stylesheet" href="webapp.css?v=40.0.0">
+  <link rel="stylesheet" href="mobile.css?v=40.0.0">
 
-  <!-- ADVANCED KINETIC ANIMATIONS, SPLASH PRELOADER & AD-BLOCK MODAL STYLES -->
   <style>
     /* ==========================================================================
-       SPLASH PRELOADER & GLOBAL SHIFT TRANSITIONS
+       AESTHETIC SPLASH PRELOADER & HUD
        ========================================================================== */
     #siteSplashPreloader {
       position: fixed;
       inset: 0;
       z-index: 999999;
-      background: radial-gradient(circle at 50% 35%, #10101c 0%, #030305 100%);
+      background: #040406;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s ease;
       contain: strict;
     }
     #siteSplashPreloader.preloader-hidden {
@@ -70,95 +69,74 @@
       visibility: hidden;
       pointer-events: none;
     }
-    .splash-kinetic-core {
-      position: relative;
-      width: 110px;
-      height: 110px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .splash-orb-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 3px solid transparent;
-      border-top-color: #ff0844;
-      border-right-color: #00f2fe;
-      animation: kineticOrbRotate 1.1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
-      box-shadow: 0 0 25px rgba(255, 8, 68, 0.4), inset 0 0 15px rgba(0, 242, 254, 0.3);
-    }
-    .splash-orb-ring-inner {
-      position: absolute;
-      inset: 12px;
-      border-radius: 50%;
-      border: 2px dashed rgba(255, 255, 255, 0.2);
-      border-bottom-color: #ff0844;
-      animation: kineticOrbRotateReverse 1.8s linear infinite;
-    }
-    .splash-logo-symbol {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #ff0844 0%, #b80710 100%);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 30px rgba(255, 8, 68, 0.8);
-      animation: coreLogoPulse 1.4s ease-in-out infinite alternate;
-    }
-    .splash-logo-symbol i {
-      color: #fff;
-      font-size: 22px;
-      margin-left: 3px;
-    }
-    .splash-text-group {
-      margin-top: 24px;
+    .aesthetic-loader {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 16px;
     }
-    .splash-brand-title {
+    .aesthetic-brand-title {
       font-family: 'Outfit', sans-serif;
-      font-size: 22px;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: 2px;
-      text-shadow: 0 0 16px rgba(255, 8, 68, 0.5);
-    }
-    .splash-caption {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      color: #00f2fe;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 6px;
       text-transform: uppercase;
+      color: #fff;
+      position: relative;
+    }
+    .aesthetic-brand-title span {
+      color: #ff0844;
+    }
+    .aesthetic-line-track {
+      width: 120px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+    .aesthetic-line-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, transparent, #ff0844, transparent);
+      animation: aestheticFlow 1.6s ease-in-out infinite;
+    }
+    .aesthetic-status-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10.5px;
       letter-spacing: 2px;
-      animation: textBlinkGlow 1.6s infinite alternate;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: uppercase;
     }
 
-    /* Shifting Mode & Opening Title Floating HUD Loader */
+    @keyframes aestheticFlow {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(300%); }
+    }
+
+    /* Mode Transition Subtle Banner */
     #globalTransitionLoader {
       position: fixed;
-      top: 72px;
+      top: 68px;
       left: 50%;
-      transform: translate3d(-50%, -20px, 0);
+      transform: translate3d(-50%, -15px, 0);
       z-index: 99990;
-      background: rgba(12, 13, 20, 0.88);
-      border: 1px solid rgba(0, 242, 254, 0.4);
-      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 242, 254, 0.3);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 8px 18px;
+      background: rgba(14, 14, 22, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
+      padding: 6px 16px;
       border-radius: 9999px;
       display: none;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       font-family: 'Outfit', sans-serif;
-      font-size: 12.5px;
-      font-weight: 800;
+      font-size: 12px;
+      font-weight: 700;
       color: #fff;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
+      transition: transform 0.25s ease, opacity 0.2s ease;
       opacity: 0;
       pointer-events: none;
     }
@@ -168,245 +146,121 @@
       transform: translate3d(-50%, 0, 0);
     }
     .mini-spinner-quantum {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      border-top-color: #00f2fe;
+      width: 12px;
+      height: 12px;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #ff0844;
       border-radius: 50%;
       animation: spinLoader 0.75s linear infinite;
-    }
-
-    @keyframes kineticOrbRotate {
-      0% { transform: rotate(0deg) scale(0.96); }
-      50% { transform: rotate(180deg) scale(1.05); }
-      100% { transform: rotate(360deg) scale(0.96); }
-    }
-    @keyframes kineticOrbRotateReverse {
-      from { transform: rotate(360deg); }
-      to { transform: rotate(0deg); }
-    }
-    @keyframes coreLogoPulse {
-      0% { transform: scale(0.92); box-shadow: 0 0 20px rgba(255, 8, 68, 0.5); }
-      100% { transform: scale(1.08); box-shadow: 0 0 35px rgba(255, 8, 68, 0.95); }
-    }
-    @keyframes textBlinkGlow {
-      0% { opacity: 0.5; filter: drop-shadow(0 0 2px rgba(0, 242, 254, 0.2)); }
-      100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.7)); }
     }
     @keyframes spinLoader {
       to { transform: rotate(360deg); }
     }
 
-    /* Player Loading Overlay Animation inside modal */
-    .player-loader-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(4, 4, 6, 0.92);
-      z-index: 45;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(12px);
-      transition: opacity 0.35s ease;
-      pointer-events: none;
-    }
-    .player-logo-pulsar {
-      font-size: 2.8rem;
-      color: #ff0844;
-      animation: coreLogoPulse 1.2s ease-in-out infinite alternate;
-    }
-    .player-spinner {
-      width: 42px;
-      height: 42px;
-      border: 3px solid rgba(255, 255, 255, 0.12);
-      border-top-color: #ff0844;
-      border-radius: 50%;
-      animation: spinLoader 0.85s linear infinite;
-      margin-top: 14px;
-    }
-    .player-loading-text {
-      margin-top: 12px;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 12.5px;
-      letter-spacing: 1.5px;
-      color: #fff;
-      font-weight: 700;
-      text-transform: uppercase;
-      opacity: 0.9;
-    }
-
-    /* ==========================================================================
-       SMART OS-AWARE ADBLOCK RECOMMENDER MODAL
-       ========================================================================== */
+    /* Adblock Advisory Modal */
     .adblock-modal-backdrop {
       position: fixed;
       inset: 0;
       z-index: 999995;
-      background: rgba(0, 0, 0, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       display: none;
       align-items: center;
       justify-content: center;
       padding: 16px;
-      animation: fadeInOverlay 0.3s ease forwards;
     }
     .adblock-modal-card {
-      background: #0d0d16;
-      border: 1px solid rgba(255, 8, 68, 0.35);
-      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.95), 0 0 30px rgba(255, 8, 68, 0.2);
-      border-radius: 20px;
+      background: #0e0f17;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
+      border-radius: 18px;
       width: 100%;
-      max-width: 490px;
-      padding: clamp(20px, 3vw, 30px);
+      max-width: 480px;
+      padding: 24px;
       position: relative;
-      animation: modalSpringUp 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       color: #fff;
       font-family: 'Outfit', sans-serif;
-    }
-    @keyframes fadeInOverlay {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes modalSpringUp {
-      from { transform: translate3d(0, 30px, 0) scale(0.92); opacity: 0; }
-      to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
     }
     .adblock-modal-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .adblock-shield-icon {
-      width: 44px;
-      height: 44px;
-      background: linear-gradient(135deg, rgba(255, 8, 68, 0.25), rgba(0, 242, 254, 0.2));
-      border: 1px solid rgba(255, 8, 68, 0.5);
-      border-radius: 12px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 8, 68, 0.15);
+      border: 1px solid rgba(255, 8, 68, 0.4);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ff0844;
-      font-size: 20px;
+      font-size: 18px;
       flex-shrink: 0;
-      box-shadow: 0 0 16px rgba(255, 8, 68, 0.3);
     }
     .adblock-modal-header h3 {
-      font-size: 19px;
+      font-size: 17px;
       font-weight: 800;
       margin: 0;
-      letter-spacing: -0.2px;
     }
     .adblock-body-text {
-      font-size: 13.5px;
+      font-size: 13px;
       line-height: 1.6;
       color: #c4c7de;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     .adblock-highlight-box {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin-bottom: 20px;
-      font-size: 13px;
-    }
-    .adblock-highlight-box strong {
-      color: #00f5a0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 4px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+      font-size: 12.5px;
     }
     .adblock-modal-btn {
       width: 100%;
-      height: 44px;
-      background: linear-gradient(135deg, #ff0844 0%, #b80710 100%);
+      height: 42px;
+      background: #ff0844;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       color: #fff;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 6px 20px rgba(255, 8, 68, 0.4);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: opacity 0.2s ease;
     }
-    .adblock-modal-btn:active {
-      transform: scale(0.97);
-    }
-
-    /* PWA Update Banner */
-    #updateNotificationBar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 99999;
-      background: linear-gradient(90deg, #ff0844 0%, #990024 100%);
-      color: #fff;
-      padding: 12px 18px;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 20px rgba(255, 8, 68, 0.4);
-      font-family: 'Outfit', sans-serif;
-      font-size: 13.5px;
-      font-weight: 600;
-      animation: slideDownUpdate 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    @keyframes slideDownUpdate {
-      from { transform: translateY(-100%); }
-      to { transform: translateY(0); }
-    }
-    #updateNotificationBar button {
-      background: #fff;
-      color: #000;
-      border: none;
-      font-weight: 800;
-      padding: 6px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      margin-left: 12px;
-      transition: transform 0.2s ease;
+    .adblock-modal-btn:hover {
+      opacity: 0.92;
     }
   </style>
 </head>
 <body class="theme-dark">
 
-  <!-- ========================================================================
-       ADVANCED QUANTUM SPLASH PRELOADER ON SITE OPENING
-       ======================================================================== -->
+  <!-- AESTHETIC SPLASH PRELOADER -->
   <div id="siteSplashPreloader" aria-hidden="false">
-    <div class="splash-kinetic-core">
-      <div class="splash-orb-ring"></div>
-      <div class="splash-orb-ring-inner"></div>
-      <div class="splash-logo-symbol">
-        <i class="fas fa-play"></i>
+    <div class="aesthetic-loader">
+      <div class="aesthetic-brand-title">Anime<span>Drift</span></div>
+      <div class="aesthetic-line-track">
+        <div class="aesthetic-line-fill"></div>
       </div>
-    </div>
-    <div class="splash-text-group">
-      <span class="splash-brand-title">ANIFLIX<small style="font-size: 11px; color:#ff0844; margin-left: 4px;">ULTRA</small></span>
-      <span class="splash-caption" id="splashSubStatus">Synchronizing Neural Streams...</span>
+      <span class="aesthetic-status-text">Loading catalog</span>
     </div>
   </div>
 
-  <!-- FLOATING NAVIGATION / MODE TRANSITION HUD LOADER -->
+  <!-- MODE TRANSITION HUD LOADER -->
   <div id="globalTransitionLoader" role="status" aria-live="polite">
     <div class="mini-spinner-quantum"></div>
-    <span id="globalTransitionText">Switching Stream Universe...</span>
+    <span id="globalTransitionText">Switching Category...</span>
   </div>
 
-  <!-- SMART OS-AWARE ADBLOCK RECOMMENDER MODAL (SHOWN ONCE PER DAY) -->
+  <!-- DEVICE-AWARE ADBLOCK ADVISORY MODAL -->
   <div class="adblock-modal-backdrop" id="adblockTipModal">
     <div class="adblock-modal-card">
       <div class="adblock-modal-header">
@@ -414,35 +268,24 @@
           <i class="fas fa-shield-halved"></i>
         </div>
         <div>
-          <h3>Enjoy 100% Ad-Free Streaming</h3>
-          <small style="color: #a3a3c2;">Clean & Pop-Up Free Experience</small>
+          <h3>Enjoy Clean Streaming</h3>
+          <small style="color: #8c8ca8;">Ad & Popup Free Experience</small>
         </div>
       </div>
       <p class="adblock-body-text" id="adblockMessageBody">
-        Third-party video servers often trigger intrusive popups. To stream smoothly without interruptions, follow this tip for your device:
+        Third-party streaming nodes may attempt to trigger external redirects. To prevent interruptions, use these settings:
       </p>
-      <div class="adblock-highlight-box" id="adblockRecommendationBox">
-        <!-- Injected dynamically based on user OS -->
-      </div>
+      <div class="adblock-highlight-box" id="adblockRecommendationBox"></div>
       <button class="adblock-modal-btn" type="button" onclick="closeAdblockTipModal()">
-        <span>Got It, Let's Stream</span> <i class="fas fa-arrow-right"></i>
+        <span>Continue to AnimeDrift</span> <i class="fas fa-arrow-right"></i>
       </button>
-    </div>
-  </div>
-
-  <!-- AUTO-UPDATE NOTIFICATION BANNER -->
-  <div id="updateNotificationBar" role="alert">
-    <span><i class="fas fa-sparkles" style="margin-right: 8px;"></i> A new version of AniFlix Ultra is available!</span>
-    <div>
-      <button onclick="window.location.reload(true)">Update Now</button>
-      <i class="fas fa-xmark" onclick="document.getElementById('updateNotificationBar').style.display='none'" style="margin-left: 12px; cursor: pointer;"></i>
     </div>
   </div>
 
   <!-- MULTIPLAYER VIRTUAL CURSOR LAYER -->
   <div id="p2pCursorLayer"></div>
 
-  <!-- DYNAMIC AMBIENT LIGHTING GLOW & OFFSCREEN CHROMA CANVAS -->
+  <!-- AMBIENT LIGHTING GLOW & OFSCREEN CHROMA CANVAS -->
   <div class="ambient-glow" id="ambientGlow"></div>
   <canvas id="chromaCanvas" width="32" height="32" style="display:none;" aria-hidden="true"></canvas>
 
@@ -455,10 +298,9 @@
     <span>Syncing offline playback progress...</span>
   </div>
 
-  <!-- CLEAN & SPACIOUS NAVIGATION HEADER -->
+  <!-- NAVIGATION HEADER -->
   <header class="header" id="mainHeader">
     <div class="header-left">
-      <!-- Menu Drawer Hamburger Toggle Button -->
       <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Open Navigation Menu" onclick="window.toggleMobileNav(true)">
         <i class="fas fa-bars-staggered"></i>
       </button>
@@ -467,8 +309,7 @@
         <div class="brand-icon-wrapper">
           <i class="fas fa-play"></i>
         </div>
-        <span class="brand-name" id="brandTitleText">ANIFLIX<small class="brand-badge">ULTRA</small></span>
-        <!-- Dynamic APP Installation Badge -->
+        <span class="brand-name" id="brandTitleText">ANIME<small class="brand-badge">DRIFT</small></span>
         <span class="pwa-badge" id="appStatusPill" style="display:none;"><i class="fas fa-bolt"></i> APP</span>
       </a>
 
@@ -476,7 +317,7 @@
       <nav class="nav-desktop">
         <ul class="nav-links">
           <li><a class="nav-link active" id="navHome" onclick="triggerNavWithLoader('Home', () => window.navigateGenre(null, 'Home'))"><i class="fas fa-house"></i> <span>Home</span></a></li>
-          <li><a class="nav-link" id="navHindi" onclick="triggerNavWithLoader('Hindi Dubbed', () => window.loadHindiDubbed())"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>
+          <li><a class="nav-link" id="navHindi" onclick="triggerNavWithLoader('Hindi Dubs', () => window.loadHindiDubbed())"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>
           <li><a class="nav-link" onclick="triggerNavWithLoader('Action', () => window.navigateGenre('Action', 'Action Blockbusters'))"><span>Action</span></a></li>
           <li><a class="nav-link" onclick="triggerNavWithLoader('Romance', () => window.navigateGenre('Romance', 'Romance & Drama'))"><span>Romance</span></a></li>
           <li><a class="nav-link" onclick="triggerNavWithLoader('Fantasy', () => window.navigateGenre('Fantasy', 'Isekai & Fantasy'))"><span>Fantasy</span></a></li>
@@ -484,14 +325,13 @@
       </nav>
     </div>
 
-    <!-- Header Controls: Streamlined Search, PWA Install, Netflix Mode & Watchlist -->
+    <!-- Header Controls -->
     <div class="header-right">
-      <!-- Desktop PWA Install App Action Button -->
-      <button class="icon-btn" id="headerInstallBtn" style="display:none;" title="Install AniFlix App on Device" aria-label="Install App" onclick="triggerPwaInstall()">
+      <button class="icon-btn" id="headerInstallBtn" style="display:none;" title="Install AnimeDrift App" aria-label="Install App" onclick="triggerPwaInstall()">
         <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
       </button>
 
-      <!-- Expandable Search Engine -->
+      <!-- Search Bar -->
       <div class="search-wrapper" id="searchWrapper">
         <i class="fas fa-search" onclick="window.toggleSearch()" aria-label="Search"></i>
         <input type="text" id="searchInput" class="search-input" placeholder="Search anime, movies, series..." autocomplete="off" />
@@ -499,8 +339,8 @@
       </div>
       <div class="search-dropdown" id="searchDropdown"></div>
 
-      <!-- Netflix Mode Toggle Button -->
-      <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch to Netflix / Live-Action Mode" aria-label="Netflix Mode" onclick="triggerNavWithLoader('Shifting Universes...', () => window.toggleNetflixMode())">
+      <!-- Mode Toggle Button -->
+      <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch Mode" aria-label="Toggle Catalog Universe" onclick="triggerNavWithLoader('Shifting Universe...', () => window.toggleNetflixMode())">
         <svg class="netflix-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5.398 0v24c1.173-.24 2.346-.51 3.518-.78V0H5.398z" fill="#E50914"/>
           <path d="M15.084 0v21.57c1.172-.27 2.345-.54 3.518-.78V0h-3.518z" fill="#E50914"/>
@@ -508,7 +348,7 @@
         </svg>
       </button>
 
-      <!-- Bookmark / Watchlist Header Button -->
+      <!-- Watchlist Button -->
       <button class="icon-btn" title="Open My Watchlist" aria-label="Watchlist" onclick="window.openWatchlistModal()">
         <i class="fas fa-bookmark"></i>
         <span class="header-badge-count" id="watchlistCount">0</span>
@@ -516,47 +356,41 @@
     </div>
   </header>
 
-  <!-- FLOATING FEATURE DOCK (QUICK ACTION HUD) -->
+  <!-- QUICK FEATURE HUD DOCK -->
   <aside class="floating-quick-dock" id="floatingQuickDock" aria-label="Quick Feature Tools">
-    <button class="dock-btn" id="pwaInstallBtn" style="display:none;" title="Install AniFlix Native App" aria-label="Install App" onclick="triggerPwaInstall()">
+    <button class="dock-btn" id="pwaInstallBtn" style="display:none;" title="Install AnimeDrift Native App" aria-label="Install App" onclick="triggerPwaInstall()">
       <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
-      <span class="dock-tooltip">Install App</span>
     </button>
     <button class="dock-btn" title="Reverse Anime Search by Screenshot" aria-label="Screenshot Frame Search" onclick="window.openTraceMoeModal()">
       <i class="fas fa-camera" style="color:var(--accent-cyan);"></i>
-      <span class="dock-tooltip">Scan Frame</span>
     </button>
-    <button class="dock-btn" title="P2P Synchronized Watch Party" aria-label="Watch Party" onclick="window.openWatchPartyModal()">
+    <button class="dock-btn" title="P2P Watch Party" aria-label="Watch Party" onclick="window.openWatchPartyModal()">
       <i class="fas fa-users-viewfinder" style="color:var(--accent-emerald);"></i>
-      <span class="dock-tooltip">Watch Party</span>
     </button>
     <button class="dock-btn" title="Weekly Simulcast Schedule" aria-label="Simulcast Schedule" onclick="window.openScheduleModal()">
       <i class="fas fa-calendar-days" style="color:var(--accent-gold);"></i>
-      <span class="dock-tooltip">Schedule</span>
     </button>
-    <button class="dock-btn" title="Roll a Random Anime / Live-Action Title" aria-label="Random Title Roll" onclick="triggerNavWithLoader('Rolling Random Title...', () => window.playRandomAnime())">
+    <button class="dock-btn" title="Roll a Random Anime" aria-label="Random Title" onclick="triggerNavWithLoader('Rolling Random...', () => window.playRandomAnime())">
       <i class="fas fa-shuffle" style="color:var(--accent-purple);"></i>
-      <span class="dock-tooltip">Random</span>
     </button>
   </aside>
 
   <!-- SIDE MENU DRAWER -->
   <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="window.toggleMobileNav(false)"></div>
-  <aside class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="Navigation & Tools Menu">
+  <aside class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="Navigation Menu">
     <div class="mobile-drawer-header">
       <div class="brand">
         <div class="brand-icon-wrapper">
           <i class="fas fa-play"></i>
         </div>
-        <span>ANIFLIX<small class="brand-badge">ULTRA</small></span>
+        <span>ANIME<small class="brand-badge">DRIFT</small></span>
       </div>
       <button class="drawer-close-btn" type="button" onclick="window.toggleMobileNav(false)" aria-label="Close Navigation">
         <i class="fas fa-xmark"></i>
       </button>
     </div>
     
-    <!-- PWA INSTALL & NOTIFICATIONS ROW INSIDE DRAWER -->
-    <div class="drawer-section-label">WEB APP & SYSTEM CONTROLS</div>
+    <div class="drawer-section-label">APPLICATION CONTROLS</div>
     <div class="drawer-tools-grid" style="margin-bottom:10px;">
       <button class="drawer-tool-btn" id="drawerInstallBtn" type="button" onclick="window.toggleMobileNav(false); triggerPwaInstall()">
         <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
@@ -564,12 +398,11 @@
       </button>
       <button class="drawer-tool-btn" id="drawerNotifyBtn" type="button" onclick="window.toggleMobileNav(false); requestNotificationPermission()">
         <i class="fas fa-bell" style="color:var(--accent-gold);"></i>
-        <span>Simulcast Alerts</span>
+        <span>Episode Alerts</span>
       </button>
     </div>
 
-    <!-- POWER-USER QUICK TOOLS SECTION INSIDE DRAWER -->
-    <div class="drawer-section-label">QUICK TOOLS & FEATURES</div>
+    <div class="drawer-section-label">DISCOVERY TOOLS</div>
     <div class="drawer-tools-grid">
       <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.openTraceMoeModal()">
         <i class="fas fa-camera" style="color:var(--accent-cyan);"></i>
@@ -583,25 +416,23 @@
         <i class="fas fa-calendar-days" style="color:var(--accent-gold);"></i>
         <span>Schedule</span>
       </button>
-      <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Rolling Random...', () => window.playRandomAnime())">
+      <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Rolling...', () => window.playRandomAnime())">
         <i class="fas fa-shuffle" style="color:var(--accent-purple);"></i>
         <span>Random Title</span>
       </button>
     </div>
 
-    <!-- MAIN NAVIGATION LINKS -->
-    <div class="drawer-section-label">CATEGORIES & NAV</div>
+    <div class="drawer-section-label">CATEGORIES</div>
     <ul class="mobile-nav-list">
       <li><a class="mobile-nav-link active" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Home', () => window.navigateGenre(null, 'Home'))"><i class="fas fa-house"></i> Home</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Hindi Dubs', () => window.loadHindiDubbed())"><i class="fas fa-language"></i> Hindi Dubbed</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Action', () => window.navigateGenre('Action', 'Action Blockbusters'))"><i class="fas fa-bolt"></i> Action</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Romance', () => window.navigateGenre('Romance', 'Romance & Drama'))"><i class="fas fa-heart"></i> Romance</a></li>
-      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Fantasy', () => window.navigateGenre('Fantasy', 'Isekai & Fantasy'))"><i class="fas fa-dungeon"></i> Fantasy & Isekai</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); triggerNavWithLoader('Fantasy', () => window.navigateGenre('Fantasy', 'Isekai & Fantasy'))"><i class="fas fa-dungeon"></i> Fantasy</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.openWatchlistModal()"><i class="fas fa-bookmark"></i> My Watchlist (<span id="mobileWatchlistCount">0</span>)</a></li>
-      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.toggleShortcutsModal(true)"><i class="fas fa-keyboard"></i> Keyboard Shortcuts</a></li>
+      <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.toggleShortcutsModal(true)"><i class="fas fa-keyboard"></i> Shortcuts</a></li>
     </ul>
 
-    <!-- FOOTER AUDIO PREFERENCE PILL -->
     <div class="mobile-drawer-footer">
       <div class="lang-selector-pill" onclick="if(typeof toggleDefaultDubLanguage === 'function') toggleDefaultDubLanguage()" style="width:100%; justify-content:center;">
         <i class="fas fa-globe"></i>
@@ -610,10 +441,10 @@
     </div>
   </aside>
 
-  <!-- HERO SPOTLIGHT BILLBOARD -->
+  <!-- HERO BILLBOARD -->
   <section class="hero" id="heroSection">
     <div class="hero-bg-wrapper">
-      <img id="heroBg" class="hero-bg" src="" alt="Featured Backdrop" />
+      <img id="heroBg" class="hero-bg" src="" alt="Featured Title" />
     </div>
     <div class="hero-overlay"></div>
     
@@ -622,7 +453,7 @@
         <i class="fas fa-play"></i> FEATURED SPOTLIGHT
       </div>
       
-      <h1 class="hero-title" id="heroTitle">Connecting to Network...</h1>
+      <h1 class="hero-title" id="heroTitle">Connecting to Stream...</h1>
       
       <div class="hero-tags">
         <span class="tag-match" id="heroScore"><i class="fas fa-star"></i> 99% Rating</span>
@@ -639,33 +470,24 @@
           <i class="fas fa-play"></i> Watch Now
         </button>
         <button class="btn btn-info" id="heroInfoBtn" type="button">
-          <i class="fas fa-circle-info"></i> Full Details
+          <i class="fas fa-circle-info"></i> Details
         </button>
-        <button class="btn btn-icon-round" id="heroBookmarkBtn" type="button" title="Bookmark" aria-label="Add to Watchlist">
+        <button class="btn btn-icon-round" id="heroBookmarkBtn" type="button" title="Bookmark" aria-label="Bookmark">
           <i class="fas fa-plus"></i>
         </button>
-        <button class="btn btn-icon-round" id="heroShareBtn" type="button" title="Share Deep Link" aria-label="Share Link" onclick="window.shareCurrentTitleLink()">
+        <button class="btn btn-icon-round" id="heroShareBtn" type="button" title="Share" aria-label="Share Link" onclick="window.shareCurrentTitleLink()">
           <i class="fas fa-share-nodes"></i>
         </button>
       </div>
     </div>
-
-    <!-- Right Side Rail Indicators -->
-    <div class="hero-side-rail" aria-hidden="true">
-      <span class="rail-indicator active"></span>
-      <span class="rail-indicator"></span>
-      <span class="rail-indicator"></span>
-      <span class="rail-indicator"></span>
-      <span class="rail-indicator"></span>
-    </div>
   </section>
 
-  <!-- QUICK CHIPS HORIZONTAL FILTER BAR -->
+  <!-- QUICK CATEGORY CHIPS RAIL -->
   <section class="quick-chips-rail" aria-label="Quick Category Filter">
     <div class="chips-container" id="filterChips">
-      <button class="chip active" type="button" onclick="triggerNavWithLoader('All Catalogs', () => window.applyQuickFilter('ALL', this))"><i class="fas fa-border-all"></i> All</button>
+      <button class="chip active" type="button" onclick="triggerNavWithLoader('All', () => window.applyQuickFilter('ALL', this))"><i class="fas fa-border-all"></i> All</button>
       <button class="chip" type="button" onclick="triggerNavWithLoader('Hindi Dubs', () => window.applyQuickFilter('HINDI', this))"><i class="fas fa-language"></i> Hindi Dubs</button>
-      <button class="chip" type="button" onclick="triggerNavWithLoader('Airing Now', () => window.applyQuickFilter('TOP_AIRING', this))"><i class="fas fa-tower-broadcast"></i> Airing</button>
+      <button class="chip" type="button" onclick="triggerNavWithLoader('Airing', () => window.applyQuickFilter('TOP_AIRING', this))"><i class="fas fa-tower-broadcast"></i> Airing</button>
       <button class="chip" type="button" onclick="triggerNavWithLoader('Movies', () => window.applyQuickFilter('MOVIES', this))"><i class="fas fa-film"></i> Movies</button>
       <button class="chip" id="chipCategory1" type="button" onclick="triggerNavWithLoader('Action', () => window.applyQuickFilter('ACTION', this))"><i class="fas fa-bolt"></i> Action</button>
       <button class="chip" id="chipCategory2" type="button" onclick="triggerNavWithLoader('Fantasy', () => window.applyQuickFilter('SECONDARY', this))"><i class="fas fa-dungeon"></i> Fantasy</button>
@@ -674,43 +496,28 @@
     </div>
   </section>
 
-  <!-- MAIN DYNAMIC CONTENT ROWS -->
+  <!-- CONTENT ROWS -->
   <main class="content-rows" id="contentRows"></main>
 
-  <!-- SUPER ADVANCED CINEMATIC MODAL & STREAMING SUITE -->
+  <!-- STREAMING MODAL -->
   <div class="modal-overlay" id="modalOverlay" onclick="window.closeModal()"></div>
   <div class="modal-container" id="modalContainer" role="dialog" aria-modal="true" aria-labelledby="modalNowPlayingTitle">
     <div class="modal-dialog" id="modalDialog">
       
-      <!-- Modal Top Navigation Strip -->
       <div class="modal-nav-strip">
         <div class="modal-nav-left">
           <span class="modal-brand-tag"><i class="fas fa-circle-play"></i> STREAM MASTER</span>
           <span class="modal-now-playing-text" id="modalNowPlayingTitle">Overview</span>
         </div>
-        <button class="btn-close-modal" type="button" onclick="window.closeModal()" title="Close Player (Esc)" aria-label="Close Dialog">
+        <button class="btn-close-modal" type="button" onclick="window.closeModal()" title="Close (Esc)" aria-label="Close">
           <i class="fas fa-xmark"></i>
         </button>
       </div>
       
-      <!-- Video Frame Viewport with AniSkip & P2P Realtime HUD Elements -->
       <div class="modal-player-wrap" id="modalPlayerWrap">
-        <!-- PLAYER LOADING ANIMATION OVERLAY -->
-        <div id="playerLoadingOverlay" class="player-loader-overlay" style="display:none;">
-          <i class="fas fa-play player-logo-pulsar"></i>
-          <div class="player-spinner"></div>
-          <div class="player-loading-text">Loading Stream</div>
-        </div>
-
-        <!-- Screen Wake Lock Active HUD Indicator -->
-        <div class="wake-lock-indicator" id="pwaWakeLockIndicator">
-          <span>AWAKE</span>
-        </div>
-
-        <!-- P2P Realtime Emote Particle Physics Canvas -->
+        <div class="wake-lock-indicator" id="pwaWakeLockIndicator"><span>AWAKE</span></div>
         <canvas id="p2pCanvasOverlay"></canvas>
 
-        <!-- P2P Emote Reaction Bar -->
         <div class="p2p-reaction-bar" id="p2pReactionBar">
           <button class="p2p-emote-btn" type="button" onclick="window.p2pParty?.sendEmote('🔥')">🔥</button>
           <button class="p2p-emote-btn" type="button" onclick="window.p2pParty?.sendEmote('😂')">😂</button>
@@ -719,15 +526,12 @@
           <button class="p2p-emote-btn" type="button" onclick="window.p2pParty?.sendEmote('👏')">👏</button>
         </div>
 
-        <!-- P2P Buffering Notification Bar -->
         <div class="p2p-buffer-notice" id="p2pBufferNotice">
           <span>Waiting for <b id="p2pBufferPeerName">Peer</b> to buffer...</span>
         </div>
 
-        <!-- P2P AFK Catch-Up Speed Notification Pill -->
         <div class="p2p-catchup-pill" id="p2pCatchUpPill"></div>
 
-        <!-- P2P Synced Audio Booster Prompt Card -->
         <div class="p2p-prompt-card" id="p2pPromptCard">
           <span id="p2pPromptDesc">The party host applied an audio boost. Match setting?</span>
           <div class="p2p-prompt-actions">
@@ -736,67 +540,59 @@
           </div>
         </div>
 
-        <!-- AniSkip HUD Trigger Overlay -->
         <button id="aniSkipIntroBtn" class="aniskip-pill-btn" style="display:none;" onclick="triggerAniSkipJump()">
           <i class="fas fa-forward"></i> <span id="aniSkipLabel">Skip Opening (OP)</span>
         </button>
       </div>
 
-      <!-- Dedicated Controls Action Strip Below Video Frame -->
       <div class="player-action-strip">
         <div class="player-action-left">
           <span class="player-current-ep-title" id="playerStreamTitle"></span>
         </div>
         <div class="player-action-right">
-          <button class="modal-pill-btn pip-trigger-btn" type="button" onclick="window.webApp?.togglePictureInPicture(document.getElementById('nativeStreamVideo') || document.getElementById('streamFrame'))" title="Detach into Floating Mini-Player">
+          <button class="modal-pill-btn pip-trigger-btn" type="button" onclick="window.webApp?.togglePictureInPicture(document.getElementById('nativeStreamVideo') || document.getElementById('streamFrame'))">
             <i class="fas fa-arrow-up-right-from-square"></i> <span>Mini Player</span>
           </button>
-          <button class="modal-pill-btn" type="button" onclick="document.getElementById('p2pChatSidebar').classList.toggle('open')" id="p2pChatToggleBtn" title="Toggle Watch Party Live Chat">
+          <button class="modal-pill-btn" type="button" onclick="document.getElementById('p2pChatSidebar').classList.toggle('open')" id="p2pChatToggleBtn">
             <i class="fas fa-comments" style="color:var(--accent-emerald);"></i> <span>Party Chat</span>
           </button>
-          <button class="modal-pill-btn booster-btn" type="button" onclick="toggleAudioVolumeBooster()" id="audioBoosterBtn" title="Boost Audio Output up to 250%">
+          <button class="modal-pill-btn booster-btn" type="button" onclick="toggleAudioVolumeBooster()" id="audioBoosterBtn">
             <i class="fas fa-volume-high"></i> <span id="audioBoosterLabel">100% Volume</span>
           </button>
-          <button class="modal-pill-btn theater-btn" type="button" onclick="window.toggleTheaterMode()" id="theaterToggleBtn" title="Toggle Theater View">
+          <button class="modal-pill-btn theater-btn" type="button" onclick="window.toggleTheaterMode()" id="theaterToggleBtn">
             <i class="fas fa-up-right-and-down-left-from-center"></i> <span>Theater</span>
           </button>
-          <button class="modal-pill-btn cinema-btn" type="button" onclick="if(typeof toggleCinemaLights === 'function') toggleCinemaLights()" id="cinemaLightsBtn" title="Dim Background Lights">
+          <button class="modal-pill-btn cinema-btn" type="button" onclick="if(typeof toggleCinemaLights === 'function') toggleCinemaLights()" id="cinemaLightsBtn">
             <i class="fas fa-lightbulb"></i> <span>Dim</span>
           </button>
-          <button class="modal-pill-btn" type="button" onclick="shareDeepLinkEpisode()" id="modalShareBtn" title="Copy Episode Deep-Link">
+          <button class="modal-pill-btn" type="button" onclick="shareDeepLinkEpisode()" id="modalShareBtn">
             <i class="fas fa-link"></i> <span>Share</span>
           </button>
-          <button class="modal-pill-btn" type="button" onclick="window.toggleModalWatchlist()" id="modalWatchlistBtn" title="Add or Remove from List">
+          <button class="modal-pill-btn" type="button" onclick="window.toggleModalWatchlist()" id="modalWatchlistBtn">
             <i class="fas fa-plus"></i> <span>My List</span>
           </button>
-          <button class="modal-pill-btn next-ep-btn" type="button" onclick="nextEpisode()" id="modalNextEpBtn" title="Next Episode">
+          <button class="modal-pill-btn next-ep-btn" type="button" onclick="nextEpisode()" id="modalNextEpBtn">
             <i class="fas fa-forward-step"></i> <span id="nextEpBtnText">Next Ep</span>
           </button>
         </div>
       </div>
 
-      <!-- Multi-Server Selector Matrix -->
       <div class="server-controls">
         <div class="server-info-col">
-          <div class="server-label">
-            <i class="fas fa-server"></i> Active Stream Server:
-          </div>
+          <div class="server-label"><i class="fas fa-server"></i> Active Stream Server:</div>
           <span class="server-status-caption" id="activeServerCaption">Server 1 (Native Direct Stream)</span>
         </div>
-
         <div class="server-pills-scroll" id="serverButtonsContainer"></div>
       </div>
 
-      <!-- Modal Body & Responsive Tab Navigation -->
       <div class="modal-body">
         <div class="modal-tabs" role="tablist">
           <button class="tab-btn active" type="button" role="tab" aria-selected="true" onclick="switchTab('tab-overview', this)"><i class="fas fa-play-circle"></i> <span id="tabEpisodesLabel">Episodes & Info</span></button>
-          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-cast', this)"><i class="fas fa-users"></i> <span>Cast & Crew</span></button>
-          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-more', this)"><i class="fas fa-layer-group"></i> <span>More Like This</span></button>
-          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-trailers', this)"><i class="fas fa-film"></i> <span>Official Trailers</span></button>
+          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-cast', this)"><i class="fas fa-users"></i> <span>Cast</span></button>
+          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-more', this)"><i class="fas fa-layer-group"></i> <span>Recommendations</span></button>
+          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-trailers', this)"><i class="fas fa-film"></i> <span>Trailers</span></button>
         </div>
 
-        <!-- TAB 1: OVERVIEW & EPISODES -->
         <div id="tab-overview" class="tab-content active" role="tabpanel">
           <div class="overview-grid">
             <div class="overview-main-col">
@@ -814,23 +610,21 @@
               <div class="side-info-card">
                 <div class="side-info-row"><span>Original Title:</span> <span id="modalNative"></span></div>
                 <div class="side-info-row"><span>Status:</span> <span id="modalStatus"></span></div>
-                <div class="side-info-row"><span>Network/Studio:</span> <span id="modalStudio">Production</span></div>
+                <div class="side-info-row"><span>Studio:</span> <span id="modalStudio">Production</span></div>
                 <div class="side-info-row"><span>Genres:</span> <span id="modalGenres"></span></div>
                 <div class="side-info-row"><span>Duration:</span> <span id="modalDuration">24 mins</span></div>
               </div>
             </div>
           </div>
 
-          <!-- EPISODES DRAWER & BATCH CONTROLLER -->
           <div class="episodes-master-section" id="episodesMasterSection">
             <div class="ep-header">
               <div class="ep-header-left">
                 <h3 id="episodesHeadingTitle">Episodes</h3>
                 <span class="episodes-total-pill" id="episodesTotalPill">Total 24</span>
               </div>
-
               <div class="ep-header-controls" id="epHeaderControls">
-                <select class="ep-select" id="episodeRangeSelect" aria-label="Select Episode Batch Range" onchange="changeEpisodeRange(this.value)">
+                <select class="ep-select" id="episodeRangeSelect" aria-label="Select Range" onchange="changeEpisodeRange(this.value)">
                   <option value="0">Episodes 1 - 50</option>
                 </select>
                 <select class="ep-select" id="seasonSelect" aria-label="Select Season" onchange="changeSeason(this.value)">
@@ -838,41 +632,27 @@
                 </select>
               </div>
             </div>
-
             <div class="ep-grid" id="epList"></div>
           </div>
         </div>
 
-        <!-- TAB 2: CAST -->
-        <div id="tab-cast" class="tab-content" role="tabpanel">
-          <div class="cast-grid" id="castGrid"></div>
-        </div>
-
-        <!-- TAB 3: RECOMMENDATIONS -->
-        <div id="tab-more" class="tab-content" role="tabpanel">
-          <div class="recommendations-grid" id="moreGrid"></div>
-        </div>
-
-        <!-- TAB 4: OFFICIAL TRAILERS -->
-        <div id="tab-trailers" class="tab-content" role="tabpanel">
-          <div class="trailers-grid" id="trailersGrid"></div>
-        </div>
+        <div id="tab-cast" class="tab-content" role="tabpanel"><div class="cast-grid" id="castGrid"></div></div>
+        <div id="tab-more" class="tab-content" role="tabpanel"><div class="recommendations-grid" id="moreGrid"></div></div>
+        <div id="tab-trailers" class="tab-content" role="tabpanel"><div class="trailers-grid" id="trailersGrid"></div></div>
       </div>
     </div>
   </div>
 
-  <!-- JIKAN CALENDAR MODAL -->
+  <!-- SIMULCAST CALENDAR MODAL -->
   <div class="drawer-overlay" id="scheduleModalOverlay" onclick="closeScheduleModal()"></div>
   <div class="shortcuts-modal" id="scheduleModal" role="dialog" aria-modal="true" aria-labelledby="scheduleTitle">
     <div class="shortcuts-card schedule-card" style="max-width: 820px; width: 95%;">
       <div class="shortcuts-header">
-        <h4 id="scheduleTitle"><i class="fas fa-calendar-days" style="color:var(--accent-red);"></i> Weekly Simulcast Airing Schedule</h4>
-        <i class="fas fa-xmark" style="cursor:pointer;" onclick="closeScheduleModal()" aria-label="Close Schedule"></i>
+        <h4 id="scheduleTitle"><i class="fas fa-calendar-days" style="color:var(--accent-red);"></i> Airing Schedule</h4>
+        <i class="fas fa-xmark" style="cursor:pointer;" onclick="closeScheduleModal()" aria-label="Close"></i>
       </div>
       <div class="schedule-day-tabs" id="scheduleDayTabs" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:14px;"></div>
-      <div class="schedule-items-grid" id="scheduleItemsContainer" style="max-height:480px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
-        <div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Fetching live broadcast feeds...</div>
-      </div>
+      <div class="schedule-items-grid" id="scheduleItemsContainer" style="max-height:480px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;"></div>
     </div>
   </div>
 
@@ -882,25 +662,25 @@
     <div class="shortcuts-card" style="max-width: 580px;">
       <div class="shortcuts-header">
         <h4 id="traceMoeTitle"><i class="fas fa-camera" style="color:var(--accent-cyan);"></i> Reverse Anime Search by Frame</h4>
-        <i class="fas fa-xmark" style="cursor:pointer;" onclick="closeTraceMoeModal()" aria-label="Close Trace.moe Modal"></i>
+        <i class="fas fa-xmark" style="cursor:pointer;" onclick="closeTraceMoeModal()" aria-label="Close"></i>
       </div>
-      <div class="trace-dropzone" id="traceDropzone" style="border:2px dashed rgba(255,255,255,0.2); border-radius:14px; padding:28px 16px; text-align:center; cursor:pointer;" onclick="document.getElementById('traceFileInput').click()">
+      <div class="trace-dropzone" id="traceDropzone" onclick="document.getElementById('traceFileInput').click()">
         <i class="fas fa-cloud-arrow-up" style="font-size:32px; color:var(--accent-cyan); margin-bottom:8px;"></i>
-        <p style="font-size:14px; font-weight:600;">Paste image (Ctrl+V), drag file here, or click to upload</p>
-        <small style="color:var(--text-muted);">Matches exact anime, season, episode, and timestamp</small>
+        <p style="font-size:14px; font-weight:600;">Paste image (Ctrl+V) or click to upload</p>
+        <small style="color:var(--text-muted);">Finds title, episode, and timestamp</small>
         <input type="file" id="traceFileInput" accept="image/*" style="display:none;" onchange="handleTraceFileUpload(event)" />
       </div>
       <div id="traceResultsArea" style="margin-top:16px;"></div>
     </div>
   </div>
 
-  <!-- P2P WATCH PARTY MODAL -->
+  <!-- WATCH PARTY MODAL -->
   <div class="drawer-overlay" id="watchPartyOverlay" onclick="closeWatchPartyModal()"></div>
   <div class="shortcuts-modal" id="watchPartyModal" role="dialog" aria-modal="true" aria-labelledby="partyTitle">
     <div class="shortcuts-card" style="max-width: 480px;">
       <div class="shortcuts-header">
-        <h4 id="partyTitle"><i class="fas fa-users-viewfinder" style="color:var(--accent-emerald);"></i> P2P Synced Watch Party</h4>
-        <i class="fas fa-xmark" style="cursor:pointer;" onclick="closeWatchPartyModal()" aria-label="Close Watch Party"></i>
+        <h4 id="partyTitle"><i class="fas fa-users-viewfinder" style="color:var(--accent-emerald);"></i> P2P Watch Party</h4>
+        <i class="fas fa-xmark" style="cursor:pointer;" onclick="closeWatchPartyModal()" aria-label="Close"></i>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px;">
         <div>
@@ -912,9 +692,9 @@
           </div>
         </div>
         <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
-          <label style="font-size:12px; color:var(--text-muted); font-weight:700;">JOIN A FRIEND'S ROOM</label>
+          <label style="font-size:12px; color:var(--text-muted); font-weight:700;">JOIN A ROOM</label>
           <div style="display:flex; gap:8px; margin-top:6px;">
-            <input type="text" id="partyJoinInput" placeholder="Paste host room code..." class="search-input" style="opacity:1; background:rgba(255,255,255,0.06); border-radius:8px; padding:8px 12px; border:1px solid rgba(255,255,255,0.15);" />
+            <input type="text" id="partyJoinInput" placeholder="Paste room link or code..." class="search-input" style="opacity:1; background:rgba(255,255,255,0.06); border-radius:8px; padding:8px 12px; border:1px solid rgba(255,255,255,0.15);" />
             <button class="btn btn-play" onclick="if(typeof joinWatchPartyRoom === 'function') joinWatchPartyRoom()" style="padding:8px 16px; font-size:12px;">Join</button>
           </div>
         </div>
@@ -922,7 +702,7 @@
     </div>
   </div>
 
-  <!-- P2P LIVE SYNCED CHAT DRAWER -->
+  <!-- P2P CHAT DRAWER -->
   <aside class="p2p-chat-sidebar" id="p2pChatSidebar">
     <div class="p2p-chat-header">
       <h3>Watch Party Live</h3>
@@ -931,7 +711,7 @@
 
     <div class="p2p-roster-box">
       <div class="p2p-roster-label">
-        <span>ROOM MEMBERS</span>
+        <span>MEMBERS</span>
         <span id="p2pMemberCount">1</span>
       </div>
       <div class="p2p-members-list" id="p2pMembersList"></div>
@@ -947,9 +727,7 @@
     </div>
 
     <div class="p2p-roster-box" style="border-bottom: 1px solid var(--p2p-border-glass);">
-      <div class="p2p-roster-label">
-        <span>SHARED "UP NEXT" QUEUE</span>
-      </div>
+      <div class="p2p-roster-label"><span>UP NEXT</span></div>
       <div id="p2pQueueList" style="max-height: 90px; overflow-y: auto;"></div>
     </div>
 
@@ -957,16 +735,16 @@
 
     <form class="p2p-chat-form" onsubmit="event.preventDefault(); const i = document.getElementById('p2pChatInput'); window.p2pParty?.sendChatMessage(i.value); i.value='';">
       <input type="text" id="p2pChatInput" class="p2p-chat-input" placeholder="Send a message..." autocomplete="off" />
-      <button class="p2p-chat-send" type="submit" aria-label="Send Message"><i class="fas fa-paper-plane"></i></button>
+      <button class="p2p-chat-send" type="submit" aria-label="Send"><i class="fas fa-paper-plane"></i></button>
     </form>
   </aside>
 
-  <!-- WATCHLIST SIDEBAR DRAWER -->
+  <!-- WATCHLIST DRAWER -->
   <div class="drawer-overlay" id="drawerOverlay" onclick="window.closeWatchlistModal()"></div>
-  <aside class="watchlist-drawer" id="watchlistDrawer" aria-label="User Watchlist Drawer">
+  <aside class="watchlist-drawer" id="watchlistDrawer" aria-label="User Watchlist">
     <div class="drawer-header">
       <h3><i class="fas fa-bookmark" style="color:var(--accent-red);"></i> My Watchlist</h3>
-      <button class="drawer-close-btn" type="button" onclick="window.closeWatchlistModal()" aria-label="Close Watchlist">
+      <button class="drawer-close-btn" type="button" onclick="window.closeWatchlistModal()" aria-label="Close">
         <i class="fas fa-xmark"></i>
       </button>
     </div>
@@ -978,38 +756,35 @@
     <div class="shortcuts-card">
       <div class="shortcuts-header">
         <h4 id="shortcutsTitle"><i class="fas fa-keyboard" style="color:var(--accent-red);"></i> Keyboard Shortcuts</h4>
-        <i class="fas fa-xmark" style="cursor:pointer;" onclick="window.toggleShortcutsModal()" aria-label="Close Shortcuts"></i>
+        <i class="fas fa-xmark" style="cursor:pointer;" onclick="window.toggleShortcutsModal()" aria-label="Close"></i>
       </div>
       <div class="shortcuts-list">
-        <div class="shortcut-row"><span>Toggle Search Engine</span><kbd>/</kbd> or <kbd>S</kbd></div>
-        <div class="shortcut-row"><span>Play / Pause Stream</span><kbd>Space</kbd> or <kbd>K</kbd></div>
-        <div class="shortcut-row"><span>Seek Backward / Forward 10s</span><kbd>J</kbd> / <kbd>L</kbd></div>
-        <div class="shortcut-row"><span>Toggle Fullscreen Player</span><kbd>F</kbd></div>
-        <div class="shortcut-row"><span>Toggle Audio Mute</span><kbd>M</kbd></div>
-        <div class="shortcut-row"><span>Toggle Theater View</span><kbd>T</kbd></div>
-        <div class="shortcut-row"><span>Jump to Next Episode / Skip</span><kbd>N</kbd></div>
-        <div class="shortcut-row"><span>Close Active Modal / Drawer</span><kbd>Esc</kbd></div>
+        <div class="shortcut-row"><span>Search</span><kbd>/</kbd> or <kbd>S</kbd></div>
+        <div class="shortcut-row"><span>Play / Pause</span><kbd>Space</kbd> or <kbd>K</kbd></div>
+        <div class="shortcut-row"><span>Seek -10s / +10s</span><kbd>J</kbd> / <kbd>L</kbd></div>
+        <div class="shortcut-row"><span>Fullscreen</span><kbd>F</kbd></div>
+        <div class="shortcut-row"><span>Mute</span><kbd>M</kbd></div>
+        <div class="shortcut-row"><span>Close Modal</span><kbd>Esc</kbd></div>
       </div>
     </div>
   </div>
 
-  <!-- 3. CACHE-BUSTED MODULAR SCRIPT ENGINES (Updated to v32.0.0)[cite: 1] -->
-  <script src="core-engine.js?v=32.0.0"></script>
-  <script src="dash-player.js?v=32.0.0"></script>
-  <script src="streaming-ui.js?v=32.0.0"></script>
-  <script src="p2p.js?v=32.0.0"></script>
-  <script src="webapp.js?v=32.0.0"></script>
-  <script src="adblock-engine.js?v=33.0.0"></script>
+  <!-- CORE SCRIPTS[cite: 1] -->
+  <script src="core-engine.js?v=40.0.0"></script>
+  <script src="dash-player.js?v=40.0.0"></script>
+  <script src="streaming-ui.js?v=40.0.0"></script>
+  <script src="p2p.js?v=40.0.0"></script>
+  <script src="webapp.js?v=40.0.0"></script>
+  <script src="adblock-engine.js?v=40.0.0"></script>
 
-
-  <!-- 4. INTELLIGENT TRANSITION & ONCE-PER-DAY ADBLOCK LOGIC -->
+  <!-- APP LIFECYCLE & CRITICAL EVENT LOGIC -->
   <script>
-    // Smooth Transition Loader Trigger
+    // Smooth Category Transition Loader
     window.triggerNavWithLoader = function(label, callback) {
       const loader = document.getElementById('globalTransitionLoader');
       const text = document.getElementById('globalTransitionText');
       if (loader && text) {
-        text.innerText = label ? `Loading ${label}...` : 'Loading Catalog...';
+        text.innerText = label ? `Loading ${label}...` : 'Loading...';
         loader.classList.add('active');
       }
       try {
@@ -1017,55 +792,53 @@
       } finally {
         setTimeout(() => {
           if (loader) loader.classList.remove('active');
-        }, 650);
+        }, 500);
       }
     };
 
-    // Auto-Dismiss Preloader Once Dynamic Elements Hydrate
+    // Preloader Dismissal
     window.addEventListener('load', () => {
       setTimeout(() => {
         const preloader = document.getElementById('siteSplashPreloader');
         if (preloader) {
           preloader.classList.add('preloader-hidden');
-          setTimeout(() => preloader.remove(), 600);
+          setTimeout(() => preloader.remove(), 800);
         }
         checkAndShowAdblockNotice();
-      }, 700);
+      }, 400);
     });
 
-    // Device-Aware Adblock Recommender (Daily Rate Limit)
+    // Device-Aware Adblock Recommender (Runs Once Daily Without Reload Loops)
     function checkAndShowAdblockNotice() {
-      const STORAGE_KEY = 'aniflix_adblock_notice_date';
-      const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const STORAGE_KEY = 'animedrift_adblock_notice_date';
+      const todayStr = new Date().toISOString().slice(0, 10);
       const lastShownDate = localStorage.getItem(STORAGE_KEY);
 
-      // Only display once per calendar day
       if (lastShownDate === todayStr) {
         return;
       }
 
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
       const isMobile = /android|iphone|ipad|ipod/i.test(userAgent);
-      const isApple = /macintosh|mac os x|iphone|ipad|ipod/i.test(userAgent);
-
       const box = document.getElementById('adblockRecommendationBox');
       const modal = document.getElementById('adblockTipModal');
 
-      if (isMobile) {
-        box.innerHTML = `
-          <strong><i class="fas fa-mobile-screen"></i> Mobile (Android / iOS) Recommendation:</strong>
-          <p style="margin: 4px 0 0 0; color: #a3a3c2;">
-            1. Open AniFlix in <b>Brave Browser</b> (built-in pop-up shield).<br>
-            2. Or set your phone's Private DNS to: <code style="color:#00f2fe; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px;">dns.adguard-dns.com</code>
-          </p>
-        `;
-      } else {
-        box.innerHTML = `
-          <strong><i class="fas fa-desktop"></i> Desktop (${isApple ? 'macOS' : 'Windows / PC'}) Recommendation:</strong>
-          <p style="margin: 4px 0 0 0; color: #a3a3c2;">
-            Install the <b>uBlock Origin</b> browser extension or use <b>Brave Browser</b> to permanently neutralize server popups.
-          </p>
-        `;
+      if (box) {
+        if (isMobile) {
+          box.innerHTML = `
+            <strong><i class="fas fa-mobile-screen"></i> Mobile Tip:</strong>
+            <p style="margin: 4px 0 0 0; color: #a3a3c2;">
+              Use <b>Brave Browser</b> or configure Private DNS to <code style="color:#00f2fe; background:rgba(255,255,255,0.05); padding:2px 5px; border-radius:4px;">dns.adguard-dns.com</code> to neutralize redirects.
+            </p>
+          `;
+        } else {
+          box.innerHTML = `
+            <strong><i class="fas fa-desktop"></i> Desktop Tip:</strong>
+            <p style="margin: 4px 0 0 0; color: #a3a3c2;">
+              Install <b>uBlock Origin</b> or use <b>Brave Browser</b> for popup-free playback.
+            </p>
+          `;
+        }
       }
 
       if (modal) modal.style.display = 'flex';
@@ -1077,44 +850,11 @@
       if (modal) modal.style.display = 'none';
     }
 
-    // Intercept Card Click to trigger loader
-    document.addEventListener('click', (e) => {
-      const card = e.target.closest('.anime-card');
-      if (card) {
-        const loader = document.getElementById('globalTransitionLoader');
-        const text = document.getElementById('globalTransitionText');
-        if (loader && text) {
-          text.innerText = 'Initializing HD Stream...';
-          loader.classList.add('active');
-          setTimeout(() => loader.classList.remove('active'), 1200);
-        }
-      }
-    });
-
-    // PWA Service Worker Registration with Immediate Update Trigger
+    // Service Worker Registration: Self-Contained without Disruptive Automatic Reloads
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=32.0.0').then(reg => {
-          reg.update();
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                const banner = document.getElementById('updateNotificationBar');
-                if (banner) banner.style.display = 'flex';
-              }
-            });
-          });
-        }).catch(err => {
-          console.warn('[PWA] Service Worker registration failed:', err);
-        });
-
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload(true);
-          }
+        navigator.serviceWorker.register('sw.js?v=40.0.0').catch(err => {
+          console.warn('[PWA] Service Worker registration skipped:', err);
         });
       });
     }
