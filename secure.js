@@ -1,12 +1,23 @@
 /**
- * AnimeDrift - Precision Anti-DevTools Guard
+ * AnimeDrift - Precision Anti-DevTools Guard & SEO/Crawler Neutralizer
  * File: secure.js
- * Version: 10.0.0 High-Precision Detection Engine
+ * Version: 11.0.0 Search Engine Safe Edition
  * Host: https://animedrift.vercel.app
  */
 
 (function () {
   'use strict';
+
+  // ===============================================================
+  // 0. SEARCH ENGINE & HEADLESS CRAWLER BYPASS (CRITICAL FOR SEO)
+  // ===============================================================
+  // Search bots, site previewers, and headless indexers must completely
+  // bypass anti-inspection to prevent cloaking penalties and indexing drops.
+  const botPattern = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|facebot|facebookexternalhit|twitterbot|linkedinbot|applebot|chrome-lighthouse/i;
+  
+  if (botPattern.test(navigator.userAgent || '')) {
+    return;
+  }
 
   const TARGET_TG_URL = 'https://t.me/New_Hindi_Dub_Anime_Crunchyroll';
   let isRedirecting = false;
@@ -102,11 +113,7 @@
   // ===============================================================
   // 3. TARGETED CONSOLE FORMATTER DETECTION (UNDOCKED / DETACHED)
   // ===============================================================
-  // Chromium triggers the toString/getter property when an object is printed to an OPEN console
   let consoleViolations = 0;
-  const detector = {
-    isOpen: false
-  };
 
   const devtoolsElement = new Image();
   Object.defineProperty(devtoolsElement, 'id', {
