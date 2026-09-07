@@ -3,19 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <title>AnimeDrift - Stream Anime & Live-Action Across All Devices</title>
   
+  <!-- Comprehensive Search Engine SEO & Discoverability Suite -->
+  <title>AnimeDrift - Stream HD Anime & Simulcast Series Online</title>
+  <meta name="description" content="Stream popular subbed and Hindi-dubbed anime series, movies, and simulcasts with real-time P2P sync and zero popups across all devices." />
+  <meta name="keywords" content="AnimeDrift, stream anime, watch anime online, hindi dub anime, anime simulcasts, free anime streaming, watch party p2p" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href="https://animedrift.vercel.app/" />
+
+  <!-- Open Graph & Social Graph Protocols -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="AnimeDrift" />
+  <meta property="og:title" content="AnimeDrift - Stream HD Anime & Simulcast Series Online" />
+  <meta property="og:description" content="Watch high-definition subbed and Hindi-dubbed anime series, movies, and simulcasts with P2P multiplayer sync." />
+  <meta property="og:url" content="https://animedrift.vercel.app/" />
+  <meta property="og:image" content="https://animedrift.vercel.app/android-chrome-512x512.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:alt" content="AnimeDrift Streaming Portal" />
+
+  <!-- Twitter Card Protocols -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AnimeDrift - Stream HD Anime & Simulcast Series Online" />
+  <meta name="twitter:description" content="Stream high-definition subbed and Hindi-dubbed anime series, movies, and simulcasts with zero popups." />
+  <meta name="twitter:image" content="https://animedrift.vercel.app/android-chrome-512x512.png" />
+
+  <!-- Structured Data: WebSite & SearchAction Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AnimeDrift",
+    "url": "https://animedrift.vercel.app/",
+    "description": "Watch popular subbed and Hindi-dubbed anime series, movies, and simulcasts with real-time P2P sync.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://animedrift.vercel.app/?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
   <!-- Zero-Cache Control Headers -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
   <!-- Favicon Suite & Multi-Platform PWA Branding[cite: 1] -->
-  <link rel="shortcut icon" href="favicon.ico?v=42.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=42.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=42.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=42.0.0" />
-  <link rel="manifest" href="manifest.json?v=42.0.0" />
+  <link rel="shortcut icon" href="favicon.ico?v=44.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=44.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=44.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=44.0.0" />
+  <link rel="manifest" href="manifest.json?v=44.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -41,12 +82,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Version Controlled to v42.0.0) -->
-  <link rel="stylesheet" href="theme-base.css?v=42.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=42.0.0">
-  <link rel="stylesheet" href="p2p.css?v=42.0.0">
-  <link rel="stylesheet" href="webapp.css?v=42.0.0">
-  <link rel="stylesheet" href="mobile.css?v=42.0.0">
+  <!-- Modular Stylesheets (Version Synchronized to v44.0.0) -->
+  <link rel="stylesheet" href="theme-base.css?v=44.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=44.0.0">
+  <link rel="stylesheet" href="p2p.css?v=44.0.0">
+  <link rel="stylesheet" href="webapp.css?v=44.0.0">
+  <link rel="stylesheet" href="mobile.css?v=44.0.0">
 
   <style>
     /* ==========================================================================
@@ -304,7 +345,7 @@
 </head>
 <body class="theme-dark">
 
-  <!-- AESTHETIC SPLASH PRELOADER (4-SECOND TIMED SEQUENCE) -->
+  <!-- AESTHETIC SPLASH PRELOADER (CRAWLER-EXEMPTED) -->
   <div id="siteSplashPreloader" aria-hidden="false">
     <div class="aesthetic-loader">
       <div class="aesthetic-brand-title">Anime<span>Drift</span></div>
@@ -512,7 +553,7 @@
   <!-- HERO BILLBOARD -->
   <section class="hero" id="heroSection">
     <div class="hero-bg-wrapper">
-      <img id="heroBg" class="hero-bg" src="" alt="Featured Title" />
+      <img id="heroBg" class="hero-bg" src="" alt="Featured Anime Series Spotlight" />
     </div>
     <div class="hero-overlay"></div>
     
@@ -531,7 +572,7 @@
         <span class="tag-hindi"><i class="fas fa-microphone"></i> HINDI / SUB / DUB</span>
       </div>
       
-      <p class="hero-desc" id="heroDesc"></p>
+      <p class="hero-desc" id="heroDesc">Stream trending anime series and simulcasts with real-time multiplayer party synchronization.</p>
       
       <div class="hero-btns">
         <button class="btn btn-play" id="heroPlayBtn" type="button">
@@ -564,8 +605,23 @@
     </div>
   </section>
 
-  <!-- CONTENT ROWS -->
-  <main class="content-rows" id="contentRows"></main>
+  <!-- CONTENT ROWS (WITH SEARCH ENGINE FALLBACK CORPUS) -->
+  <main class="content-rows" id="contentRows">
+    <noscript>
+      <section style="padding: 24px 16px; color: #fff; max-width: 900px; margin: 0 auto;">
+        <h2>Watch HD Anime & Simulcast Series Online - AnimeDrift</h2>
+        <p>AnimeDrift offers high-definition streaming for the latest anime series, movies, and simulcasts in subbed, English dubbed, and Hindi dubbed formats.</p>
+        <h3>Top Streaming Categories</h3>
+        <ul>
+          <li><a href="/?filter=hindi-dubbed" style="color: #ff0844;">Hindi Dubbed Anime</a></li>
+          <li><a href="/?genre=action" style="color: #ff0844;">Action & Blockbuster Anime</a></li>
+          <li><a href="/?genre=fantasy" style="color: #ff0844;">Isekai & Fantasy Adventures</a></li>
+          <li><a href="/?genre=romance" style="color: #ff0844;">Romance & Drama</a></li>
+          <li><a href="/?filter=top-airing" style="color: #ff0844;">Top Airing Simulcasts</a></li>
+        </ul>
+      </section>
+    </noscript>
+  </main>
 
   <!-- STREAMING MODAL -->
   <div class="modal-overlay" id="modalOverlay" onclick="window.closeModal()"></div>
@@ -837,10 +893,10 @@
     </div>
   </div>
 
-  <!-- RUNTIME LINK INTERCEPTOR: Automatically upgrades ?v=32.0.0 calls to v42.0.0 without editing core-engine.js -->
+  <!-- RUNTIME LINK INTERCEPTOR (Rewrites legacy ?v= query strings dynamically to v44.0.0) -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '43.1.2';
+      const CURRENT_APP_VERSION = '44.0.0';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -861,46 +917,47 @@
     })();
   </script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v42.0.0)[cite: 1] -->
-  <script src="core-engine.js?v=42.0.0"></script>
-  <script src="dash-player.js?v=42.0.0"></script>
-  <script src="streaming-ui.js?v=42.0.0"></script>
-  <script src="p2p.js?v=42.0.0"></script>
-  <script src="webapp.js?v=42.0.0"></script>
-  <script src="adblock-engine.js?v=43.0.0"></script>
-   <script src="secure.js?v=42.1.0"></script>
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.0)[cite: 1] -->
+  <script src="core-engine.js?v=44.0.0"></script>
+  <script src="dash-player.js?v=44.0.0"></script>
+  <script src="streaming-ui.js?v=44.0.0"></script>
+  <script src="p2p.js?v=44.0.0"></script>
+  <script src="webapp.js?v=44.0.0"></script>
+  <script src="adblock-engine.js?v=44.0.0"></script>
+  <script src="secure.js?v=44.0.0"></script>
 
-  <!-- APP LIFECYCLE, 4-SECOND PRELOADER & UPDATE ENGINE -->
+  <!-- APP LIFECYCLE, SEO-AWARE PRELOADER & UPDATE ENGINE -->
   <script>
-    // =========================================================================
-    // 1. 4-SECOND TRANSITION & BACKGROUND PRELOADER CONTROLLER
-    // =========================================================================
-    let globalLoaderTimeout = null;
+    // Crawler verification to eliminate wait times and prevent index drop
+    const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
+    // 1. Transition Loader
+    let globalLoaderTimeout = null;
     window.triggerNavWithLoader = function(label, callback) {
+      if (isSearchBot) {
+        if (typeof callback === 'function') callback();
+        return;
+      }
       const loader = document.getElementById('globalTransitionLoader');
       const text = document.getElementById('globalTransitionText');
       if (loader && text) {
         text.innerText = label ? `Preparing ${label}...` : 'Preparing Stream Universe...';
         loader.classList.add('active');
       }
-
-      // Execute target navigation immediately to trigger background fetch
       try {
         if (typeof callback === 'function') callback();
       } catch (e) {
         console.warn('[Nav Callback Notice]:', e);
       }
-
-      // Enforce 4-second loading window for transition completeness
       if (globalLoaderTimeout) clearTimeout(globalLoaderTimeout);
       globalLoaderTimeout = setTimeout(() => {
         if (loader) loader.classList.remove('active');
       }, 4000);
     };
 
-    // Card Click Interceptor (4-second buffer on anime info modals)
+    // Card click interceptor
     document.addEventListener('click', (e) => {
+      if (isSearchBot) return;
       const card = e.target.closest('.anime-card, .btn-play, .hero-btns .btn-info, .ep-badge-btn');
       if (card && !e.target.closest('#modalContainer')) {
         const loader = document.getElementById('globalTransitionLoader');
@@ -915,20 +972,26 @@
       }
     });
 
-    // 4-Second Initial Site Opening Splash Sequence & Asset Preload
+    // 2. Preloader Lifecycle (Instant bypass for search engine bots)
     window.addEventListener('DOMContentLoaded', () => {
+      const splash = document.getElementById('siteSplashPreloader');
+
+      if (isSearchBot) {
+        if (splash) splash.remove();
+        return;
+      }
+
       const fillBar = document.getElementById('splashFillBar');
       const statusLabel = document.getElementById('splashStatusLabel');
       const startTime = Date.now();
       const TOTAL_DURATION = 4000;
 
-      // Background warm-up during the 4-second splash
       const preloadCandidates = [
-        'theme-base.css?v=42.0.0',
-        'components-modal.css?v=42.0.0',
-        'p2p.css?v=42.0.0',
-        'webapp.css?v=42.0.0',
-        'mobile.css?v=42.0.0'
+        'theme-base.css?v=44.0.0',
+        'components-modal.css?v=44.0.0',
+        'p2p.css?v=44.0.0',
+        'webapp.css?v=44.0.0',
+        'mobile.css?v=44.0.0'
       ];
       preloadCandidates.forEach(url => {
         const link = document.createElement('link');
@@ -953,7 +1016,6 @@
         if (progress >= 100) {
           clearInterval(interval);
           setTimeout(() => {
-            const splash = document.getElementById('siteSplashPreloader');
             if (splash) {
               splash.classList.add('preloader-hidden');
               setTimeout(() => splash.remove(), 800);
@@ -964,8 +1026,10 @@
       }, 50);
     });
 
-    // Device-Aware Adblock Advisory (Single Display per 24h)
+    // 3. Device-Aware Adblock Advisory (Single Display per 24h, crawlers bypassed)
     function checkAndShowAdblockNotice() {
+      if (isSearchBot) return;
+
       const STORAGE_KEY = 'animedrift_adblock_notice_date';
       const todayStr = new Date().toISOString().slice(0, 10);
       const lastShownDate = localStorage.getItem(STORAGE_KEY);
@@ -1005,7 +1069,7 @@
     }
 
     // =========================================================================
-    // 2. ACTIVE UPDATE DETECTION & HUD ENGINE (Pushes prompt to web & PWA users)
+    // 4. SERVICE WORKER REGISTRATION (v44.0.0) & LIVE UPDATE HUD
     // =========================================================================
     let newWorkerWaiting = null;
 
@@ -1021,7 +1085,6 @@
       const banner = document.getElementById('updateNotificationBar');
       if (banner) banner.classList.remove('visible');
 
-      // Purge client CacheStorage so old bundles are dropped
       if ('caches' in window) {
         try {
           const keys = await caches.keys();
@@ -1031,7 +1094,6 @@
         }
       }
 
-      // Tell waiting worker to take control
       if (newWorkerWaiting) {
         newWorkerWaiting.postMessage({ type: 'SKIP_WAITING' });
       } else {
@@ -1044,20 +1106,17 @@
       if (banner) banner.classList.remove('visible');
     });
 
-    // Register Service Worker with forced server verification
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && !isSearchBot) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('sw.js?v=42.0.0', {
+          const reg = await navigator.serviceWorker.register('sw.js?v=44.0.0', {
             updateViaCache: 'none'
           });
 
-          // Check if an updated worker is already waiting
           if (reg.waiting) {
             showUpdateAvailableUI(reg.waiting);
           }
 
-          // Listen for new updates
           reg.addEventListener('updatefound', () => {
             const installingWorker = reg.installing;
             if (!installingWorker) return;
@@ -1069,7 +1128,6 @@
             });
           });
 
-          // Active check on page load and periodic poll every 60 seconds
           reg.update().catch(() => {});
           setInterval(() => {
             reg.update().catch(() => {});
@@ -1079,7 +1137,6 @@
           console.warn('[PWA] Service Worker registration skipped:', err);
         }
 
-        // Reload once the user clicks "Update Now" and new worker claims clients
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing && newWorkerWaiting) {
