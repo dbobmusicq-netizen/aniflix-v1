@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   
-  <!-- Comprehensive Search Engine SEO & Discoverability Suite -->
+  <!-- Search Engine SEO & Discoverability Suite -->
   <title>AnimeDrift - Stream HD Anime & Simulcast Series Online</title>
   <meta name="description" content="Stream popular subbed and Hindi-dubbed anime series, movies, and simulcasts with real-time P2P sync and zero popups across all devices." />
   <meta name="keywords" content="AnimeDrift, stream anime, watch anime online, hindi dub anime, anime simulcasts, free anime streaming, watch party p2p" />
@@ -12,7 +12,7 @@
   <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href="https://animedrift.vercel.app/" />
 
-  <!-- Open Graph & Social Graph Protocols -->
+  <!-- Open Graph Protocols -->
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:site_name" content="AnimeDrift" />
@@ -82,7 +82,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Version Synchronized to v44.0.0) -->
+  <!-- Modular Stylesheets (Synchronized to v44.0.0) -->
   <link rel="stylesheet" href="theme-base.css?v=44.0.0">
   <link rel="stylesheet" href="components-modal.css?v=44.0.0">
   <link rel="stylesheet" href="p2p.css?v=44.0.0">
@@ -343,13 +343,9 @@
     }
 
     /* ==========================================================================
-       SMOOTH DESKTOP HORIZONTAL CAROUSEL CONTROLS & NETFLIX-STYLE CHEVRONS
+       HARDWARE-ACCELERATED PC-EXCLUSIVE HORIZONTAL CAROUSEL CONTROLS
        ========================================================================== */
-    .ad-carousel-wrapper {
-      position: relative;
-      width: 100%;
-    }
-
+    /* Hide scrollbars universally without affecting layout */
     .row-scroll-container,
     .content-row-scroll,
     .ep-grid,
@@ -358,17 +354,9 @@
     .category-row,
     [class*="row-container"],
     [class*="carousel"] {
-      display: flex !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      scroll-behavior: smooth;
-      cursor: grab;
-      user-select: none;
-      -webkit-overflow-scrolling: touch;
       scrollbar-width: none !important;
       -ms-overflow-style: none !important;
     }
-
     .row-scroll-container::-webkit-scrollbar,
     .content-row-scroll::-webkit-scrollbar,
     .ep-grid::-webkit-scrollbar,
@@ -382,64 +370,87 @@
       height: 0 !important;
     }
 
-    .row-scroll-container.is-dragging,
-    .content-row-scroll.is-dragging,
-    .anime-cards-row.is-dragging,
-    .movie-row.is-dragging,
-    [class*="row-container"].is-dragging {
-      cursor: grabbing !important;
-      scroll-behavior: auto !important;
+    /* PC Desktop Exclusive View Rules */
+    @media (hover: hover) and (pointer: fine) and (min-width: 992px) {
+      .ad-pc-carousel-wrapper {
+        position: relative !important;
+        width: 100% !important;
+      }
+
+      .ad-pc-enhanced-row {
+        display: flex !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        cursor: grab !important;
+        user-select: none !important;
+        -webkit-user-drag: none !important;
+        will-change: scroll-position;
+        /* Dynamic smooth scrolling toggle handled by JS to kill wheel lag */
+      }
+
+      .ad-pc-enhanced-row.is-dragging {
+        cursor: grabbing !important;
+      }
+
+      .ad-pc-enhanced-row.is-smooth {
+        scroll-behavior: smooth !important;
+      }
+
+      .ad-pc-arrow-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%) scale(0.92);
+        width: 44px;
+        height: 84px;
+        background: rgba(10, 11, 18, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 30;
+        opacity: 0;
+        pointer-events: none;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+        transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, border-color 0.15s ease;
+      }
+
+      .ad-pc-arrow-btn:hover {
+        background: #ff0844;
+        border-color: #ff0844;
+        color: #fff;
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 0 24px rgba(255, 8, 68, 0.7);
+      }
+
+      .ad-pc-arrow-btn.prev-btn { left: 4px; }
+      .ad-pc-arrow-btn.next-btn { right: 4px; }
+
+      .ad-pc-carousel-wrapper:hover .ad-pc-arrow-btn {
+        opacity: 1;
+        pointer-events: auto;
+      }
     }
 
-    .carousel-nav-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%) scale(0.95);
-      width: 46px;
-      height: 88px;
-      background: rgba(8, 9, 14, 0.82);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      z-index: 25;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-    }
-
-    .carousel-nav-arrow:hover {
-      background: rgba(255, 8, 68, 0.95);
-      border-color: #ff0844;
-      transform: translateY(-50%) scale(1.05);
-      box-shadow: 0 0 20px rgba(255, 8, 68, 0.6);
-    }
-
-    .carousel-nav-arrow.prev-arrow { left: 6px; }
-    .carousel-nav-arrow.next-arrow { right: 6px; }
-
-    .ad-carousel-wrapper:hover .carousel-nav-arrow {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    @media (max-width: 768px) {
-      .carousel-nav-arrow {
+    /* Completely isolate and strip buttons/grab cursor on mobile and tablets */
+    @media not all and (hover: hover) and (pointer: fine) and (min-width: 992px) {
+      .ad-pc-arrow-btn {
         display: none !important;
+      }
+      .ad-pc-enhanced-row {
+        cursor: auto !important;
       }
     }
   </style>
 </head>
 <body class="theme-dark">
 
-  <!-- AESTHETIC SPLASH PRELOADER (CRAWLER-EXEMPTED) -->
+  <!-- AESTHETIC SPLASH PRELOADER -->
   <div id="siteSplashPreloader" aria-hidden="false">
     <div class="aesthetic-loader">
       <div class="aesthetic-brand-title">Anime<span>Drift</span></div>
@@ -699,7 +710,7 @@
     </div>
   </section>
 
-  <!-- CONTENT ROWS (WITH SEARCH ENGINE FALLBACK CORPUS) -->
+  <!-- CONTENT ROWS -->
   <main class="content-rows" id="contentRows">
     <noscript>
       <section style="padding: 24px 16px; color: #fff; max-width: 900px; margin: 0 auto;">
@@ -987,10 +998,10 @@
     </div>
   </div>
 
-  <!-- RUNTIME LINK INTERCEPTOR (Rewrites legacy ?v= query strings dynamically to v44.0.0) -->
+  <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '44.0.0';
+      const CURRENT_APP_VERSION = '44.0.1';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1020,7 +1031,7 @@
   <script src="adblock-engine.js?v=44.0.0"></script>
   <script src="secure.js?v=44.0.0"></script>
 
-  <!-- APP LIFECYCLE, SEO-AWARE PRELOADER, HORIZONTAL SMOOTH NAVIGATION & UPDATE ENGINE -->
+  <!-- APPLICATION CONTROLLER & PC-EXCLUSIVE HARDWARE-ACCELERATED CAROUSEL -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
@@ -1065,7 +1076,7 @@
       }
     });
 
-    // 2. Preloader Lifecycle (Instant bypass for search engine bots)
+    // 2. Preloader Lifecycle
     window.addEventListener('DOMContentLoaded', () => {
       const splash = document.getElementById('siteSplashPreloader');
 
@@ -1119,7 +1130,7 @@
       }, 50);
     });
 
-    // 3. Device-Aware Adblock Advisory (Single Display per 24h, crawlers bypassed)
+    // 3. Device-Aware Adblock Advisory
     function checkAndShowAdblockNotice() {
       if (isSearchBot) return;
 
@@ -1162,10 +1173,14 @@
     }
 
     // =========================================================================
-    // 4. DESKTOP & LAPTOP SMOOTH ROW SCROLL ENGINE (DRAG, WHEEL & ARROWS)
+    // 4. PC-EXCLUSIVE HARDWARE ACCELERATED CAROUSEL CONTROLLER
     // =========================================================================
-    function enhanceHorizontalRowScrollers() {
-      const rowSelectors = [
+    (function initPCHorizontalScroll() {
+      // Strict hardware check: Only runs on PC / Laptop with fine pointer (mouse/trackpad)
+      const isDesktopPC = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 992px)').matches;
+      if (!isDesktopPC || isSearchBot) return;
+
+      const SELECTORS = [
         '.content-rows > section',
         '.content-rows .row',
         '.row-scroll-container',
@@ -1177,122 +1192,144 @@
         '[class*="carousel"]'
       ];
 
-      const rows = document.querySelectorAll(rowSelectors.join(','));
-
-      rows.forEach((row) => {
-        // Find the actual scrolling element
-        let scrollTarget = row;
-        if (row.scrollWidth <= row.clientWidth) {
-          const innerScrollable = row.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
-          if (innerScrollable) scrollTarget = innerScrollable;
+      function enhanceRowElement(el) {
+        // Resolve the true scrolling element
+        let scroller = el;
+        if (el.scrollWidth <= el.clientWidth) {
+          const inner = el.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
+          if (inner) scroller = inner;
         }
 
-        // Avoid attaching multiple times
-        if (scrollTarget.dataset.enhancedCarousel === 'true') return;
-        scrollTarget.dataset.enhancedCarousel = 'true';
+        if (scroller.dataset.adPcBound === 'true') return;
+        scroller.dataset.adPcBound = 'true';
+        scroller.classList.add('ad-pc-enhanced-row');
 
-        // 1. Wrap in container for positioning arrow buttons
-        let wrapper = scrollTarget.parentElement;
-        if (!wrapper.classList.contains('ad-carousel-wrapper')) {
+        // 1. Wrap in container for Netflix-style arrow positioning
+        let wrapper = scroller.parentElement;
+        if (!wrapper.classList.contains('ad-pc-carousel-wrapper')) {
           const newWrapper = document.createElement('div');
-          newWrapper.className = 'ad-carousel-wrapper';
-          scrollTarget.parentNode.insertBefore(newWrapper, scrollTarget);
-          newWrapper.appendChild(scrollTarget);
+          newWrapper.className = 'ad-pc-carousel-wrapper';
+          scroller.parentNode.insertBefore(newWrapper, scroller);
+          newWrapper.appendChild(scroller);
           wrapper = newWrapper;
         }
 
         // 2. Inject Left & Right Navigation Chevrons
-        if (!wrapper.querySelector('.carousel-nav-arrow.prev-arrow')) {
-          const prevArrow = document.createElement('button');
-          prevArrow.className = 'carousel-nav-arrow prev-arrow';
-          prevArrow.type = 'button';
-          prevArrow.setAttribute('aria-label', 'Previous Titles');
-          prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
-          wrapper.appendChild(prevArrow);
+        if (!wrapper.querySelector('.ad-pc-arrow-btn.prev-btn')) {
+          const prevBtn = document.createElement('button');
+          prevBtn.className = 'ad-pc-arrow-btn prev-btn';
+          prevBtn.type = 'button';
+          prevBtn.setAttribute('aria-label', 'Previous Titles');
+          prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+          wrapper.appendChild(prevBtn);
 
-          const nextArrow = document.createElement('button');
-          nextArrow.className = 'carousel-nav-arrow next-arrow';
-          nextArrow.type = 'button';
-          nextArrow.setAttribute('aria-label', 'Next Titles');
-          nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
-          wrapper.appendChild(nextArrow);
+          const nextBtn = document.createElement('button');
+          nextBtn.className = 'ad-pc-arrow-btn next-btn';
+          nextBtn.type = 'button';
+          nextBtn.setAttribute('aria-label', 'Next Titles');
+          nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+          wrapper.appendChild(nextBtn);
 
-          prevArrow.addEventListener('click', (e) => {
+          prevBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            scrollTarget.scrollBy({ left: -(scrollTarget.clientWidth * 0.75), behavior: 'smooth' });
+            scroller.classList.add('is-smooth');
+            scroller.scrollBy({ left: -(scroller.clientWidth * 0.8), behavior: 'smooth' });
           });
 
-          nextArrow.addEventListener('click', (e) => {
+          nextBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            scrollTarget.scrollBy({ left: scrollTarget.clientWidth * 0.75, behavior: 'smooth' });
+            scroller.classList.add('is-smooth');
+            scroller.scrollBy({ left: scroller.clientWidth * 0.8, behavior: 'smooth' });
           });
         }
 
-        // 3. Mouse Wheel Translation (Vertical Mouse Wheel -> Horizontal Smooth Glide)
-        scrollTarget.addEventListener('wheel', (e) => {
+        // 3. Mouse Wheel Translation (Zero-Lag Instant Input)
+        scroller.addEventListener('wheel', (e) => {
           if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-            // Only translate if container can scroll horizontally
-            const canScroll = scrollTarget.scrollWidth > scrollTarget.clientWidth;
-            if (canScroll) {
+            const hasScrollSpace = scroller.scrollWidth > scroller.clientWidth;
+            if (hasScrollSpace) {
               e.preventDefault();
-              scrollTarget.scrollLeft += e.deltaY * 1.4;
+              // Remove CSS smoothing during wheel scroll to prevent input lag
+              scroller.classList.remove('is-smooth');
+              scroller.scrollLeft += e.deltaY * 1.35;
             }
           }
         }, { passive: false });
 
-        // 4. Click & Drag To Slide (Grab-to-scroll)
+        // 4. Smooth Hardware-Accelerated Dragging (requestAnimationFrame)
         let isDown = false;
         let startX = 0;
-        let initialScroll = 0;
-        let hasDraggedFar = false;
+        let startScrollLeft = 0;
+        let draggedDistance = 0;
+        let targetScroll = 0;
+        let rafId = null;
 
-        scrollTarget.addEventListener('mousedown', (e) => {
-          if (e.button !== 0) return; // Only trigger for left click
+        function updateDragScroll() {
+          if (!isDown) return;
+          scroller.scrollLeft = targetScroll;
+          rafId = requestAnimationFrame(updateDragScroll);
+        }
+
+        scroller.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return; // Only listen for primary left click
           isDown = true;
-          hasDraggedFar = false;
-          scrollTarget.classList.add('is-dragging');
-          startX = e.pageX - scrollTarget.offsetLeft;
-          initialScroll = scrollTarget.scrollLeft;
+          draggedDistance = 0;
+          scroller.classList.remove('is-smooth');
+          scroller.classList.add('is-dragging');
+          startX = e.pageX;
+          startScrollLeft = scroller.scrollLeft;
+          targetScroll = startScrollLeft;
+          cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(updateDragScroll);
         });
 
         window.addEventListener('mouseup', () => {
           if (isDown) {
             isDown = false;
-            scrollTarget.classList.remove('is-dragging');
+            cancelAnimationFrame(rafId);
+            scroller.classList.remove('is-dragging');
           }
         });
 
-        scrollTarget.addEventListener('mousemove', (e) => {
+        window.addEventListener('mousemove', (e) => {
           if (!isDown) return;
-          e.preventDefault();
-          const currentX = e.pageX - scrollTarget.offsetLeft;
-          const walkDistance = (currentX - startX) * 1.6;
-          if (Math.abs(walkDistance) > 6) hasDraggedFar = true;
-          scrollTarget.scrollLeft = initialScroll - walkDistance;
+          const currentX = e.pageX;
+          const walk = (currentX - startX) * 1.45;
+          draggedDistance += Math.abs(currentX - startX);
+          targetScroll = startScrollLeft - walk;
         });
 
-        // Prevent poster clicks when a drag action was performed
-        scrollTarget.addEventListener('click', (e) => {
-          if (hasDraggedFar) {
+        // Suppress accidental poster clicks when dragging across titles
+        scroller.addEventListener('click', (e) => {
+          if (draggedDistance > 8) {
             e.preventDefault();
             e.stopPropagation();
           }
         }, true);
-      });
-    }
-
-    // Initialize horizontal scrollers and watch for newly injected dynamic category rows
-    window.addEventListener('DOMContentLoaded', () => {
-      enhanceHorizontalRowScrollers();
-
-      const contentRowsNode = document.getElementById('contentRows');
-      if (contentRowsNode) {
-        const observer = new MutationObserver(() => {
-          enhanceHorizontalRowScrollers();
-        });
-        observer.observe(contentRowsNode, { childList: true, subtree: true });
       }
-    });
+
+      function scanAndMountScrollers() {
+        const found = document.querySelectorAll(SELECTORS.join(','));
+        found.forEach(enhanceRowElement);
+      }
+
+      // Initial Mount
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scanAndMountScrollers);
+      } else {
+        scanAndMountScrollers();
+      }
+
+      // Debounced MutationObserver to prevent layout thrashing on dynamic rows
+      let debounceTimer = null;
+      const targetObserver = new MutationObserver(() => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(scanAndMountScrollers, 120);
+      });
+
+      const containerNode = document.getElementById('contentRows') || document.body;
+      targetObserver.observe(containerNode, { childList: true, subtree: true });
+    })();
 
     // =========================================================================
     // 5. SERVICE WORKER REGISTRATION (v44.0.0) & LIVE UPDATE HUD
