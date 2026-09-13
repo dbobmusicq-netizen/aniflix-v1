@@ -51,7 +51,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Favicon Suite & Multi-Platform PWA Branding[cite: 1] -->
+  <!-- Favicon Suite & Multi-Platform PWA Branding -->
   <link rel="shortcut icon" href="favicon.ico?v=44.0.0" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=44.0.0" />
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=44.0.0" />
@@ -340,6 +340,100 @@
     }
     .adblock-modal-btn:hover {
       opacity: 0.92;
+    }
+
+    /* ==========================================================================
+       SMOOTH DESKTOP HORIZONTAL CAROUSEL CONTROLS & NETFLIX-STYLE CHEVRONS
+       ========================================================================== */
+    .ad-carousel-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .row-scroll-container,
+    .content-row-scroll,
+    .ep-grid,
+    .anime-cards-row,
+    .movie-row,
+    .category-row,
+    [class*="row-container"],
+    [class*="carousel"] {
+      display: flex !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      scroll-behavior: smooth;
+      cursor: grab;
+      user-select: none;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .row-scroll-container::-webkit-scrollbar,
+    .content-row-scroll::-webkit-scrollbar,
+    .ep-grid::-webkit-scrollbar,
+    .anime-cards-row::-webkit-scrollbar,
+    .movie-row::-webkit-scrollbar,
+    .category-row::-webkit-scrollbar,
+    [class*="row-container"]::-webkit-scrollbar,
+    [class*="carousel"]::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .row-scroll-container.is-dragging,
+    .content-row-scroll.is-dragging,
+    .anime-cards-row.is-dragging,
+    .movie-row.is-dragging,
+    [class*="row-container"].is-dragging {
+      cursor: grabbing !important;
+      scroll-behavior: auto !important;
+    }
+
+    .carousel-nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%) scale(0.95);
+      width: 46px;
+      height: 88px;
+      background: rgba(8, 9, 14, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 25;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .carousel-nav-arrow:hover {
+      background: rgba(255, 8, 68, 0.95);
+      border-color: #ff0844;
+      transform: translateY(-50%) scale(1.05);
+      box-shadow: 0 0 20px rgba(255, 8, 68, 0.6);
+    }
+
+    .carousel-nav-arrow.prev-arrow { left: 6px; }
+    .carousel-nav-arrow.next-arrow { right: 6px; }
+
+    .ad-carousel-wrapper:hover .carousel-nav-arrow {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (max-width: 768px) {
+      .carousel-nav-arrow {
+        display: none !important;
+      }
     }
   </style>
 </head>
@@ -815,7 +909,7 @@
             <button class="btn btn-info" onclick="if(typeof copyWatchPartyCode === 'function') copyWatchPartyCode()" style="padding:8px 14px; font-size:12px;"><i class="fas fa-copy"></i></button>
           </div>
         </div>
-        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+        <div style="border-top:1px solid rgba(255,255,200,0.08); padding-top:12px;">
           <label style="font-size:12px; color:var(--text-muted); font-weight:700;">JOIN A ROOM</label>
           <div style="display:flex; gap:8px; margin-top:6px;">
             <input type="text" id="partyJoinInput" placeholder="Paste room link or code..." class="search-input" style="opacity:1; background:rgba(255,255,255,0.06); border-radius:8px; padding:8px 12px; border:1px solid rgba(255,255,255,0.15);" />
@@ -917,7 +1011,7 @@
     })();
   </script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.0)[cite: 1] -->
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.0) -->
   <script src="core-engine.js?v=44.0.0"></script>
   <script src="dash-player.js?v=44.0.0"></script>
   <script src="streaming-ui.js?v=44.0.0"></script>
@@ -926,9 +1020,8 @@
   <script src="adblock-engine.js?v=44.0.0"></script>
   <script src="secure.js?v=44.0.0"></script>
 
-  <!-- APP LIFECYCLE, SEO-AWARE PRELOADER & UPDATE ENGINE -->
+  <!-- APP LIFECYCLE, SEO-AWARE PRELOADER, HORIZONTAL SMOOTH NAVIGATION & UPDATE ENGINE -->
   <script>
-    // Crawler verification to eliminate wait times and prevent index drop
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
     // 1. Transition Loader
@@ -1069,7 +1162,140 @@
     }
 
     // =========================================================================
-    // 4. SERVICE WORKER REGISTRATION (v44.0.0) & LIVE UPDATE HUD
+    // 4. DESKTOP & LAPTOP SMOOTH ROW SCROLL ENGINE (DRAG, WHEEL & ARROWS)
+    // =========================================================================
+    function enhanceHorizontalRowScrollers() {
+      const rowSelectors = [
+        '.content-rows > section',
+        '.content-rows .row',
+        '.row-scroll-container',
+        '.content-row-scroll',
+        '.anime-cards-row',
+        '.movie-row',
+        '.category-row',
+        '[class*="row-container"]',
+        '[class*="carousel"]'
+      ];
+
+      const rows = document.querySelectorAll(rowSelectors.join(','));
+
+      rows.forEach((row) => {
+        // Find the actual scrolling element
+        let scrollTarget = row;
+        if (row.scrollWidth <= row.clientWidth) {
+          const innerScrollable = row.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
+          if (innerScrollable) scrollTarget = innerScrollable;
+        }
+
+        // Avoid attaching multiple times
+        if (scrollTarget.dataset.enhancedCarousel === 'true') return;
+        scrollTarget.dataset.enhancedCarousel = 'true';
+
+        // 1. Wrap in container for positioning arrow buttons
+        let wrapper = scrollTarget.parentElement;
+        if (!wrapper.classList.contains('ad-carousel-wrapper')) {
+          const newWrapper = document.createElement('div');
+          newWrapper.className = 'ad-carousel-wrapper';
+          scrollTarget.parentNode.insertBefore(newWrapper, scrollTarget);
+          newWrapper.appendChild(scrollTarget);
+          wrapper = newWrapper;
+        }
+
+        // 2. Inject Left & Right Navigation Chevrons
+        if (!wrapper.querySelector('.carousel-nav-arrow.prev-arrow')) {
+          const prevArrow = document.createElement('button');
+          prevArrow.className = 'carousel-nav-arrow prev-arrow';
+          prevArrow.type = 'button';
+          prevArrow.setAttribute('aria-label', 'Previous Titles');
+          prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
+          wrapper.appendChild(prevArrow);
+
+          const nextArrow = document.createElement('button');
+          nextArrow.className = 'carousel-nav-arrow next-arrow';
+          nextArrow.type = 'button';
+          nextArrow.setAttribute('aria-label', 'Next Titles');
+          nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
+          wrapper.appendChild(nextArrow);
+
+          prevArrow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            scrollTarget.scrollBy({ left: -(scrollTarget.clientWidth * 0.75), behavior: 'smooth' });
+          });
+
+          nextArrow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            scrollTarget.scrollBy({ left: scrollTarget.clientWidth * 0.75, behavior: 'smooth' });
+          });
+        }
+
+        // 3. Mouse Wheel Translation (Vertical Mouse Wheel -> Horizontal Smooth Glide)
+        scrollTarget.addEventListener('wheel', (e) => {
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            // Only translate if container can scroll horizontally
+            const canScroll = scrollTarget.scrollWidth > scrollTarget.clientWidth;
+            if (canScroll) {
+              e.preventDefault();
+              scrollTarget.scrollLeft += e.deltaY * 1.4;
+            }
+          }
+        }, { passive: false });
+
+        // 4. Click & Drag To Slide (Grab-to-scroll)
+        let isDown = false;
+        let startX = 0;
+        let initialScroll = 0;
+        let hasDraggedFar = false;
+
+        scrollTarget.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return; // Only trigger for left click
+          isDown = true;
+          hasDraggedFar = false;
+          scrollTarget.classList.add('is-dragging');
+          startX = e.pageX - scrollTarget.offsetLeft;
+          initialScroll = scrollTarget.scrollLeft;
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (isDown) {
+            isDown = false;
+            scrollTarget.classList.remove('is-dragging');
+          }
+        });
+
+        scrollTarget.addEventListener('mousemove', (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const currentX = e.pageX - scrollTarget.offsetLeft;
+          const walkDistance = (currentX - startX) * 1.6;
+          if (Math.abs(walkDistance) > 6) hasDraggedFar = true;
+          scrollTarget.scrollLeft = initialScroll - walkDistance;
+        });
+
+        // Prevent poster clicks when a drag action was performed
+        scrollTarget.addEventListener('click', (e) => {
+          if (hasDraggedFar) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, true);
+      });
+    }
+
+    // Initialize horizontal scrollers and watch for newly injected dynamic category rows
+    window.addEventListener('DOMContentLoaded', () => {
+      enhanceHorizontalRowScrollers();
+
+      const contentRowsNode = document.getElementById('contentRows');
+      if (contentRowsNode) {
+        const observer = new MutationObserver(() => {
+          enhanceHorizontalRowScrollers();
+        });
+        observer.observe(contentRowsNode, { childList: true, subtree: true });
+      }
+    });
+
+    // =========================================================================
+    // 5. SERVICE WORKER REGISTRATION (v44.0.0) & LIVE UPDATE HUD
     // =========================================================================
     let newWorkerWaiting = null;
 
