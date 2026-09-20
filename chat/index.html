@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+
+  <!-- Canonical, Indexing & Metadata Suite -->
+  <title>AnimeDrift Community Lounge - Live Discussion, Dub Requests & Sync</title>
+  <meta name="description" content="Join the real-time AnimeDrift community lounge. Chat about airing simulcasts, request Hindi and regional dubs, share watch party rooms, and connect with anime fans." />
+  <meta name="keywords" content="AnimeDrift chat, anime community lounge, request hindi dub anime, anime discussion room, watch party sync, anime simulcast chat" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href="https://animedrift.vercel.app/chat" />
+
+  <!-- Open Graph & Social Graph Protocols -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="AnimeDrift" />
+  <meta property="og:title" content="AnimeDrift Community Lounge - Live Discussion & Dub Requests" />
+  <meta property="og:description" content="Connect with anime fans in the official AnimeDrift live room. Request regional dubs, discuss weekly episodes, and synchronize multiplayer watch rooms." />
+  <meta property="og:url" content="https://animedrift.vercel.app/chat" />
+  <meta property="og:image" content="https://animedrift.vercel.app/android-chrome-512x512.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:alt" content="AnimeDrift Community Lounge" />
+
+  <!-- Twitter Card Protocols -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AnimeDrift Community Lounge - Live Discussion & Dub Requests" />
+  <meta name="twitter:description" content="Connect with anime fans in the official AnimeDrift live room. Request regional dubs and discuss weekly episodes." />
+  <meta name="twitter:image" content="https://animedrift.vercel.app/android-chrome-512x512.png" />
+
+  <!-- Structured Data: WebPage & BreadcrumbList Schema (Schema.org) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://animedrift.vercel.app/#website",
+        "url": "https://animedrift.vercel.app/",
+        "name": "AnimeDrift",
+        "description": "Stream high-definition subbed and Hindi-dubbed anime series, movies, and simulcasts."
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://animedrift.vercel.app/chat#webpage",
+        "url": "https://animedrift.vercel.app/chat",
+        "name": "AnimeDrift Community Lounge - Live Discussion & Dub Requests",
+        "isPartOf": { "@id": "https://animedrift.vercel.app/#website" },
+        "description": "Official AnimeDrift live discussion and dub request lounge."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://animedrift.vercel.app/chat#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://animedrift.vercel.app/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Community Chat",
+            "item": "https://animedrift.vercel.app/chat"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- Favicon & PWA Suite -->
+  <link rel="shortcut icon" href="/favicon.ico?v=44.0.2" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=44.0.2" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=44.0.2" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=44.0.2" />
+  <link rel="manifest" href="/manifest.json?v=44.0.2" />
+  <meta name="theme-color" content="#040406" />
+
+  <!-- Icons & Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --chat-bg: #040406;
+      --chat-crimson: #ff0844;
+      --chat-crimson-glow: rgba(255, 8, 68, 0.35);
+      --chat-border: rgba(255, 255, 255, 0.08);
+      --chat-text: #f8fafc;
+      --chat-muted: #94a3b8;
+      --font-ui: 'Outfit', sans-serif;
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--chat-bg);
+      font-family: var(--font-ui);
+      color: var(--chat-text);
+    }
+
+    /* Top Navigation Strip */
+    .chat-app-nav {
+      height: 56px;
+      width: 100%;
+      background: rgba(10, 11, 18, 0.94);
+      border-bottom: 1px solid var(--chat-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .chat-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-return-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--chat-border);
+      color: var(--chat-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: all 0.22s ease;
+    }
+    .chat-return-btn:hover {
+      background: var(--chat-crimson);
+      border-color: var(--chat-crimson);
+      color: #fff;
+      transform: translateX(-2px);
+      box-shadow: 0 4px 14px var(--chat-crimson-glow);
+    }
+
+    .chat-brand-title {
+      font-family: var(--font-head);
+      font-size: 1.08rem;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .chat-brand-title span {
+      color: var(--chat-crimson);
+    }
+
+    .chat-status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      color: #10b981;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+      animation: pulseLive 2s infinite ease-in-out;
+    }
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(1.3); }
+    }
+
+    .chat-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chat-action-btn {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--chat-border);
+      background: rgba(255, 255, 255, 0.03);
+      transition: all 0.2s ease;
+    }
+    .chat-action-btn:hover {
+      color: #fff;
+      border-color: var(--chat-crimson);
+      background: rgba(255, 8, 68, 0.1);
+    }
+
+    /* Full-Screen Frame Viewport */
+    .chat-viewport-stage {
+      width: 100%;
+      height: calc(100% - 56px);
+      position: relative;
+      background: #000;
+    }
+
+    .chat-embed-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #f8fafc;
+    }
+
+    /* Fast Preloader HUD */
+    .chat-loader-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--chat-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 10;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    .chat-loader-overlay.is-loaded {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .chat-quantum-spinner {
+      width: 38px;
+      height: 38px;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      border-top-color: var(--chat-crimson);
+      border-radius: 50%;
+      animation: spinStage 0.75s linear infinite;
+    }
+    @keyframes spinStage {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Crawler-Friendly Semantic Text (Screen-Reader & Search Engine Indexable) */
+    .seo-corpus-anchor {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Crawler-Accessible Semantic Content for Googlebot / Search Indexes -->
+  <div class="seo-corpus-anchor" aria-hidden="true">
+    <h1>AnimeDrift Community Lounge & Real-Time Discussion</h1>
+    <p>
+      Welcome to the official community chatroom for AnimeDrift. Connect with community members to discuss trending anime simulcasts, submit requests for Hindi dubbed and regional multi-audio episodes, share peer-to-peer watch party invite codes, and report streaming node issues.
+    </p>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/?filter=hindi-dubbed">Hindi Dubbed Anime Catalog</a>
+      <a href="/?filter=top-airing">Airing Simulcast Schedule</a>
+      <a href="/chat">Community Chat Room</a>
+    </nav>
+  </div>
+
+  <!-- Main Navigation Strip -->
+  <header class="chat-app-nav">
+    <div class="chat-nav-left">
+      <a href="/" class="chat-return-btn" title="Return to Streaming Portal" aria-label="Home">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <a href="/" class="chat-brand-title">
+        <i class="fa-solid fa-play" style="color: var(--chat-crimson); font-size: 0.85rem;"></i>
+        Anime<span>Drift</span> Lounge
+      </a>
+      <div class="chat-status-indicator">
+        <div class="status-dot"></div>
+        <span>LIVE</span>
+      </div>
+    </div>
+
+    <div class="chat-nav-actions">
+      <a href="https://nexalogz.blogspot.com/2026/09/animedrift.html" target="_blank" rel="noopener noreferrer" class="chat-action-btn" title="Open directly in new tab">
+        <span>Direct Portal</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Embedded Chat Canvas Stage -->
+  <main class="chat-viewport-stage">
+    <div class="chat-loader-overlay" id="chatLoader">
+      <div class="chat-quantum-spinner"></div>
+      <span style="font-size: 0.86rem; color: var(--chat-muted); font-weight: 600;">Connecting Community Lounge Node...</span>
+    </div>
+
+    <iframe
+      id="chatIframe"
+      class="chat-embed-frame"
+      title="AnimeDrift Community Discussion & Dub Requests"
+      src="https://nexalogz.blogspot.com/2026/09/animedrift.html"
+      allow="clipboard-write; clipboard-read"
+      onload="document.getElementById('chatLoader').classList.add('is-loaded')"
+    ></iframe>
+  </main>
+
+  <script>
+    // Fallback safety: automatically hide preloader after 5 seconds if iframe event lags
+    setTimeout(() => {
+      const loader = document.getElementById('chatLoader');
+      if (loader) loader.classList.add('is-loaded');
+    }, 5000);
+  </script>
+</body>
+</html>
