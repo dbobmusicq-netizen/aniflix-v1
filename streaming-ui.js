@@ -1,25 +1,25 @@
 /**
  * ============================================================================
- * AniFlix Ultra — ADVANCED STREAMING UI (ENTERPRISE MASTER SYSTEM)
+ * AnimeDrift — ADVANCED STREAMING UI (ENTERPRISE MASTER SYSTEM)
  * ============================================================================
  *
  * File:
- *   streaming-ui.js
+ *    streaming-ui.js
  *
  * Version:
- *   28.0.0 Unified Responsive Streaming Engine & Storage Nexus
+ *    44.0.2 Zero-CORS Secure Edge Proxy & High-Availability Nexus
  *
  * Resolved Systems in this Build:
- *   - Strict Variable Sanitization for AniList GraphQL (Zero HTTP 400 Bad Requests).
- *   - Quiet Exception Handling for AniSkip Offsets (Suppresses unindexed 404 logs).
- *   - Automated 24-Hour IndexedDB/Dexie Cache Eviction & LRU Garbage Collector.
- *   - Image Blob Storage Nexus for Instant Offline Posters & Reduced Bandwidth.
- *   - Netflix/Anime Dual-Universe Navigation & Chip Synchronization.
- *   - Responsive 16:9 Thumbnail Episode Grid with Air-Dates & Dynamic Truncation.
- *   - 4-Tier Verified Mirror Cluster (NxSha Ultra, Filmu Native, VidCore, VidFast).
- *   - Cross-Origin Font / Tracking Sandbox Isolation & PostMessage P2P Mesh Engine.
- *   - Strictly preserves layout hierarchy (No layout-shift or height collapse on scroll).
- *
+ *    - 100% Elimination of db.speedracelight.com CORS / 429 Errors (All TMDB traffic routed via /api/tmdb).
+ *    - Massively Expanded Indian & Regional Multi-Language Rails (Hindi, Tamil, Telugu, Malayalam, Bollywood).
+ *    - Strict AniList GraphQL Variable Sanitization (Zero HTTP 400 Bad Requests).
+ *    - Quiet Exception Handling for AniSkip Offsets (Suppresses unindexed 404 console spam).
+ *    - Automated 24-Hour IndexedDB/Dexie Cache Eviction & LRU Garbage Collector.
+ *    - Image Blob Storage Nexus for Instant Offline Posters & Zero Layout Shifts.
+ *    - Netflix/Anime Dual-Universe Navigation & Clean Chip Synchronization.
+ *    - Responsive 16:9 Thumbnail Episode Grid with Air-Dates & Dynamic Truncation.
+ *    - 4-Tier Verified Mirror Cluster (NxSha Ultra, Filmu Native, VidCore, VidFast).
+ *    - Cross-Origin Font / Tracking Sandbox Isolation & PostMessage P2P Mesh Engine.
  * ============================================================================
  */
 
@@ -53,7 +53,7 @@
   // ==========================================================================
   // 02. INDEXEDDB PERSISTENCE (DEXIE.JS WITH 24H PRUNING ENGINE)
   // ==========================================================================
-  const db = win.Dexie ? new win.Dexie('AniFlixUltraDB') : null;
+  const db = win.Dexie ? new win.Dexie('AnimeDriftUltraDB') : null;
   if (db) {
     try {
       db.version(2).stores({
@@ -145,22 +145,20 @@
   }
 
   // ==========================================================================
-  // 04. NETWORK ENGINE & OFFICIAL GRAPHQL / TMDB DEDUPLICATOR
+  // 04. VERCEL SERVERLESS PROXY URL BUILDER (CORS-FREE / RATE-LIMIT RESILIENT)
   // ==========================================================================
   function cleanTMDBUrl(endpointPath, customParams = {}) {
-    const base = endpointPath.startsWith('http')
-      ? endpointPath
-      : `https://db.speedracelight.com/3${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;
+    let cleanEndpoint = endpointPath.replace(/^\/+/, '');
+    if (cleanEndpoint.startsWith('3/')) {
+      cleanEndpoint = cleanEndpoint.replace(/^3\//, '');
+    }
 
-    const url = new URL(base);
+    const url = new URL('/api/tmdb', win.location.origin);
+    url.searchParams.set('endpoint', cleanEndpoint);
 
-    if (url.pathname.includes('/discover/')) {
-      if (!url.searchParams.has('without_genres')) {
-        url.searchParams.set('without_genres', '16');
-      }
-      if (!url.searchParams.has('vote_count.gte')) {
-        url.searchParams.set('vote_count.gte', '15');
-      }
+    if (cleanEndpoint.startsWith('discover/')) {
+      if (!customParams['without_genres']) url.searchParams.set('without_genres', '16');
+      if (!customParams['vote_count.gte']) url.searchParams.set('vote_count.gte', '15');
     }
 
     for (const [key, value] of Object.entries(customParams)) {
@@ -185,16 +183,28 @@
     return gqlQueue;
   }
 
-  async function fetchWithRetry(url, options = {}, retries = 2, delay = 2000) {
+  async function fetchWithRetry(url, options = {}, retries = 2, delay = 1500) {
+    let finalUrl = url;
+    if (typeof url === 'string' && url.includes('db.speedracelight.com/3/')) {
+      try {
+        const parsed = new URL(url);
+        const ep = parsed.pathname.replace(/^\/?3\/?/, '');
+        const newUrl = new URL('/api/tmdb', win.location.origin);
+        newUrl.searchParams.set('endpoint', ep);
+        parsed.searchParams.forEach((v, k) => newUrl.searchParams.set(k, v));
+        finalUrl = newUrl.toString();
+      } catch (e) {}
+    }
+
     try {
-      const response = await fetch(url, options);
+      const response = await fetch(finalUrl, options);
 
       if (response.status === 429) {
         const retryHeader = response.headers.get('Retry-After');
         const waitSeconds = retryHeader ? parseInt(retryHeader, 10) : (delay / 1000);
         if (retries > 0) {
           await new Promise(res => setTimeout(res, Math.max(waitSeconds, 2) * 1000));
-          return fetchWithRetry(url, options, retries - 1, delay * 2);
+          return fetchWithRetry(finalUrl, options, retries - 1, delay * 2);
         }
         return null;
       }
@@ -205,7 +215,7 @@
         }
         if (retries > 0) {
           await new Promise(res => setTimeout(res, delay));
-          return fetchWithRetry(url, options, retries - 1, delay * 2);
+          return fetchWithRetry(finalUrl, options, retries - 1, delay * 2);
         }
         return null;
       }
@@ -214,7 +224,7 @@
     } catch (error) {
       if (retries > 0) {
         await new Promise(res => setTimeout(res, delay));
-        return fetchWithRetry(url, options, retries - 1, delay * 2);
+        return fetchWithRetry(finalUrl, options, retries - 1, delay * 2);
       }
       return null;
     }
@@ -308,7 +318,6 @@
   `;
 
   async function fetchGQL(query, rawVariables = {}) {
-    // Variable sanitization: guarantees no invalid data types trigger HTTP 400
     const variables = {};
     for (const [key, value] of Object.entries(rawVariables)) {
       if (value !== null && value !== undefined && value !== '') {
@@ -425,7 +434,7 @@
     }
     win.STATE.watchHistory[recordKey] = telemetry;
     try {
-      localStorage.setItem('aniflix_history_v6', JSON.stringify(win.STATE.watchHistory));
+      localStorage.setItem('animedrift_history_v6', JSON.stringify(win.STATE.watchHistory));
     } catch (e) {}
 
     const epCard = doc.querySelector(`.ep-modern-card[onclick*="switchEpisode(${episode})"]`);
@@ -477,7 +486,7 @@
 
     if (win.STATE.isNetflixMode) {
       try {
-        const url = cleanTMDBUrl('/discover/movie', {
+        const url = cleanTMDBUrl('discover/movie', {
           sort_by: 'popularity.desc',
           'vote_count.gte': '100'
         });
@@ -602,20 +611,24 @@
   };
 
   // ==========================================================================
-  // 08. STAGGERED CATALOG RAILS & CARD INTERFACE
+  // 08. STAGGERED CATALOG RAILS & EXPANDED INDIAN/HINDI CONTENT
   // ==========================================================================
   win.renderHomeRows = async function () {
     const content = doc.getElementById('contentRows');
     if (content) content.innerHTML = '';
 
     if (win.STATE.isNetflixMode) {
-      if (typeof win.showToast === 'function') win.showToast('Loading Live-Action Universe...');
-      await renderTMDBRow('Trending Movies Worldwide', '/discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
-      await renderTMDBRow('Trending TV Series', '/discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
-      await renderTMDBRow('Bollywood & Hindi Cinema', '/discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-language"></i>', 'MOVIE');
-      await renderTMDBRow('Action Blockbusters & Adrenaline', '/discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
-      await renderTMDBRow('Gripping Crime & Mystery Thrillers', '/discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
-      await renderTMDBRow('Romance & Heartwarming Dramas', '/discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
+      if (typeof win.showToast === 'function') win.showToast('Loading Netflix Live-Action Universe...');
+      // Expanded Global + Regional Indian content via secure Vercel Edge Proxy
+      await renderTMDBRow('Trending Movies Worldwide', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+      await renderTMDBRow('Bollywood Blockbusters & Hindi Cinema', 'discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-language"></i>', 'MOVIE');
+      await renderTMDBRow('Top Hindi Web Series & Dramas', 'discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('South Indian Cinema (Tamil & Telugu Dubs)', 'discover/movie?with_original_language=te|ta&sort_by=popularity.desc', '<i class="fas fa-fire"></i>', 'MOVIE');
+      await renderTMDBRow('Trending TV Shows Worldwide', 'discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('Explosive Action & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+      await renderTMDBRow('Gripping Crime & Mystery Thrillers', 'discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
+      await renderTMDBRow('Sci-Fi & Futuristic Realities', 'discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE');
+      await renderTMDBRow('Romance & Heartwarming Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
       return;
     }
 
@@ -640,7 +653,7 @@
   async function renderHindiDubRow() {
     const data = await fetchGQL(GQL_BASIC, { page: 1, perPage: 14, sort: ['FAVOURITES_DESC'] });
     if (data?.Page?.media?.length) {
-      buildUnifiedCarouselDOM('<i class="fas fa-language" style="color:var(--accent-red,#e50914);"></i> Premium Hindi Dubbed Series', data.Page.media, false, true);
+      buildUnifiedCarouselDOM('<i class="fas fa-language" style="color:var(--accent-red,#e50914);"></i> Premium Hindi Dubbed Anime', data.Page.media, false, true);
     }
   }
   win.renderHindiDubRow = renderHindiDubRow;
@@ -821,20 +834,20 @@
 
     if (win.STATE.isNetflixMode) {
       if (genre === 'Movies' || genre === 'Movie') {
-        await renderTMDBRow('Trending Feature Films', '/discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
-        await renderTMDBRow('Top Rated Blockbusters', '/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE');
+        await renderTMDBRow('Trending Feature Films', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+        await renderTMDBRow('Top Rated Blockbusters', 'discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE');
       } else if (genre === 'TV' || genre === 'TV Shows') {
-        await renderTMDBRow('Top Binge TV Series', '/discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
-        await renderTMDBRow('Critically Acclaimed Series', '/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV');
+        await renderTMDBRow('Top Binge TV Series', 'discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        await renderTMDBRow('Critically Acclaimed Series', 'discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV');
       } else if (genre === 'Action') {
-        await renderTMDBRow('Action Movies & Thrillers', '/discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
-        await renderTMDBRow('Action & Adventure Series', '/discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        await renderTMDBRow('Action Movies & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+        await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
       } else if (genre === 'Thriller' || genre === 'Thriller & Crime') {
-        await renderTMDBRow('Gripping Crime & Mystery Films', '/discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
-        await renderTMDBRow('Psychological Thriller Series', '/discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV');
+        await renderTMDBRow('Gripping Crime & Mystery Films', 'discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
+        await renderTMDBRow('Psychological Thriller Series', 'discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV');
       } else if (genre === 'Romance') {
-        await renderTMDBRow('Romantic Comedies & Dramas', '/discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
-        await renderTMDBRow('Romantic TV Series', '/discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        await renderTMDBRow('Romantic Comedies & Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
+        await renderTMDBRow('Romantic TV Series', 'discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
       } else if (genre === 'Hindi') {
         await win.loadHindiDubbed();
       }
@@ -853,12 +866,14 @@
     const contentRows = doc.getElementById('contentRows');
     if (contentRows) contentRows.innerHTML = '';
 
-    if (typeof win.showToast === 'function') win.showToast('Loading Hindi Releases...');
+    if (typeof win.showToast === 'function') win.showToast('Loading Hindi & Regional Indian Releases...');
 
     if (win.STATE.isNetflixMode) {
-      await renderTMDBRow('Hindi Blockbuster Movies', '/discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
-      await renderTMDBRow('Hindi Web Series & Dramas', '/discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
-      await renderTMDBRow('Critically Acclaimed Hindi Cinema', '/discover/movie?with_original_language=hi&sort_by=vote_average.desc&vote_count.gte=50', '<i class="fas fa-star"></i>', 'MOVIE');
+      await renderTMDBRow('Hindi Blockbuster Movies', 'discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+      await renderTMDBRow('Hindi Web Series & Dramas', 'discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('Telugu Action Blockbusters', 'discover/movie?with_original_language=te&sort_by=popularity.desc', '<i class="fas fa-fire"></i>', 'MOVIE');
+      await renderTMDBRow('Tamil Thrillers & Hits', 'discover/movie?with_original_language=ta&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+      await renderTMDBRow('Critically Acclaimed Hindi Cinema', 'discover/movie?with_original_language=hi&sort_by=vote_average.desc&vote_count.gte=50', '<i class="fas fa-star"></i>', 'MOVIE');
     } else {
       await renderHindiDubRow();
       await renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
@@ -882,39 +897,39 @@
           break;
         case 'MOVIES':
           win.syncCategoryState('MOVIES');
-          await renderTMDBRow('Trending Movies Worldwide', '/discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
-          await renderTMDBRow('Critically Acclaimed Feature Films', '/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE');
+          await renderTMDBRow('Trending Movies Worldwide', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+          await renderTMDBRow('Critically Acclaimed Feature Films', 'discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE');
           break;
         case 'TOP_AIRING':
         case 'SHOWS':
         case 'TV':
           win.syncCategoryState('TOP_AIRING');
-          await renderTMDBRow('Top Binge TV Series', '/discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
-          await renderTMDBRow('All-Time Greatest TV Shows', '/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV');
+          await renderTMDBRow('Top Binge TV Series', 'discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+          await renderTMDBRow('All-Time Greatest TV Shows', 'discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV');
           break;
         case 'HINDI':
           await win.loadHindiDubbed();
           break;
         case 'ACTION':
           win.syncCategoryState('ACTION');
-          await renderTMDBRow('Action Movies & Adrenaline', '/discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
-          await renderTMDBRow('Action & Adventure Series', '/discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+          await renderTMDBRow('Action Movies & Adrenaline', 'discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+          await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
           break;
         case 'THRILLER':
         case 'CRIME':
           win.syncCategoryState('THRILLER');
-          await renderTMDBRow('Crime & Mystery Thrillers', '/discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
-          await renderTMDBRow('Psychological Drama Series', '/discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV');
+          await renderTMDBRow('Crime & Mystery Thrillers', 'discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
+          await renderTMDBRow('Psychological Drama Series', 'discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV');
           break;
         case 'SCI_FI':
           win.syncCategoryState('SCI_FI');
-          await renderTMDBRow('Sci-Fi Explorations & Cyberpunk', '/discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE');
-          await renderTMDBRow('Sci-Fi & Futuristic TV Shows', '/discover/tv?with_genres=10765&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+          await renderTMDBRow('Sci-Fi Explorations & Cyberpunk', 'discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE');
+          await renderTMDBRow('Sci-Fi & Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
           break;
         case 'ROMANCE':
           win.syncCategoryState('ROMANCE');
-          await renderTMDBRow('Romantic Comedies & Dramas', '/discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
-          await renderTMDBRow('Romantic Drama Series', '/discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+          await renderTMDBRow('Romantic Comedies & Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
+          await renderTMDBRow('Romantic Drama Series', 'discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
           break;
       }
       win.scrollTo({ top: 350, behavior: 'smooth' });
@@ -964,7 +979,7 @@
 
     if (win.STATE.isNetflixMode) {
       try {
-        const url = cleanTMDBUrl('/discover/movie', { sort_by: 'popularity.desc' });
+        const url = cleanTMDBUrl('discover/movie', { sort_by: 'popularity.desc' });
         const data = await fetchWithRetry(url);
         const results = data?.results || [];
         if (results.length > 0) {
@@ -1013,7 +1028,7 @@
     if (!anime) {
       if (win.STATE.isNetflixMode) {
         try {
-          const item = await fetchWithRetry(`https://db.speedracelight.com/3/movie/${id}`);
+          const item = await fetchWithRetry(cleanTMDBUrl(`movie/${id}`));
           if (item) anime = win.formatTmdbMediaItem?.(item, 'MOVIE');
         } catch (e) {}
       } else {
@@ -1244,7 +1259,7 @@
       navigator.mediaSession.metadata = new MediaMetadata({
         title: isMovie ? title : `Episode ${e} - ${title}`,
         artist: isMovie ? 'Feature Film' : `Season ${s}`,
-        album: 'AniFlix Ultra',
+        album: 'AnimeDrift Ultra',
         artwork: [{ src: poster, sizes: '512x512', type: 'image/jpeg' }]
       });
 
@@ -1349,8 +1364,10 @@
     if (win.STATE.isNetflixMode || (win.STATE.currentTMDBId && win.STATE.currentTMDBId !== 533535)) {
       try {
         const isMovie = anime.format === 'MOVIE';
-        const endpoint = `https://db.speedracelight.com/3/${isMovie ? 'movie' : 'tv'}/${win.STATE.currentTMDBId}?append_to_response=credits,videos,recommendations`;
-        const tmdbData = await fetchWithRetry(endpoint);
+        const proxyUrl = cleanTMDBUrl(`${isMovie ? 'movie' : 'tv'}/${win.STATE.currentTMDBId}`, {
+          append_to_response: 'credits,videos,recommendations'
+        });
+        const tmdbData = await fetchWithRetry(proxyUrl);
 
         if (tmdbData) {
           if (tmdbData.credits?.cast?.length) {
@@ -1536,7 +1553,7 @@
   win.switchTab = switchTab;
 
   // ==========================================================================
-  // 13. REAL-TIME SEARCH AUTOCOMPLETE
+  // 13. REAL-TIME SEARCH AUTOCOMPLETE (VIA PROXY)
   // ==========================================================================
   win.toggleSearch = function () {
     const wrapper = doc.getElementById('searchWrapper');
@@ -1581,7 +1598,7 @@
     win.STATE.searchDebounce = setTimeout(async () => {
       if (win.STATE.isNetflixMode) {
         try {
-          const searchUrl = cleanTMDBUrl(`/search/multi?query=${encodeURIComponent(q)}`);
+          const searchUrl = cleanTMDBUrl('search/multi', { query: q });
           const data = await fetchWithRetry(searchUrl);
           drop.innerHTML = '';
           const results = (data?.results || []).filter(item => {
@@ -1890,7 +1907,6 @@
     if (!malId || win.STATE.isNetflixMode) return;
 
     try {
-      // Quiet fetch: Missing skip offsets will not populate errors or retries
       const res = await fetch(`https://api.aniskip.com/v2/skip-times/${malId}/${episode}?types[]=op&types[]=ed&types[]=recap&episodeLength=1440`);
       if (!res.ok) return;
       const data = await res.json();
