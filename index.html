@@ -51,11 +51,11 @@
   <meta http-equiv="Expires" content="0" />
 
   <!-- Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="favicon.ico?v=44.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=44.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=44.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=44.0.0" />
-  <link rel="manifest" href="manifest.json?v=44.0.0" />
+  <link rel="shortcut icon" href="favicon.ico?v=44.0.2" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=44.0.2" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=44.0.2" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=44.0.2" />
+  <link rel="manifest" href="manifest.json?v=44.0.2" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -81,12 +81,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v44.0.0) -->
-  <link rel="stylesheet" href="theme-base.css?v=44.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=44.0.0">
-  <link rel="stylesheet" href="p2p.css?v=44.0.0">
-  <link rel="stylesheet" href="webapp.css?v=44.0.0">
-  <link rel="stylesheet" href="mobile.css?v=44.0.0">
+  <!-- Modular Stylesheets (Synchronized to v44.0.2) -->
+  <link rel="stylesheet" href="theme-base.css?v=44.0.2">
+  <link rel="stylesheet" href="components-modal.css?v=44.0.2">
+  <link rel="stylesheet" href="p2p.css?v=44.0.2">
+  <link rel="stylesheet" href="webapp.css?v=44.0.2">
+  <link rel="stylesheet" href="mobile.css?v=44.0.2">
 
   <style>
     /* ==========================================================================
@@ -342,7 +342,7 @@
     }
 
     /* ==========================================================================
-       PC-EXCLUSIVE KINETIC HARDWARE CAROUSEL (ZERO LAG / ZERO RERENDER LOOPS)
+       NON-INTRUSIVE PC-EXCLUSIVE CAROUSEL SCROLLER (ZERO DOM REPARENTING)
        ========================================================================== */
     .row-scroll-container,
     .content-row-scroll,
@@ -369,101 +369,71 @@
     }
 
     @media (hover: hover) and (pointer: fine) and (min-width: 992px) {
-      .ad-pc-wrapper {
+      .ad-pc-enhanced-row {
         position: relative !important;
-        width: 100% !important;
       }
 
-      /* Edge Vignettes for cinema look */
-      .ad-pc-wrapper::before,
-      .ad-pc-wrapper::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 60px;
-        z-index: 15;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
-      .ad-pc-wrapper::before {
-        left: 0;
-        background: linear-gradient(90deg, rgba(4, 4, 6, 0.9) 0%, transparent 100%);
-      }
-      .ad-pc-wrapper::after {
-        right: 0;
-        background: linear-gradient(-90deg, rgba(4, 4, 6, 0.9) 0%, transparent 100%);
-      }
-      .ad-pc-wrapper:hover::before,
-      .ad-pc-wrapper:hover::after {
-        opacity: 1;
-      }
-
-      .ad-pc-row {
-        display: flex !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
+      .ad-pc-scrollable-target {
         cursor: grab !important;
         user-select: none !important;
         -webkit-user-drag: none !important;
         will-change: scroll-position;
       }
 
-      .ad-pc-row.is-dragging {
+      .ad-pc-scrollable-target.is-dragging {
         cursor: grabbing !important;
       }
 
-      .ad-pc-row.use-smooth {
+      .ad-pc-scrollable-target.is-smooth {
         scroll-behavior: smooth !important;
       }
 
-      .ad-nav-chevron {
+      .ad-pc-arrow-btn {
         position: absolute;
-        top: 50%;
-        transform: translateY(-50%) scale(0.9);
-        width: 46px;
-        height: 96px;
+        top: 55%;
+        transform: translateY(-50%) scale(0.92);
+        width: 44px;
+        height: 84px;
         background: rgba(10, 11, 20, 0.88);
         border: 1px solid rgba(255, 255, 255, 0.12);
         color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        border-radius: 12px;
+        font-size: 19px;
+        border-radius: 10px;
         cursor: pointer;
-        z-index: 30;
+        z-index: 40;
         opacity: 0;
         pointer-events: none;
-        backdrop-filter: blur(16px) saturate(180%);
-        -webkit-backdrop-filter: blur(16px) saturate(180%);
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
-        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+        transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, border-color 0.15s ease;
       }
 
-      .ad-nav-chevron:hover {
-        background: linear-gradient(135deg, #ff0844 0%, #ff2a5f 100%);
+      .ad-pc-arrow-btn:hover {
+        background: #ff0844;
         border-color: #ff0844;
-        color: #ffffff;
-        transform: translateY(-50%) scale(1.08);
-        box-shadow: 0 0 28px rgba(255, 8, 68, 0.75);
+        color: #fff;
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 0 24px rgba(255, 8, 68, 0.7);
       }
 
-      .ad-nav-chevron.left-arrow { left: 8px; }
-      .ad-nav-chevron.right-arrow { right: 8px; }
+      .ad-pc-arrow-btn.prev-btn { left: 4px; }
+      .ad-pc-arrow-btn.next-btn { right: 4px; }
 
-      .ad-pc-wrapper:hover .ad-nav-chevron {
+      .ad-pc-enhanced-row:hover > .ad-pc-arrow-btn {
         opacity: 1;
         pointer-events: auto;
       }
     }
 
     @media not all and (hover: hover) and (pointer: fine) and (min-width: 992px) {
-      .ad-nav-chevron {
+      .ad-pc-arrow-btn {
         display: none !important;
       }
-      .ad-pc-row {
+      .ad-pc-scrollable-target {
         cursor: auto !important;
       }
     }
@@ -574,7 +544,7 @@
       </div>
       <div class="search-dropdown" id="searchDropdown"></div>
 
-      <!-- Mode Toggle Button -->
+      <!-- Mode Toggle Button (Anime / Netflix Live-Action Universe) -->
       <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch Mode" aria-label="Toggle Catalog Universe" onclick="triggerNavWithLoader('Shifting Universe...', () => window.toggleNetflixMode())">
         <svg class="netflix-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5.398 0v24c1.173-.24 2.346-.51 3.518-.78V0H5.398z" fill="#E50914"/>
@@ -1022,7 +992,7 @@
   <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '44.0.2';
+      const CURRENT_APP_VERSION = '44.0.3';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1043,16 +1013,16 @@
     })();
   </script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.0) -->
-  <script src="core-engine.js?v=44.0.0"></script>
-  <script src="dash-player.js?v=44.0.0"></script>
-  <script src="streaming-ui.js?v=44.0.0"></script>
-  <script src="p2p.js?v=44.0.0"></script>
-  <script src="webapp.js?v=44.0.0"></script>
-  <script src="adblock-engine.js?v=44.0.0"></script>
-  <script src="secure.js?v=44.0.0"></script>
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.2) -->
+  <script src="core-engine.js?v=44.0.2"></script>
+  <script src="dash-player.js?v=44.0.2"></script>
+  <script src="streaming-ui.js?v=44.0.2"></script>
+  <script src="p2p.js?v=44.0.2"></script>
+  <script src="webapp.js?v=44.0.2"></script>
+  <script src="adblock-engine.js?v=44.0.2"></script>
+  <script src="secure.js?v=44.0.2"></script>
 
-  <!-- APPLICATION CONTROLLER & PC-EXCLUSIVE HARDWARE-ACCELERATED KINETIC ENGINE -->
+  <!-- APP CONTROLLER & SAFE NON-INTRUSIVE PC SCROLL CONTROLLER -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
@@ -1112,11 +1082,11 @@
       const TOTAL_DURATION = 4000;
 
       const preloadCandidates = [
-        'theme-base.css?v=44.0.0',
-        'components-modal.css?v=44.0.0',
-        'p2p.css?v=44.0.0',
-        'webapp.css?v=44.0.0',
-        'mobile.css?v=44.0.0'
+        'theme-base.css?v=44.0.2',
+        'components-modal.css?v=44.0.2',
+        'p2p.css?v=44.0.2',
+        'webapp.css?v=44.0.2',
+        'mobile.css?v=44.0.2'
       ];
       preloadCandidates.forEach(url => {
         const link = document.createElement('link');
@@ -1194,154 +1164,111 @@
     }
 
     // =========================================================================
-    // 4. ADVANCED PC-EXCLUSIVE HORIZONTAL KINETIC SCROLL ENGINE (ZERO-LAG RAF)
+    // 4. SAFE PC-EXCLUSIVE NON-DESTRUCTIVE HORIZONTAL SCROLLER
     // =========================================================================
-    (function initAdvancedPCScrollEngine() {
+    (function initSafePCScrollEngine() {
       const isDesktopPC = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 992px)').matches;
       if (!isDesktopPC || isSearchBot) return;
 
-      const SELECTORS = [
+      const ROW_QUERY = [
         '.content-rows > section',
         '.content-rows .row',
         '.row-scroll-container',
         '.content-row-scroll',
         '.anime-cards-row',
         '.movie-row',
-        '.category-row',
-        '[class*="row-container"]',
-        '[class*="carousel"]'
-      ];
+        '.category-row'
+      ].join(',');
 
-      function enhanceRow(node) {
-        let scroller = node;
-        // Find deep scroll element if parent is a wrapper
-        if (node.scrollWidth <= node.clientWidth) {
-          const child = node.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
-          if (child) scroller = child;
+      function attachControls(rowNode) {
+        // Resolve the true scrolling container element
+        let scroller = rowNode;
+        if (rowNode.scrollWidth <= rowNode.clientWidth) {
+          const inner = rowNode.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
+          if (inner) scroller = inner;
         }
 
-        if (scroller.dataset.adKineticBound === 'true') return;
-        scroller.dataset.adKineticBound = 'true';
-        scroller.classList.add('ad-pc-row');
+        if (scroller.dataset.adPcBound === 'true') return;
+        scroller.dataset.adPcBound = 'true';
+        scroller.classList.add('ad-pc-scrollable-target');
 
-        // Setup container for Chevrons and Vignettes
-        let wrapper = scroller.parentElement;
-        if (!wrapper.classList.contains('ad-pc-wrapper')) {
-          const pcWrap = document.createElement('div');
-          pcWrap.className = 'ad-pc-wrapper';
-          scroller.parentNode.insertBefore(pcWrap, scroller);
-          pcWrap.appendChild(scroller);
-          wrapper = pcWrap;
-        }
+        // Target parent for arrow positioning WITHOUT reparenting children (prevents breaking core-engine.js)
+        const hostContainer = scroller.parentElement || scroller;
+        hostContainer.classList.add('ad-pc-enhanced-row');
 
-        // Navigation Chevron controls
-        if (!wrapper.querySelector('.ad-nav-chevron.left-arrow')) {
-          const leftBtn = document.createElement('button');
-          leftBtn.className = 'ad-nav-chevron left-arrow';
-          leftBtn.type = 'button';
-          leftBtn.setAttribute('aria-label', 'Previous Titles');
-          leftBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-          wrapper.appendChild(leftBtn);
+        // Inject navigation arrows inside host container
+        if (!hostContainer.querySelector(':scope > .ad-pc-arrow-btn.prev-btn')) {
+          const prev = document.createElement('button');
+          prev.className = 'ad-pc-arrow-btn prev-btn';
+          prev.type = 'button';
+          prev.setAttribute('aria-label', 'Previous Titles');
+          prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
 
-          const rightBtn = document.createElement('button');
-          rightBtn.className = 'ad-nav-chevron right-arrow';
-          rightBtn.type = 'button';
-          rightBtn.setAttribute('aria-label', 'Next Titles');
-          rightBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-          wrapper.appendChild(rightBtn);
+          const next = document.createElement('button');
+          next.className = 'ad-pc-arrow-btn next-btn';
+          next.type = 'button';
+          next.setAttribute('aria-label', 'Next Titles');
+          next.innerHTML = '<i class="fas fa-chevron-right"></i>';
 
-          leftBtn.addEventListener('click', (e) => {
+          hostContainer.appendChild(prev);
+          hostContainer.appendChild(next);
+
+          prev.addEventListener('click', (e) => {
             e.stopPropagation();
-            scroller.classList.add('use-smooth');
-            scroller.scrollBy({ left: -(scroller.clientWidth * 0.78), behavior: 'smooth' });
+            scroller.classList.add('is-smooth');
+            scroller.scrollBy({ left: -(scroller.clientWidth * 0.8), behavior: 'smooth' });
           });
 
-          rightBtn.addEventListener('click', (e) => {
+          next.addEventListener('click', (e) => {
             e.stopPropagation();
-            scroller.classList.add('use-smooth');
-            scroller.scrollBy({ left: scroller.clientWidth * 0.78, behavior: 'smooth' });
+            scroller.classList.add('is-smooth');
+            scroller.scrollBy({ left: scroller.clientWidth * 0.8, behavior: 'smooth' });
           });
         }
 
-        // Kinetic Drag Variables
-        let isDown = false;
-        let startX = 0;
-        let scrollStart = 0;
-        let velocity = 0;
-        let lastX = 0;
-        let lastTime = 0;
-        let momentumID = null;
-        let hasMoved = false;
-
-        function runMomentum() {
-          if (Math.abs(velocity) > 0.4) {
-            scroller.scrollLeft -= velocity;
-            velocity *= 0.94; // Friction damping
-            momentumID = requestAnimationFrame(runMomentum);
-          } else {
-            cancelAnimationFrame(momentumID);
-            momentumID = null;
-          }
-        }
-
-        // 1. Mouse Drag
-        scroller.addEventListener('mousedown', (e) => {
-          if (e.button !== 0) return;
-          isDown = true;
-          hasMoved = false;
-          scroller.classList.remove('use-smooth');
-          scroller.classList.add('is-dragging');
-          
-          if (momentumID) cancelAnimationFrame(momentumID);
-
-          startX = e.pageX;
-          lastX = e.pageX;
-          scrollStart = scroller.scrollLeft;
-          lastTime = performance.now();
-          velocity = 0;
-        });
-
-        window.addEventListener('mouseup', () => {
-          if (!isDown) return;
-          isDown = false;
-          scroller.classList.remove('is-dragging');
-          if (Math.abs(velocity) > 1.2) {
-            momentumID = requestAnimationFrame(runMomentum);
-          }
-        });
-
-        window.addEventListener('mousemove', (e) => {
-          if (!isDown) return;
-          e.preventDefault();
-          const now = performance.now();
-          const currentX = e.pageX;
-          const deltaX = currentX - startX;
-          
-          if (Math.abs(deltaX) > 6) hasMoved = true;
-
-          scroller.scrollLeft = scrollStart - (deltaX * 1.25);
-
-          // Compute instantaneous velocity for momentum
-          const dt = Math.max(now - lastTime, 1);
-          velocity = ((currentX - lastX) / dt) * 16;
-          
-          lastX = currentX;
-          lastTime = now;
-        });
-
-        // 2. Instantaneous Zero-Lag Mouse Wheel (Zero DOM jitter)
+        // Mouse Wheel Horizontal Translation (Zero-Lag, Smooth-Disabled during roll)
         scroller.addEventListener('wheel', (e) => {
           if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
             if (scroller.scrollWidth > scroller.clientWidth) {
               e.preventDefault();
-              if (momentumID) cancelAnimationFrame(momentumID);
-              scroller.classList.remove('use-smooth');
-              scroller.scrollLeft += (e.deltaY * 1.2);
+              scroller.classList.remove('is-smooth');
+              scroller.scrollLeft += (e.deltaY * 1.3);
             }
           }
         }, { passive: false });
 
-        // Prevent accidental card navigation clicks on release after drag
+        // Hardware-Accelerated Kinetic Dragging
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        let hasMoved = false;
+
+        scroller.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          isDown = true;
+          hasMoved = false;
+          scroller.classList.remove('is-smooth');
+          scroller.classList.add('is-dragging');
+          startX = e.pageX;
+          scrollStart = scroller.scrollLeft;
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (isDown) {
+            isDown = false;
+            scroller.classList.remove('is-dragging');
+          }
+        });
+
+        scroller.addEventListener('mousemove', (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const walk = (e.pageX - startX) * 1.4;
+          if (Math.abs(walk) > 6) hasMoved = true;
+          scroller.scrollLeft = scrollStart - walk;
+        });
+
+        // Suppress accidental card clicks when dragging
         scroller.addEventListener('click', (e) => {
           if (hasMoved) {
             e.preventDefault();
@@ -1350,34 +1277,30 @@
         }, true);
       }
 
-      function mountAllScrollers() {
-        const elements = document.querySelectorAll(SELECTORS.join(','));
-        elements.forEach(enhanceRow);
+      function scanRows() {
+        const rows = document.querySelectorAll(ROW_QUERY);
+        rows.forEach(attachControls);
       }
 
-      // Initial Mount
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', mountAllScrollers);
+        document.addEventListener('DOMContentLoaded', scanRows);
       } else {
-        mountAllScrollers();
+        scanRows();
       }
 
-      // Throttled Dynamic DOM Injection Observer
-      let throttleTimeout = null;
+      // Safe, throttled observer that doesn't conflict with catalog updates
+      let debounce = null;
       const obs = new MutationObserver(() => {
-        if (throttleTimeout) return;
-        throttleTimeout = setTimeout(() => {
-          mountAllScrollers();
-          throttleTimeout = null;
-        }, 180);
+        clearTimeout(debounce);
+        debounce = setTimeout(scanRows, 150);
       });
 
-      const rootTarget = document.getElementById('contentRows') || document.body;
-      obs.observe(rootTarget, { childList: true, subtree: true });
+      const container = document.getElementById('contentRows') || document.body;
+      obs.observe(container, { childList: true });
     })();
 
     // =========================================================================
-    // 5. SERVICE WORKER REGISTRATION (v44.0.0) & LIVE UPDATE HUD
+    // 5. SERVICE WORKER REGISTRATION (v44.0.2) & LIVE UPDATE HUD
     // =========================================================================
     let newWorkerWaiting = null;
 
@@ -1417,7 +1340,7 @@
     if ('serviceWorker' in navigator && !isSearchBot) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('sw.js?v=44.0.0', {
+          const reg = await navigator.serviceWorker.register('sw.js?v=44.0.2', {
             updateViaCache: 'none'
           });
 
