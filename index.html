@@ -992,7 +992,7 @@
   <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '44.0.3';
+      const CURRENT_APP_VERSION = '44.0.4';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1014,13 +1014,13 @@
   </script>
 
   <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.2) -->
-  <script src="core-engine.js?v=44.0.2"></script>
+  <script src="core-engine.js?v=44.0.3"></script>
   <script src="dash-player.js?v=44.0.2"></script>
-  <script src="streaming-ui.js?v=44.0.2"></script>
+  <script src="streaming-ui.js?v=44.0.3"></script>
   <script src="p2p.js?v=44.0.2"></script>
   <script src="webapp.js?v=44.0.2"></script>
   <script src="adblock-engine.js?v=44.0.2"></script>
-  
+   <script src="secure.js?v=44.0.3"></script>
 
   <!-- APP CONTROLLER & SAFE NON-INTRUSIVE PC SCROLL CONTROLLER -->
   <script>
