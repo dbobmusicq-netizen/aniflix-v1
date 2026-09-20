@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   
-  <!-- Search Engine SEO & Discoverability Suite -->
   <title>AnimeDrift - Stream HD Anime & Simulcast Series Online</title>
   <meta name="description" content="Stream popular subbed and Hindi-dubbed anime series, movies, and simulcasts with real-time P2P sync and zero popups across all devices." />
   <meta name="keywords" content="AnimeDrift, stream anime, watch anime online, hindi dub anime, anime simulcasts, free anime streaming, watch party p2p" />
@@ -343,9 +342,8 @@
     }
 
     /* ==========================================================================
-       HARDWARE-ACCELERATED PC-EXCLUSIVE HORIZONTAL CAROUSEL CONTROLS
+       PC-EXCLUSIVE KINETIC HARDWARE CAROUSEL (ZERO LAG / ZERO RERENDER LOOPS)
        ========================================================================== */
-    /* Hide scrollbars universally without affecting layout */
     .row-scroll-container,
     .content-row-scroll,
     .ep-grid,
@@ -370,14 +368,39 @@
       height: 0 !important;
     }
 
-    /* PC Desktop Exclusive View Rules */
     @media (hover: hover) and (pointer: fine) and (min-width: 992px) {
-      .ad-pc-carousel-wrapper {
+      .ad-pc-wrapper {
         position: relative !important;
         width: 100% !important;
       }
 
-      .ad-pc-enhanced-row {
+      /* Edge Vignettes for cinema look */
+      .ad-pc-wrapper::before,
+      .ad-pc-wrapper::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 60px;
+        z-index: 15;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .ad-pc-wrapper::before {
+        left: 0;
+        background: linear-gradient(90deg, rgba(4, 4, 6, 0.9) 0%, transparent 100%);
+      }
+      .ad-pc-wrapper::after {
+        right: 0;
+        background: linear-gradient(-90deg, rgba(4, 4, 6, 0.9) 0%, transparent 100%);
+      }
+      .ad-pc-wrapper:hover::before,
+      .ad-pc-wrapper:hover::after {
+        opacity: 1;
+      }
+
+      .ad-pc-row {
         display: flex !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
@@ -385,64 +408,62 @@
         user-select: none !important;
         -webkit-user-drag: none !important;
         will-change: scroll-position;
-        /* Dynamic smooth scrolling toggle handled by JS to kill wheel lag */
       }
 
-      .ad-pc-enhanced-row.is-dragging {
+      .ad-pc-row.is-dragging {
         cursor: grabbing !important;
       }
 
-      .ad-pc-enhanced-row.is-smooth {
+      .ad-pc-row.use-smooth {
         scroll-behavior: smooth !important;
       }
 
-      .ad-pc-arrow-btn {
+      .ad-nav-chevron {
         position: absolute;
         top: 50%;
-        transform: translateY(-50%) scale(0.92);
-        width: 44px;
-        height: 84px;
-        background: rgba(10, 11, 18, 0.88);
+        transform: translateY(-50%) scale(0.9);
+        width: 46px;
+        height: 96px;
+        background: rgba(10, 11, 20, 0.88);
         border: 1px solid rgba(255, 255, 255, 0.12);
         color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 19px;
-        border-radius: 8px;
+        font-size: 20px;
+        border-radius: 12px;
         cursor: pointer;
         z-index: 30;
         opacity: 0;
         pointer-events: none;
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
-        transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, border-color 0.15s ease;
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
       }
 
-      .ad-pc-arrow-btn:hover {
-        background: #ff0844;
+      .ad-nav-chevron:hover {
+        background: linear-gradient(135deg, #ff0844 0%, #ff2a5f 100%);
         border-color: #ff0844;
-        color: #fff;
-        transform: translateY(-50%) scale(1.05);
-        box-shadow: 0 0 24px rgba(255, 8, 68, 0.7);
+        color: #ffffff;
+        transform: translateY(-50%) scale(1.08);
+        box-shadow: 0 0 28px rgba(255, 8, 68, 0.75);
       }
 
-      .ad-pc-arrow-btn.prev-btn { left: 4px; }
-      .ad-pc-arrow-btn.next-btn { right: 4px; }
+      .ad-nav-chevron.left-arrow { left: 8px; }
+      .ad-nav-chevron.right-arrow { right: 8px; }
 
-      .ad-pc-carousel-wrapper:hover .ad-pc-arrow-btn {
+      .ad-pc-wrapper:hover .ad-nav-chevron {
         opacity: 1;
         pointer-events: auto;
       }
     }
 
-    /* Completely isolate and strip buttons/grab cursor on mobile and tablets */
     @media not all and (hover: hover) and (pointer: fine) and (min-width: 992px) {
-      .ad-pc-arrow-btn {
+      .ad-nav-chevron {
         display: none !important;
       }
-      .ad-pc-enhanced-row {
+      .ad-pc-row {
         cursor: auto !important;
       }
     }
@@ -1001,7 +1022,7 @@
   <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '44.0.1';
+      const CURRENT_APP_VERSION = '44.0.2';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1031,7 +1052,7 @@
   <script src="adblock-engine.js?v=44.0.0"></script>
   <script src="secure.js?v=44.0.0"></script>
 
-  <!-- APPLICATION CONTROLLER & PC-EXCLUSIVE HARDWARE-ACCELERATED CAROUSEL -->
+  <!-- APPLICATION CONTROLLER & PC-EXCLUSIVE HARDWARE-ACCELERATED KINETIC ENGINE -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
@@ -1173,10 +1194,9 @@
     }
 
     // =========================================================================
-    // 4. PC-EXCLUSIVE HARDWARE ACCELERATED CAROUSEL CONTROLLER
+    // 4. ADVANCED PC-EXCLUSIVE HORIZONTAL KINETIC SCROLL ENGINE (ZERO-LAG RAF)
     // =========================================================================
-    (function initPCHorizontalScroll() {
-      // Strict hardware check: Only runs on PC / Laptop with fine pointer (mouse/trackpad)
+    (function initAdvancedPCScrollEngine() {
       const isDesktopPC = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 992px)').matches;
       if (!isDesktopPC || isSearchBot) return;
 
@@ -1192,143 +1212,168 @@
         '[class*="carousel"]'
       ];
 
-      function enhanceRowElement(el) {
-        // Resolve the true scrolling element
-        let scroller = el;
-        if (el.scrollWidth <= el.clientWidth) {
-          const inner = el.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
-          if (inner) scroller = inner;
+      function enhanceRow(node) {
+        let scroller = node;
+        // Find deep scroll element if parent is a wrapper
+        if (node.scrollWidth <= node.clientWidth) {
+          const child = node.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
+          if (child) scroller = child;
         }
 
-        if (scroller.dataset.adPcBound === 'true') return;
-        scroller.dataset.adPcBound = 'true';
-        scroller.classList.add('ad-pc-enhanced-row');
+        if (scroller.dataset.adKineticBound === 'true') return;
+        scroller.dataset.adKineticBound = 'true';
+        scroller.classList.add('ad-pc-row');
 
-        // 1. Wrap in container for Netflix-style arrow positioning
+        // Setup container for Chevrons and Vignettes
         let wrapper = scroller.parentElement;
-        if (!wrapper.classList.contains('ad-pc-carousel-wrapper')) {
-          const newWrapper = document.createElement('div');
-          newWrapper.className = 'ad-pc-carousel-wrapper';
-          scroller.parentNode.insertBefore(newWrapper, scroller);
-          newWrapper.appendChild(scroller);
-          wrapper = newWrapper;
+        if (!wrapper.classList.contains('ad-pc-wrapper')) {
+          const pcWrap = document.createElement('div');
+          pcWrap.className = 'ad-pc-wrapper';
+          scroller.parentNode.insertBefore(pcWrap, scroller);
+          pcWrap.appendChild(scroller);
+          wrapper = pcWrap;
         }
 
-        // 2. Inject Left & Right Navigation Chevrons
-        if (!wrapper.querySelector('.ad-pc-arrow-btn.prev-btn')) {
-          const prevBtn = document.createElement('button');
-          prevBtn.className = 'ad-pc-arrow-btn prev-btn';
-          prevBtn.type = 'button';
-          prevBtn.setAttribute('aria-label', 'Previous Titles');
-          prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-          wrapper.appendChild(prevBtn);
+        // Navigation Chevron controls
+        if (!wrapper.querySelector('.ad-nav-chevron.left-arrow')) {
+          const leftBtn = document.createElement('button');
+          leftBtn.className = 'ad-nav-chevron left-arrow';
+          leftBtn.type = 'button';
+          leftBtn.setAttribute('aria-label', 'Previous Titles');
+          leftBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+          wrapper.appendChild(leftBtn);
 
-          const nextBtn = document.createElement('button');
-          nextBtn.className = 'ad-pc-arrow-btn next-btn';
-          nextBtn.type = 'button';
-          nextBtn.setAttribute('aria-label', 'Next Titles');
-          nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-          wrapper.appendChild(nextBtn);
+          const rightBtn = document.createElement('button');
+          rightBtn.className = 'ad-nav-chevron right-arrow';
+          rightBtn.type = 'button';
+          rightBtn.setAttribute('aria-label', 'Next Titles');
+          rightBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+          wrapper.appendChild(rightBtn);
 
-          prevBtn.addEventListener('click', (e) => {
+          leftBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            scroller.classList.add('is-smooth');
-            scroller.scrollBy({ left: -(scroller.clientWidth * 0.8), behavior: 'smooth' });
+            scroller.classList.add('use-smooth');
+            scroller.scrollBy({ left: -(scroller.clientWidth * 0.78), behavior: 'smooth' });
           });
 
-          nextBtn.addEventListener('click', (e) => {
+          rightBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            scroller.classList.add('is-smooth');
-            scroller.scrollBy({ left: scroller.clientWidth * 0.8, behavior: 'smooth' });
+            scroller.classList.add('use-smooth');
+            scroller.scrollBy({ left: scroller.clientWidth * 0.78, behavior: 'smooth' });
           });
         }
 
-        // 3. Mouse Wheel Translation (Zero-Lag Instant Input)
-        scroller.addEventListener('wheel', (e) => {
-          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-            const hasScrollSpace = scroller.scrollWidth > scroller.clientWidth;
-            if (hasScrollSpace) {
-              e.preventDefault();
-              // Remove CSS smoothing during wheel scroll to prevent input lag
-              scroller.classList.remove('is-smooth');
-              scroller.scrollLeft += e.deltaY * 1.35;
-            }
-          }
-        }, { passive: false });
-
-        // 4. Smooth Hardware-Accelerated Dragging (requestAnimationFrame)
+        // Kinetic Drag Variables
         let isDown = false;
         let startX = 0;
-        let startScrollLeft = 0;
-        let draggedDistance = 0;
-        let targetScroll = 0;
-        let rafId = null;
+        let scrollStart = 0;
+        let velocity = 0;
+        let lastX = 0;
+        let lastTime = 0;
+        let momentumID = null;
+        let hasMoved = false;
 
-        function updateDragScroll() {
-          if (!isDown) return;
-          scroller.scrollLeft = targetScroll;
-          rafId = requestAnimationFrame(updateDragScroll);
+        function runMomentum() {
+          if (Math.abs(velocity) > 0.4) {
+            scroller.scrollLeft -= velocity;
+            velocity *= 0.94; // Friction damping
+            momentumID = requestAnimationFrame(runMomentum);
+          } else {
+            cancelAnimationFrame(momentumID);
+            momentumID = null;
+          }
         }
 
+        // 1. Mouse Drag
         scroller.addEventListener('mousedown', (e) => {
-          if (e.button !== 0) return; // Only listen for primary left click
+          if (e.button !== 0) return;
           isDown = true;
-          draggedDistance = 0;
-          scroller.classList.remove('is-smooth');
+          hasMoved = false;
+          scroller.classList.remove('use-smooth');
           scroller.classList.add('is-dragging');
+          
+          if (momentumID) cancelAnimationFrame(momentumID);
+
           startX = e.pageX;
-          startScrollLeft = scroller.scrollLeft;
-          targetScroll = startScrollLeft;
-          cancelAnimationFrame(rafId);
-          rafId = requestAnimationFrame(updateDragScroll);
+          lastX = e.pageX;
+          scrollStart = scroller.scrollLeft;
+          lastTime = performance.now();
+          velocity = 0;
         });
 
         window.addEventListener('mouseup', () => {
-          if (isDown) {
-            isDown = false;
-            cancelAnimationFrame(rafId);
-            scroller.classList.remove('is-dragging');
+          if (!isDown) return;
+          isDown = false;
+          scroller.classList.remove('is-dragging');
+          if (Math.abs(velocity) > 1.2) {
+            momentumID = requestAnimationFrame(runMomentum);
           }
         });
 
         window.addEventListener('mousemove', (e) => {
           if (!isDown) return;
+          e.preventDefault();
+          const now = performance.now();
           const currentX = e.pageX;
-          const walk = (currentX - startX) * 1.45;
-          draggedDistance += Math.abs(currentX - startX);
-          targetScroll = startScrollLeft - walk;
+          const deltaX = currentX - startX;
+          
+          if (Math.abs(deltaX) > 6) hasMoved = true;
+
+          scroller.scrollLeft = scrollStart - (deltaX * 1.25);
+
+          // Compute instantaneous velocity for momentum
+          const dt = Math.max(now - lastTime, 1);
+          velocity = ((currentX - lastX) / dt) * 16;
+          
+          lastX = currentX;
+          lastTime = now;
         });
 
-        // Suppress accidental poster clicks when dragging across titles
+        // 2. Instantaneous Zero-Lag Mouse Wheel (Zero DOM jitter)
+        scroller.addEventListener('wheel', (e) => {
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            if (scroller.scrollWidth > scroller.clientWidth) {
+              e.preventDefault();
+              if (momentumID) cancelAnimationFrame(momentumID);
+              scroller.classList.remove('use-smooth');
+              scroller.scrollLeft += (e.deltaY * 1.2);
+            }
+          }
+        }, { passive: false });
+
+        // Prevent accidental card navigation clicks on release after drag
         scroller.addEventListener('click', (e) => {
-          if (draggedDistance > 8) {
+          if (hasMoved) {
             e.preventDefault();
             e.stopPropagation();
           }
         }, true);
       }
 
-      function scanAndMountScrollers() {
-        const found = document.querySelectorAll(SELECTORS.join(','));
-        found.forEach(enhanceRowElement);
+      function mountAllScrollers() {
+        const elements = document.querySelectorAll(SELECTORS.join(','));
+        elements.forEach(enhanceRow);
       }
 
       // Initial Mount
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', scanAndMountScrollers);
+        document.addEventListener('DOMContentLoaded', mountAllScrollers);
       } else {
-        scanAndMountScrollers();
+        mountAllScrollers();
       }
 
-      // Debounced MutationObserver to prevent layout thrashing on dynamic rows
-      let debounceTimer = null;
-      const targetObserver = new MutationObserver(() => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(scanAndMountScrollers, 120);
+      // Throttled Dynamic DOM Injection Observer
+      let throttleTimeout = null;
+      const obs = new MutationObserver(() => {
+        if (throttleTimeout) return;
+        throttleTimeout = setTimeout(() => {
+          mountAllScrollers();
+          throttleTimeout = null;
+        }, 180);
       });
 
-      const containerNode = document.getElementById('contentRows') || document.body;
-      targetObserver.observe(containerNode, { childList: true, subtree: true });
+      const rootTarget = document.getElementById('contentRows') || document.body;
+      obs.observe(rootTarget, { childList: true, subtree: true });
     })();
 
     // =========================================================================
