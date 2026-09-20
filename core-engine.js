@@ -1,21 +1,15 @@
 /**
- * AniFlix Ultra - Multi-Device Synchronized Core Engine
- * Production-Grade JavaScript Controller (Version 35.0 Enterprise Resilient Architecture)
+ * ============================================================================
+ * AnimeDrift Core Engine — Secure Edge Proxy Architecture
+ * Production-Grade JavaScript Controller (Version 44.0.2 Resilient Architecture)
  *
- * Architecture & Features:
- *  - Anti-Wipe DOM Protection Shield (blocks malicious overwrites).
- *  - Circuit Breaker & Adaptive Token-Bucket Request Guard for GraphQL/REST.
- *  - GraphQL Query Normalizer with In-Memory Caching & Auto-Deduplication.
- *  - Anti-Rate Limit Staggering: 429 backoff pause with exponential jitter.
- *  - Complete Multi-Server Stream Routing Matrix (NxSha, Filmu, VidCore, VidFast).
- *  - AniList & TMDB Synchronous Dual-Universe Discovery (Anime & Live-Action Netflix).
- *  - Multi-Season Hydration Engine with Dynamic Route Verification.
- *  - Safe Bi-directional History State Router with URL Synchronization.
- *  - IndexedDB Persistence Layer with Schema Upgrade Handlers.
- *  - Real-time Sub-pixel Canvas Chroma Extraction & Ambilight Engine.
- *  - Keyboard Accessibility & Fullscreen/Theater Modes.
- *  - Native AniList GraphQL Airing Schedule Engine (Direct replacement for deprecated Jikan API).
- *  - Clean CSS-DOM Handshake (Zero inline layout conflicts, interactive iframe delegation).
+ * Major Updates:
+ *  - Removed hardcoded TMDB API endpoints and public token leaks.
+ *  - Full integration with Vercel serverless proxy gateway (`/api/tmdb`).
+ *  - Dual-Universe catalog resolution (Anime via AniList & Netflix via Secure Edge).
+ *  - Anti-DOM-Wipe execution shield & Adaptive Circuit Breaker.
+ *  - Zero layout-thrashing: Compatible with kinetic horizontal scroller & drawer HUDs.
+ * ============================================================================
  */
 
 // ============================================================================
@@ -28,7 +22,7 @@
     window.__shield_active = true;
 
     const noopWarn = function (method) {
-      console.warn(`[AniFlix Shield] Blocked unauthorized document.${method} invocation.`);
+      console.warn(`[AnimeDrift Shield] Blocked unauthorized document.${method} invocation.`);
     };
 
     Object.defineProperty(document, 'write', {
@@ -43,7 +37,7 @@
       configurable: false
     });
   } catch (e) {
-    console.error('[AniFlix Shield] Initialization failed:', e);
+    console.error('[AnimeDrift Shield] Initialization failed:', e);
   }
 })();
 
@@ -55,7 +49,7 @@ const CONFIG = {
     ANILIST: 'https://graphql.anilist.co',
     KITSU: 'https://kitsu.io/api/edge',
     ANISKIP: 'https://api.aniskip.com/v2/skip-times',
-    TMDB_BASE: 'https://db.speedracelight.com/3'
+    TMDB_PROXY: '/api/tmdb' // Secure Vercel Serverless Edge Gateway
   },
   TMDB_GENRES: {
     ACTION: { movie: 28, tv: 10759 },
@@ -65,28 +59,48 @@ const CONFIG = {
     ANIMATION_EXCLUDE_ID: 16
   },
   STORAGE_KEYS: {
-    WATCHLIST: 'aniflix_watchlist_v6',
-    HISTORY: 'aniflix_history_v6',
-    PREFS: 'aniflix_prefs_v6',
-    DUB_PREF: 'aniflix_dub_pref_v6',
-    ACTIVE_SERVER: 'aniflix_active_server_v6'
+    WATCHLIST: 'animedrift_watchlist_v6',
+    HISTORY: 'animedrift_history_v6',
+    PREFS: 'animedrift_prefs_v6',
+    DUB_PREF: 'animedrift_dub_pref_v6',
+    ACTIVE_SERVER: 'animedrift_active_server_v6'
   },
   DEFAULT_TMDB_FALLBACK: 533535
 };
 window.CONFIG = CONFIG;
+
+// Helper to route all TMDB requests securely through /api/tmdb
+function buildSecureTmdbUrl(endpointPath, customParams = {}) {
+  const cleanEndpoint = endpointPath.replace(/^\/+/, '');
+  const url = new URL(CONFIG.APIS.TMDB_PROXY, window.location.origin);
+  url.searchParams.set('endpoint', cleanEndpoint);
+
+  if (cleanEndpoint.startsWith('discover/')) {
+    if (!customParams['without_genres']) url.searchParams.set('without_genres', '16');
+    if (!customParams['vote_count.gte']) url.searchParams.set('vote_count.gte', '15');
+  }
+
+  for (const [key, value] of Object.entries(customParams)) {
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, String(value));
+    }
+  }
+
+  return url.toString();
+}
 
 // ============================================================================
 // 2. ADVANCED CIRCUIT BREAKER & API REQUEST RATE-LIMIT GUARD
 // ============================================================================
 (function () {
   'use strict';
-  if (window.__AniFlixRequestGuard) return;
+  if (window.__AnimeDriftRequestGuard) return;
 
   const nativeFetch = window.fetch.bind(window);
 
   const GUARD = {
-    minDelay: 600,
-    maxConcurrent: 2,
+    minDelay: 500,
+    maxConcurrent: 3,
     maxRetries: 2,
     cacheTTL: 5 * 60 * 1000,
     queue: [],
@@ -97,14 +111,12 @@ window.CONFIG = CONFIG;
     circuitOpenUntil: 0
   };
 
-  window.__AniFlixRequestGuard = GUARD;
+  window.__AnimeDriftRequestGuard = GUARD;
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   function getUrl(input) {
-    return typeof input === 'string'
-      ? input
-      : (input && input.url) || String(input);
+    return typeof input === 'string' ? input : (input && input.url) || String(input);
   }
 
   function isProtectedAPI(url) {
@@ -112,7 +124,7 @@ window.CONFIG = CONFIG;
       url.includes('graphql.anilist.co') ||
       url.includes('kitsu.io/api') ||
       url.includes('api.aniskip.com') ||
-      url.includes('db.speedracelight.com')
+      url.includes('/api/tmdb')
     );
   }
 
@@ -160,7 +172,7 @@ window.CONFIG = CONFIG;
     const now = Date.now();
     if (GUARD.circuitOpenUntil > now) {
       const waitTime = GUARD.circuitOpenUntil - now;
-      console.warn(`[AniFlix Guard] Circuit Breaker Open. Pausing request for ${waitTime}ms.`);
+      console.warn(`[AnimeDrift Guard] Circuit Open. Pausing for ${waitTime}ms.`);
       await sleep(waitTime);
     }
 
@@ -214,12 +226,12 @@ window.CONFIG = CONFIG;
           if (response.status === 429) {
             let retryAfterMs = Number(response.headers.get('Retry-After')) * 1000;
             if (!Number.isFinite(retryAfterMs) || retryAfterMs <= 0) {
-              retryAfterMs = Math.min(25000, 5000 * Math.pow(2, attempt));
+              retryAfterMs = Math.min(20000, 4000 * Math.pow(2, attempt));
             }
-            retryAfterMs += Math.floor(Math.random() * 1200);
+            retryAfterMs += Math.floor(Math.random() * 1000);
 
             GUARD.circuitOpenUntil = Date.now() + retryAfterMs;
-            console.warn(`[AniFlix Guard] 429 Rate Limit encountered. Circuit open for ${retryAfterMs}ms.`);
+            console.warn(`[AnimeDrift Guard] 429 encountered. Backoff for ${retryAfterMs}ms.`);
 
             await sleep(retryAfterMs);
             attempt++;
@@ -227,7 +239,7 @@ window.CONFIG = CONFIG;
           }
 
           if (response.status >= 500 && attempt < GUARD.maxRetries) {
-            const retryDelay = Math.min(10000, 2000 * Math.pow(2, attempt));
+            const retryDelay = Math.min(8000, 1500 * Math.pow(2, attempt));
             await sleep(retryDelay);
             attempt++;
             continue;
@@ -245,7 +257,7 @@ window.CONFIG = CONFIG;
           if (attempt >= GUARD.maxRetries) {
             throw error;
           }
-          const retryDelay = Math.min(10000, 1500 * Math.pow(2, attempt));
+          const retryDelay = Math.min(8000, 1200 * Math.pow(2, attempt));
           await sleep(retryDelay);
           attempt++;
         }
@@ -276,7 +288,7 @@ window.CONFIG = CONFIG;
 })();
 
 // ============================================================================
-// 3. STREAM SERVER CONFIGURATION & MULTI-ROUTE ENGINE
+// 3. STREAM SERVER CONFIGURATION & MULTI-ROUTE MATRIX
 // ============================================================================
 const SERVER_CONFIG = {
   1: {
@@ -381,23 +393,6 @@ let STATE = {
 };
 window.STATE = STATE;
 
-function cleanTMDBUrl(endpointPath, customParams = {}) {
-  const base = endpointPath.startsWith('http')
-    ? endpointPath
-    : `${CONFIG.APIS.TMDB_BASE}${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;
-
-  const url = new URL(base);
-  if (url.pathname.includes('/discover/')) {
-    if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
-    if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
-  }
-
-  for (const [key, value] of Object.entries(customParams)) {
-    url.searchParams.set(key, String(value));
-  }
-  return url.toString();
-}
-
 // ============================================================================
 // 5. INDEXEDDB PERSISTENCE LAYER (VIA DEXIE)
 // ============================================================================
@@ -410,7 +405,7 @@ class LocalStorageDatabase {
   init() {
     if (window.Dexie) {
       try {
-        this.db = new window.Dexie('AniFlixDatabase');
+        this.db = new window.Dexie('AnimeDriftDatabase');
         this.db.version(1).stores({
           watchHistory: '&animeId, title, season, episode, timestamp, duration, updated, isFinished',
           playbackProgress: '&streamKey, currentTime, duration, progressPercent',
@@ -516,12 +511,6 @@ const Router = {
     push
       ? window.history.pushState(Object.fromEntries(url.searchParams), '', url)
       : window.history.replaceState(Object.fromEntries(url.searchParams), '', url);
-  },
-
-  remove(...keys) {
-    const params = {};
-    keys.forEach(k => { params[k] = null; });
-    this.set(params, false);
   },
 
   closeAllUI() {
@@ -630,7 +619,7 @@ window.extractChromaAmbilight = function(imageUrl) {
 };
 
 // ============================================================================
-// 8. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION (TOUCH-PASSTHROUGH PATCH)
+// 8. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION
 // ============================================================================
 window.resolveActiveStreamUrl = function() {
   const isMovie = STATE.currentAnime?.format === 'MOVIE';
@@ -658,7 +647,6 @@ window.executeStream = function(seekTimestamp = 0) {
     if (playerStreamTitle) playerStreamTitle.innerText = `Season ${STATE.season} • Episode ${STATE.episode}`;
   }
 
-  // FIX A: Added onclick="this.classList.add('is-interacting')" to enable iframe pointer events on user tap
   wrap.innerHTML = `
     <div class="stream-frame-container" id="streamContainer" onclick="this.classList.add('is-interacting')" style="position:relative; width:100%; height:100%; background:#000;">
       <iframe 
@@ -733,19 +721,19 @@ window.renderServerSwitcherGrid = function() {
 // ============================================================================
 // 9. ANISKIP TELEMETRY INTEGRATION
 // ============================================================================
-let __AniFlixAniSkipRequest = 0;
+let __AniSkipRequest = 0;
 
 async function resolveAndPollAniSkip(malId, episodeNumber) {
   if (STATE.isNetflixMode || !STATE.userPreferences.autoSkipIntro) return;
 
-  const requestId = ++__AniFlixAniSkipRequest;
+  const requestId = ++__AniSkipRequest;
   const skipBtn = document.getElementById('aniSkipIntroBtn');
   const skipLabel = document.getElementById('aniSkipLabel');
 
   if (skipBtn) skipBtn.style.display = 'none';
 
   await new Promise(resolve => setTimeout(resolve, 400));
-  if (requestId !== __AniFlixAniSkipRequest) return;
+  if (requestId !== __AniSkipRequest) return;
 
   try {
     const url =
@@ -758,7 +746,7 @@ async function resolveAndPollAniSkip(malId, episodeNumber) {
     if (!res.ok) return;
     const data = await res.json();
 
-    if (requestId !== __AniFlixAniSkipRequest) return;
+    if (requestId !== __AniSkipRequest) return;
 
     if (data.found && data.results?.length > 0) {
       STATE.activeAniSkipData = data.results;
@@ -802,7 +790,7 @@ window.triggerAniSkipJump = function() {
 };
 
 // ============================================================================
-// 10. MULTI-SEASON QUERY & REAL-TIME EPISODE HYDRATION ENGINE
+// 10. MULTI-SEASON QUERY & REAL-TIME EPISODE HYDRATION (EDGE PROXIED)
 // ============================================================================
 window.resolveTMDBId = async function(rawTitle, isMovie = false) {
   if (STATE.isNetflixMode && STATE.currentAnime?.tmdbId) {
@@ -821,11 +809,13 @@ window.resolveTMDBId = async function(rawTitle, isMovie = false) {
   }
 
   try {
-    const sanitized = encodeURIComponent(rawTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim());
     const searchType = isMovie ? 'movie' : 'tv';
-    const endpoint = `${CONFIG.APIS.TMDB_BASE}/search/${searchType}?query=${sanitized}`;
-    const res = await fetch(endpoint);
-    if (!res.ok) throw new Error('Search failed');
+    const proxyUrl = buildSecureTmdbUrl(`search/${searchType}`, {
+      query: rawTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim()
+    });
+
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error('Proxy search failed');
     const data = await res.json();
     if (data.results?.length > 0) {
       STATE.currentTMDBId = data.results[0].id;
@@ -847,8 +837,8 @@ window.fetchSeriesSeasons = async function(tmdbId) {
   }
 
   try {
-    const endpoint = `${CONFIG.APIS.TMDB_BASE}/tv/${tmdbId}`;
-    const res = await fetch(endpoint);
+    const proxyUrl = buildSecureTmdbUrl(`tv/${tmdbId}`);
+    const res = await fetch(proxyUrl);
     if (!res.ok) return [];
     const data = await res.json();
 
@@ -877,8 +867,8 @@ window.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
   }
 
   try {
-    const endpoint = `${CONFIG.APIS.TMDB_BASE}/tv/${tmdbId}/season/${seasonNum}`;
-    const res = await fetch(endpoint);
+    const proxyUrl = buildSecureTmdbUrl(`tv/${tmdbId}/season/${seasonNum}`);
+    const res = await fetch(proxyUrl);
     if (!res.ok) throw new Error('Season query rejected');
     const data = await res.json();
 
@@ -1062,7 +1052,7 @@ window.nextEpisode = function() {
 };
 
 // ============================================================================
-// 11. DUAL-UNIVERSE TMDB CATALOG ENGINE (NETFLIX & LIVE ACTION)
+// 11. DUAL-UNIVERSE TMDB CATALOG ENGINE (NETFLIX & LIVE ACTION VIA EDGE PROXY)
 // ============================================================================
 window.formatTmdbMediaItem = function(item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
@@ -1099,8 +1089,8 @@ window.formatTmdbMediaItem = function(item, forceFormat = null) {
 
 window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = null) {
   try {
-    const sanitizedUrl = cleanTMDBUrl(endpoint);
-    const res = await fetch(sanitizedUrl);
+    const proxyUrl = buildSecureTmdbUrl(endpoint);
+    const res = await fetch(proxyUrl);
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.results || !data.results.length) return null;
@@ -1131,13 +1121,13 @@ window.renderTmdbLiveActionHome = async function() {
 
   const G = CONFIG.TMDB_GENRES;
   const rowPromises = [
-    window.fetchTmdbLiveActionRail('/discover/movie?sort_by=popularity.desc', 'Trending Movies Worldwide', 'MOVIE'),
-    window.fetchTmdbLiveActionRail('/discover/tv?sort_by=popularity.desc', 'Top Binge-Worthy TV Series', 'TV'),
-    window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.ACTION.movie}&sort_by=popularity.desc`, 'Explosive Action & Thrillers', 'MOVIE'),
-    window.fetchTmdbLiveActionRail(`/discover/tv?with_genres=${G.ACTION.tv}&sort_by=popularity.desc`, 'Action & Adventure Series', 'TV'),
-    window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.ROMANCE.movie}&sort_by=popularity.desc`, 'Romance & Heartwarming Dramas', 'MOVIE'),
-    window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.SCI_FI.movie}&sort_by=popularity.desc`, 'Sci-Fi & High Concept Cinema', 'MOVIE'),
-    window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Dubbed & Bollywood Cinema', 'MOVIE')
+    window.fetchTmdbLiveActionRail('discover/movie?sort_by=popularity.desc', 'Trending Movies Worldwide', 'MOVIE'),
+    window.fetchTmdbLiveActionRail('discover/tv?sort_by=popularity.desc', 'Top Binge-Worthy TV Series', 'TV'),
+    window.fetchTmdbLiveActionRail(`discover/movie?with_genres=${G.ACTION.movie}&sort_by=popularity.desc`, 'Explosive Action & Thrillers', 'MOVIE'),
+    window.fetchTmdbLiveActionRail(`discover/tv?with_genres=${G.ACTION.tv}&sort_by=popularity.desc`, 'Action & Adventure Series', 'TV'),
+    window.fetchTmdbLiveActionRail(`discover/movie?with_genres=${G.ROMANCE.movie}&sort_by=popularity.desc`, 'Romance & Heartwarming Dramas', 'MOVIE'),
+    window.fetchTmdbLiveActionRail(`discover/movie?with_genres=${G.SCI_FI.movie}&sort_by=popularity.desc`, 'Sci-Fi & High Concept Cinema', 'MOVIE'),
+    window.fetchTmdbLiveActionRail('discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Dubbed & Bollywood Cinema', 'MOVIE')
   ];
 
   const rows = (await Promise.all(rowPromises)).filter(Boolean);
@@ -1187,7 +1177,6 @@ window.updateHeroBillboard = function(item) {
   }
 };
 
-// FIX B: Stripped hardcoded inline flex/width/height !important so theme-base.css and mobile.css control responsive layout cleanly
 window.generateRowHTML = function(title, items, rowIndex) {
   const cardsHTML = items.map(item => {
     const displayTitle = item.title?.english || item.title?.romaji || 'Title';
@@ -1271,38 +1260,38 @@ window.applyQuickFilter = async function(filterKey, element) {
       return;
     } else if (key === 'MOVIES') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail('/discover/movie?sort_by=popularity.desc', 'Trending Movies Worldwide', 'MOVIE'),
-        window.fetchTmdbLiveActionRail('/discover/movie?sort_by=vote_average.desc&vote_count.gte=200', 'Critically Acclaimed Movies', 'MOVIE')
+        window.fetchTmdbLiveActionRail('discover/movie?sort_by=popularity.desc', 'Trending Movies Worldwide', 'MOVIE'),
+        window.fetchTmdbLiveActionRail('discover/movie?sort_by=vote_average.desc&vote_count.gte=200', 'Critically Acclaimed Movies', 'MOVIE')
       ];
     } else if (key === 'TOP_AIRING' || key === 'SHOWS' || key === 'TV') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail('/discover/tv?sort_by=popularity.desc', 'Top Binge Series', 'TV'),
-        window.fetchTmdbLiveActionRail('/discover/tv?sort_by=vote_average.desc&vote_count.gte=100', 'All-Time Greatest TV Shows', 'TV')
+        window.fetchTmdbLiveActionRail('discover/tv?sort_by=popularity.desc', 'Top Binge Series', 'TV'),
+        window.fetchTmdbLiveActionRail('discover/tv?sort_by=vote_average.desc&vote_count.gte=100', 'All-Time Greatest TV Shows', 'TV')
       ];
     } else if (key === 'HINDI') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail('/discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Blockbuster Movies', 'MOVIE'),
-        window.fetchTmdbLiveActionRail('/discover/tv?with_original_language=hi&sort_by=popularity.desc', 'Hindi Web Series & Dramas', 'TV')
+        window.fetchTmdbLiveActionRail('discover/movie?with_original_language=hi&sort_by=popularity.desc', 'Hindi Blockbuster Movies', 'MOVIE'),
+        window.fetchTmdbLiveActionRail('discover/tv?with_original_language=hi&sort_by=popularity.desc', 'Hindi Web Series & Dramas', 'TV')
       ];
     } else if (key === 'ACTION') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.ACTION.movie}&sort_by=popularity.desc`, 'Action Blockbusters & Adrenaline', 'MOVIE'),
-        window.fetchTmdbLiveActionRail(`/discover/tv?with_genres=${G.ACTION.tv}&sort_by=popularity.desc`, 'Action & Military TV Series', 'TV')
+        window.fetchTmdbLiveActionRail(`discover/movie?with_genres=${G.ACTION.movie}&sort_by=popularity.desc`, 'Action Blockbusters & Adrenaline', 'MOVIE'),
+        window.fetchTmdbLiveActionRail(`discover/tv?with_genres=${G.ACTION.tv}&sort_by=popularity.desc`, 'Action & Military TV Series', 'TV')
       ];
     } else if (key === 'ROMANCE') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.ROMANCE.movie}&sort_by=popularity.desc`, 'Romantic Comedies & Dramas', 'MOVIE'),
-        window.fetchTmdbLiveActionRail(`/discover/tv?with_genres=${G.ROMANCE.tv}&sort_by=popularity.desc`, 'Romantic Drama Series', 'TV')
+        window.fetchTmdbLiveActionRail(`discover/movie?with_genres=${G.ROMANCE.movie}&sort_by=popularity.desc`, 'Romantic Comedies & Dramas', 'MOVIE'),
+        window.fetchTmdbLiveActionRail(`discover/tv?with_genres=${G.ROMANCE.tv}&sort_by=popularity.desc`, 'Romantic Drama Series', 'TV')
       ];
     } else if (key === 'SCI_FI') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.SCI_FI.movie}&sort_by=popularity.desc`, 'Sci-Fi Explorations & Cyberpunk', 'MOVIE'),
-        window.fetchTmdbLiveActionRail(`/discover/tv?with_genres=${G.SCI_FI.tv}&sort_by=popularity.desc`, 'Sci-Fi & Futuristic TV Shows', 'TV')
+        window.fetchTmdbLiveActionRail(`discover/movie?with_genres=${G.SCI_FI.movie}&sort_by=popularity.desc`, 'Sci-Fi Explorations & Cyberpunk', 'MOVIE'),
+        window.fetchTmdbLiveActionRail(`discover/tv?with_genres=${G.SCI_FI.tv}&sort_by=popularity.desc`, 'Sci-Fi & Futuristic TV Shows', 'TV')
       ];
     } else if (key === 'THRILLER' || key === 'CRIME') {
       fetchPromises = [
-        window.fetchTmdbLiveActionRail(`/discover/movie?with_genres=${G.THRILLER_CRIME.movie}&sort_by=popularity.desc`, 'Gripping Crime & Mystery Films', 'MOVIE'),
-        window.fetchTmdbLiveActionRail(`/discover/tv?with_genres=${G.THRILLER_CRIME.tv}&sort_by=popularity.desc`, 'Psychological Thriller Series', 'TV')
+        window.fetchTmdbLiveActionRail(`discover/movie?with_genres=${G.THRILLER_CRIME.movie}&sort_by=popularity.desc`, 'Gripping Crime & Mystery Films', 'MOVIE'),
+        window.fetchTmdbLiveActionRail(`discover/tv?with_genres=${G.THRILLER_CRIME.tv}&sort_by=popularity.desc`, 'Psychological Thriller Series', 'TV')
       ];
     }
 
@@ -1469,7 +1458,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
   } else {
     document.body.classList.remove('netflix-theme-active');
     if (btn) btn.classList.remove('netflix-mode-active');
-    if (brandText) brandText.innerHTML = 'ANIFLIX<small class="brand-badge">ULTRA</small>';
+    if (brandText) brandText.innerHTML = 'ANIMEDRIFT<small class="brand-badge">PORTAL</small>';
     if (searchInput) searchInput.placeholder = "Search anime, movies, series...";
 
     if (quickDock) {
@@ -1525,7 +1514,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
 };
 
 // ============================================================================
-// 14. MODAL, DRAWER & WATCHLIST MANAGERS (SAFE SCROLL-LOCK HANDSHAKE)
+// 14. MODAL, DRAWER & WATCHLIST MANAGERS
 // ============================================================================
 window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
   const drawer = document.getElementById('mobileNavDrawer');
@@ -1668,7 +1657,7 @@ window.updateWatchlistBadge = function() {
 };
 
 // ============================================================================
-// 15. NATIVE ANILIST AIRING SCHEDULE ENGINE (JIKAN ALTERNATIVE)
+// 15. NATIVE ANILIST AIRING SCHEDULE ENGINE
 // ============================================================================
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -1734,7 +1723,6 @@ window.fetchAiringScheduleForDay = async function(dayIndex) {
     </div>
   `;
 
-  // Calculate timestamp boundaries for chosen day in local timezone
   const now = new Date();
   const currentDayIndex = now.getDay();
   const distance = dayIndex - currentDayIndex;
@@ -1802,7 +1790,7 @@ window.fetchAiringScheduleForDay = async function(dayIndex) {
     scheduleCache.set(cacheKey, items);
     window.renderScheduleList(items);
   } catch (err) {
-    console.error('[AniFlix Schedule] Failed:', err);
+    console.error('[AnimeDrift Schedule] Failed:', err);
     container.innerHTML = `
       <div style="text-align:center; padding:30px; color:var(--text-muted);">
         <i class="fas fa-triangle-exclamation" style="font-size:22px; margin-bottom:8px; color:var(--accent-red);"></i>
@@ -1882,6 +1870,7 @@ function initKeyboardShortcuts() {
         break;
       case 't':
       case 'T':
+        e.preventDefault();
         window.toggleTheaterMode();
         break;
       case 'n':
@@ -1976,13 +1965,12 @@ window.addEventListener('message', (e) => {
 });
 
 // ============================================================================
-// 18. BOOTSTRAP ORCHESTRATOR (WITH LOW-RAM KEYBOARD FALLBACK)
+// 18. BOOTSTRAP ORCHESTRATOR
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
   initKeyboardShortcuts();
 
-  // FIX C: Virtual Keyboard Fallback for older mobile browsers lacking CSS :has()
   document.body.addEventListener('focusin', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
       document.body.classList.add('keyboard-open');
