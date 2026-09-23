@@ -51,11 +51,11 @@
   <meta http-equiv="Expires" content="0" />
 
   <!-- Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="favicon.ico?v=44.0.2" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=44.0.2" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=44.0.2" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=44.0.2" />
-  <link rel="manifest" href="manifest.json?v=44.0.2" />
+  <link rel="shortcut icon" href="favicon.ico?v=44.0.5" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=44.0.5" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=44.0.5" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=44.0.5" />
+  <link rel="manifest" href="manifest.json?v=44.0.5" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -81,12 +81,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v44.0.2) -->
-  <link rel="stylesheet" href="theme-base.css?v=44.0.2">
-  <link rel="stylesheet" href="components-modal.css?v=44.0.2">
-  <link rel="stylesheet" href="p2p.css?v=44.0.2">
-  <link rel="stylesheet" href="webapp.css?v=44.0.2">
-  <link rel="stylesheet" href="mobile.css?v=44.0.2">
+  <!-- Modular Stylesheets (Synchronized to v44.0.5) -->
+  <link rel="stylesheet" href="theme-base.css?v=44.0.5">
+  <link rel="stylesheet" href="components-modal.css?v=44.0.5">
+  <link rel="stylesheet" href="p2p.css?v=44.0.5">
+  <link rel="stylesheet" href="webapp.css?v=44.0.5">
+  <link rel="stylesheet" href="mobile.css?v=44.0.5">
 
   <style>
     /* ==========================================================================
@@ -161,25 +161,25 @@
     /* Interactive Update Available Notification Pill */
     #updateNotificationBar {
       position: fixed;
-      top: 20px;
+      top: 24px;
       left: 50%;
-      transform: translate3d(-50%, -100px, 0);
+      transform: translate3d(-50%, -120px, 0);
       z-index: 1000000;
       background: rgba(14, 15, 24, 0.96);
-      border: 1px solid rgba(255, 8, 68, 0.4);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 8, 68, 0.25);
+      border: 1px solid rgba(255, 8, 68, 0.5);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 8, 68, 0.35);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      padding: 10px 18px;
+      padding: 10px 20px;
       border-radius: 9999px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       font-family: 'Outfit', sans-serif;
       color: #fff;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 700;
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
       opacity: 0;
       pointer-events: none;
     }
@@ -192,7 +192,7 @@
       background: #ff0844;
       color: #fff;
       border: none;
-      padding: 6px 14px;
+      padding: 6px 16px;
       border-radius: 9999px;
       font-size: 11.5px;
       font-weight: 800;
@@ -201,6 +201,9 @@
       letter-spacing: 0.5px;
       transition: transform 0.15s ease, background 0.15s ease;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     #updateNotificationBar .update-action-btn:hover {
       background: #ff2a5f;
@@ -209,7 +212,7 @@
     #updateNotificationBar .update-dismiss-btn {
       color: #747994;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 15px;
       display: flex;
       align-items: center;
       transition: color 0.15s ease;
@@ -455,7 +458,9 @@
   <!-- INTERACTIVE UPDATE HUD -->
   <aside id="updateNotificationBar" role="alert" aria-live="assertive">
     <span><i class="fas fa-sparkles" style="color: #00f0ff; margin-right: 6px;"></i> An update is available!</span>
-    <button class="update-action-btn" type="button" id="applyUpdateBtn">Update Now</button>
+    <button class="update-action-btn" type="button" id="applyUpdateBtn">
+      <i class="fas fa-rotate"></i> Update Now
+    </button>
     <div class="update-dismiss-btn" id="dismissUpdateBtn" title="Dismiss"><i class="fas fa-xmark"></i></div>
   </aside>
 
@@ -992,7 +997,7 @@
   <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '44.0.4';
+      const CURRENT_APP_VERSION = '44.0.5';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1013,14 +1018,14 @@
     })();
   </script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.2) -->
-  <script src="core-engine.js?v=44.0.3"></script>
-  <script src="dash-player.js?v=44.0.2"></script>
-  <script src="streaming-ui.js?v=44.0.3"></script>
-  <script src="p2p.js?v=44.0.2"></script>
-  <script src="webapp.js?v=44.0.2"></script>
-  <script src="adblock-engine.js?v=44.0.2"></script>
-   <script src="secure.js?v=44.0.3"></script>
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.5) -->
+  <script src="core-engine.js?v=44.0.5"></script>
+  <script src="dash-player.js?v=44.0.5"></script>
+  <script src="streaming-ui.js?v=44.0.5"></script>
+  <script src="p2p.js?v=44.0.5"></script>
+  <script src="webapp.js?v=44.0.5"></script>
+  <script src="adblock-engine.js?v=44.0.5"></script>
+  <script src="secure.js?v=44.0.5"></script>
 
   <!-- APP CONTROLLER & SAFE NON-INTRUSIVE PC SCROLL CONTROLLER -->
   <script>
@@ -1082,11 +1087,11 @@
       const TOTAL_DURATION = 4000;
 
       const preloadCandidates = [
-        'theme-base.css?v=44.0.2',
-        'components-modal.css?v=44.0.2',
-        'p2p.css?v=44.0.2',
-        'webapp.css?v=44.0.2',
-        'mobile.css?v=44.0.2'
+        'theme-base.css?v=44.0.5',
+        'components-modal.css?v=44.0.5',
+        'p2p.css?v=44.0.5',
+        'webapp.css?v=44.0.5',
+        'mobile.css?v=44.0.5'
       ];
       preloadCandidates.forEach(url => {
         const link = document.createElement('link');
@@ -1181,7 +1186,6 @@
       ].join(',');
 
       function attachControls(rowNode) {
-        // Resolve the true scrolling container element
         let scroller = rowNode;
         if (rowNode.scrollWidth <= rowNode.clientWidth) {
           const inner = rowNode.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
@@ -1192,11 +1196,9 @@
         scroller.dataset.adPcBound = 'true';
         scroller.classList.add('ad-pc-scrollable-target');
 
-        // Target parent for arrow positioning WITHOUT reparenting children (prevents breaking core-engine.js)
         const hostContainer = scroller.parentElement || scroller;
         hostContainer.classList.add('ad-pc-enhanced-row');
 
-        // Inject navigation arrows inside host container
         if (!hostContainer.querySelector(':scope > .ad-pc-arrow-btn.prev-btn')) {
           const prev = document.createElement('button');
           prev.className = 'ad-pc-arrow-btn prev-btn';
@@ -1226,7 +1228,6 @@
           });
         }
 
-        // Mouse Wheel Horizontal Translation (Zero-Lag, Smooth-Disabled during roll)
         scroller.addEventListener('wheel', (e) => {
           if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
             if (scroller.scrollWidth > scroller.clientWidth) {
@@ -1237,7 +1238,6 @@
           }
         }, { passive: false });
 
-        // Hardware-Accelerated Kinetic Dragging
         let isDown = false;
         let startX = 0;
         let scrollStart = 0;
@@ -1268,7 +1268,6 @@
           scroller.scrollLeft = scrollStart - walk;
         });
 
-        // Suppress accidental card clicks when dragging
         scroller.addEventListener('click', (e) => {
           if (hasMoved) {
             e.preventDefault();
@@ -1288,7 +1287,6 @@
         scanRows();
       }
 
-      // Safe, throttled observer that doesn't conflict with catalog updates
       let debounce = null;
       const obs = new MutationObserver(() => {
         clearTimeout(debounce);
@@ -1300,15 +1298,57 @@
     })();
 
     // =========================================================================
-    // 5. SERVICE WORKER REGISTRATION (v44.0.2) & LIVE UPDATE HUD
+    // 5. ULTRA-RELIABLE SERVICE WORKER UPDATE ENGINE & PWA MANAGER
     // =========================================================================
+    const CURRENT_CLIENT_VERSION = '44.0.5';
+    let deferredPrompt = null;
     let newWorkerWaiting = null;
 
-    function showUpdateAvailableUI(worker) {
-      newWorkerWaiting = worker;
+    // PWA Install Event Guard
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtns = [
+        document.getElementById('headerInstallBtn'),
+        document.getElementById('pwaInstallBtn'),
+        document.getElementById('drawerInstallBtn')
+      ];
+      installBtns.forEach(btn => {
+        if (btn) btn.style.display = 'inline-flex';
+      });
+    });
+
+    window.triggerPwaInstall = async function() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        const installBtns = [
+          document.getElementById('headerInstallBtn'),
+          document.getElementById('pwaInstallBtn'),
+          document.getElementById('drawerInstallBtn')
+        ];
+        installBtns.forEach(btn => {
+          if (btn) btn.style.display = 'none';
+        });
+      }
+      deferredPrompt = null;
+    };
+
+    // Update Banner Activator
+    function showUpdateAvailableUI(worker = null) {
+      if (worker) newWorkerWaiting = worker;
       const banner = document.getElementById('updateNotificationBar');
       if (banner) {
         banner.classList.add('visible');
+      }
+    }
+
+    // Version Check via LocalStorage comparison
+    function evaluateVersionHandshake() {
+      const storedVersion = localStorage.getItem('animedrift_app_installed_version');
+      if (storedVersion && storedVersion !== CURRENT_CLIENT_VERSION) {
+        showUpdateAvailableUI();
       }
     }
 
@@ -1316,17 +1356,25 @@
       const banner = document.getElementById('updateNotificationBar');
       if (banner) banner.classList.remove('visible');
 
+      // Purge cached storage
       if ('caches' in window) {
         try {
           const keys = await caches.keys();
           await Promise.all(keys.map(k => caches.delete(k)));
-        } catch (e) {
-          console.warn('[Cache Purge Error]:', e);
-        }
+        } catch (e) {}
       }
+
+      localStorage.setItem('animedrift_app_installed_version', CURRENT_CLIENT_VERSION);
 
       if (newWorkerWaiting) {
         newWorkerWaiting.postMessage({ type: 'SKIP_WAITING' });
+      } else if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          for (let reg of regs) {
+            reg.unregister();
+          }
+          window.location.reload(true);
+        });
       } else {
         window.location.reload(true);
       }
@@ -1335,19 +1383,25 @@
     document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {
       const banner = document.getElementById('updateNotificationBar');
       if (banner) banner.classList.remove('visible');
+      localStorage.setItem('animedrift_app_installed_version', CURRENT_CLIENT_VERSION);
     });
 
+    // Register SW and hook deep life-cycle listeners
     if ('serviceWorker' in navigator && !isSearchBot) {
       window.addEventListener('load', async () => {
+        evaluateVersionHandshake();
+
         try {
-          const reg = await navigator.serviceWorker.register('sw.js?v=44.0.2', {
+          const reg = await navigator.serviceWorker.register(`sw.js?v=${CURRENT_CLIENT_VERSION}`, {
             updateViaCache: 'none'
           });
 
+          // Check if an updated worker is already waiting in background
           if (reg.waiting) {
             showUpdateAvailableUI(reg.waiting);
           }
 
+          // Check if a new worker is currently downloading
           reg.addEventListener('updatefound', () => {
             const installingWorker = reg.installing;
             if (!installingWorker) return;
@@ -1359,18 +1413,19 @@
             });
           });
 
+          // Actively check for SW updates
           reg.update().catch(() => {});
           setInterval(() => {
             reg.update().catch(() => {});
-          }, 60000);
+          }, 30000); // Check every 30 seconds
 
         } catch (err) {
-          console.warn('[PWA] Service Worker registration skipped:', err);
+          console.warn('[PWA] Service Worker registration:', err);
         }
 
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing && newWorkerWaiting) {
+          if (!refreshing) {
             refreshing = true;
             window.location.reload(true);
           }
