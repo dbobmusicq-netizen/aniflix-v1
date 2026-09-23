@@ -1,14 +1,15 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 44.0.2 Resilient Architecture)
+ * Production-Grade JavaScript Controller (Version 44.0.5 Resilient Architecture)
  *
  * Major Updates:
- *  - Removed hardcoded TMDB API endpoints and public token leaks.
- *  - Full integration with Vercel serverless proxy gateway (`/api/tmdb`).
- *  - Dual-Universe catalog resolution (Anime via AniList & Netflix via Secure Edge).
- *  - Anti-DOM-Wipe execution shield & Adaptive Circuit Breaker.
- *  - Zero layout-thrashing: Compatible with kinetic horizontal scroller & drawer HUDs.
+ *  - Fixed TMDB query parser in `buildSecureTmdbUrl`: splits route paths from embedded
+ *    queries to eliminate duplicate rails and corrupted parameter serialization[cite: 6].
+ *  - Full integration with Vercel serverless proxy gateway (`/api/tmdb`)[cite: 6].
+ *  - Dual-Universe catalog resolution (Anime via AniList & Netflix via Secure Edge)[cite: 6].
+ *  - Anti-DOM-Wipe execution shield & Adaptive Circuit Breaker[cite: 6].
+ *  - Zero layout-thrashing: Compatible with kinetic horizontal scroller & drawer HUDs[cite: 6].
  * ============================================================================
  */
 
@@ -49,7 +50,7 @@ const CONFIG = {
     ANILIST: 'https://graphql.anilist.co',
     KITSU: 'https://kitsu.io/api/edge',
     ANISKIP: 'https://api.aniskip.com/v2/skip-times',
-    TMDB_PROXY: '/api/tmdb' // Secure Vercel Serverless Edge Gateway
+    TMDB_PROXY: '/api/tmdb' // Secure Vercel Serverless Edge Gateway[cite: 6]
   },
   TMDB_GENRES: {
     ACTION: { movie: 28, tv: 10759 },
@@ -69,19 +70,44 @@ const CONFIG = {
 };
 window.CONFIG = CONFIG;
 
-// Helper to route all TMDB requests securely through /api/tmdb
+// Helper to route all TMDB requests securely through /api/tmdb with clean parameter parsing
 function buildSecureTmdbUrl(endpointPath, customParams = {}) {
-  const cleanEndpoint = endpointPath.replace(/^\/+/, '');
-  const url = new URL(CONFIG.APIS.TMDB_PROXY, window.location.origin);
-  url.searchParams.set('endpoint', cleanEndpoint);
-
-  if (cleanEndpoint.startsWith('discover/')) {
-    if (!customParams['without_genres']) url.searchParams.set('without_genres', '16');
-    if (!customParams['vote_count.gte']) url.searchParams.set('vote_count.gte', '15');
+  let rawPath = String(endpointPath || '').replace(/^\/+/, '');
+  if (rawPath.startsWith('3/')) {
+    rawPath = rawPath.replace(/^3\//, '');
   }
 
+  // Split route path from sub-query parameters
+  let path = rawPath;
+  let queryStr = '';
+  if (rawPath.includes('?')) {
+    const parts = rawPath.split('?');
+    path = parts[0].replace(/\/+$/, '');
+    queryStr = parts.slice(1).join('?');
+  } else {
+    path = path.replace(/\/+$/, '');
+  }
+
+  const url = new URL(CONFIG.APIS.TMDB_PROXY, window.location.origin);
+  url.searchParams.set('endpoint', path);
+
+  // Parse and attach embedded query string parameters individually
+  if (queryStr) {
+    const embeddedParams = new URLSearchParams(queryStr);
+    embeddedParams.forEach((val, key) => {
+      url.searchParams.set(key, val);
+    });
+  }
+
+  // Set discover defaults
+  if (path.startsWith('discover/')) {
+    if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
+    if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
+  }
+
+  // Forward extra function-level customParams
   for (const [key, value] of Object.entries(customParams)) {
-    if (value !== undefined && value !== null) {
+    if (value !== undefined && value !== null && value !== '') {
       url.searchParams.set(key, String(value));
     }
   }
@@ -193,8 +219,21 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
   }
 
   async function guardedFetch(input, init = {}) {
-    const url = getUrl(input);
+    let url = getUrl(input);
     const method = String(init.method || 'GET').toUpperCase();
+
+    // Reroute any remaining calls to legacy domain directly through proxy
+    if (url.includes('db.speedracelight.com/3/')) {
+      try {
+        const parsed = new URL(url);
+        const ep = parsed.pathname.replace(/^\/?3\/?/, '');
+        const newUrl = new URL('/api/tmdb', window.location.origin);
+        newUrl.searchParams.set('endpoint', ep);
+        parsed.searchParams.forEach((v, k) => newUrl.searchParams.set(k, v));
+        url = newUrl.toString();
+        input = url;
+      } catch (err) {}
+    }
 
     if (!isProtectedAPI(url)) {
       return nativeFetch(input, init);
@@ -655,7 +694,7 @@ window.executeStream = function(seekTimestamp = 0) {
         title="${title}"
         frameborder="0" 
         allowfullscreen 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
         style="position:absolute; top:0; left:0; width:100%; height:100%; border:0; z-index:5;">
       </iframe>
       <div id="playerBufferingLoader" class="player-buffering-indicator">
