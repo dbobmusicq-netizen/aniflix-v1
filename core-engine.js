@@ -1892,7 +1892,7 @@ window.addEventListener('message', (e) => {
 });
 
 // ============================================================================
-// 18. BOOTSTRAP ORCHESTRATOR (STRICT ORDER & ZERO-BLEED LIFECYCLE)
+// 18. BOOTSTRAP ORCHESTRATOR (GUARANTEED DISPATCH & INSTANT FALLBACK)
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
@@ -1916,23 +1916,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pill) pill.style.display = isPwaInstalled ? 'inline-flex' : 'none';
   } catch (e) {}
 
-  // 1. Sync URL state FIRST so that ?mode=netflix is applied before rendering rows
+  // 1. Sync URL state FIRST
   if (window.Router) {
-    await window.Router.syncUIFromURL();
-  }
-
-  // 2. Render initial hero spotlight and home rows based on the synchronized state
-  const contentRows = document.getElementById('contentRows');
-  if (contentRows && contentRows.children.length === 0) {
-    if (typeof window.renderHeroSpotlight === 'function') {
-      await window.renderHeroSpotlight();
-    }
-    if (typeof window.renderHomeRows === 'function') {
-      await window.renderHomeRows();
+    try {
+      await window.Router.syncUIFromURL();
+    } catch (err) {
+      console.warn('[Router Sync Error]:', err);
     }
   }
-});
 
-window.addEventListener('resize', () => {
-  STATE.isMobile = window.innerWidth <= 768;
+  // 2. ALWAYS dispatch Hero Spotlight and Content Rows (Ignore noscript tags)
+  if (typeof window.renderHeroSpotlight === 'function') {
+    window.renderHeroSpotlight().catch((err) => {
+      console.warn('[Hero Spotlight Error]:', err);
+    });
+  }
+
+  if (typeof window.renderHomeRows === 'function') {
+    window.renderHomeRows().catch((err) => {
+      console.warn('[Home Rows Error]:', err);
+    });
+  }
 });
