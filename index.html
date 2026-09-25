@@ -51,11 +51,11 @@
   <meta http-equiv="Expires" content="0" />
 
   <!-- Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="favicon.ico?v=44.0.5" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=44.0.5" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=44.0.5" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=44.0.5" />
-  <link rel="manifest" href="manifest.json?v=44.0.5" />
+  <link rel="shortcut icon" href="favicon.ico?v=53.0.5" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=53.0.5" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=53.0.5" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=53.0.5" />
+  <link rel="manifest" href="manifest.json?v=53.0.5" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -81,12 +81,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v44.0.5) -->
-  <link rel="stylesheet" href="theme-base.css?v=44.0.5">
-  <link rel="stylesheet" href="components-modal.css?v=44.0.5">
-  <link rel="stylesheet" href="p2p.css?v=44.0.5">
-  <link rel="stylesheet" href="webapp.css?v=44.0.5">
-  <link rel="stylesheet" href="mobile.css?v=44.0.5">
+  <!-- Modular Stylesheets (Synchronized to v53.0.5) -->
+  <link rel="stylesheet" href="theme-base.css?v=53.0.5">
+  <link rel="stylesheet" href="components-modal.css?v=53.0.5">
+  <link rel="stylesheet" href="p2p.css?v=53.0.5">
+  <link rel="stylesheet" href="webapp.css?v=53.0.5">
+  <link rel="stylesheet" href="mobile.css?v=53.0.5">
 
   <style>
     /* ==========================================================================
@@ -261,92 +261,142 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Adblock Advisory Modal */
-    .adblock-modal-backdrop {
+    /* ==========================================================================
+       NETFLIX MODE SMART REFRESH ADVISOR BANNER
+       ========================================================================== */
+    #netflixRefreshAdvisor {
       position: fixed;
-      inset: 0;
-      z-index: 999995;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .adblock-modal-card {
-      background: #0e0f17;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
-      border-radius: 18px;
-      width: 100%;
-      max-width: 480px;
-      padding: 24px;
-      position: relative;
-      color: #fff;
-      font-family: 'Outfit', sans-serif;
-    }
-    .adblock-modal-header {
+      bottom: 24px;
+      left: 50%;
+      transform: translate3d(-50%, 150px, 0);
+      z-index: 99980;
+      background: rgba(14, 15, 24, 0.94);
+      border: 1px solid rgba(255, 8, 68, 0.45);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 8, 68, 0.25);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 10px 18px;
+      border-radius: 9999px;
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 12px;
-    }
-    .adblock-shield-icon {
-      width: 40px;
-      height: 40px;
-      background: rgba(255, 8, 68, 0.15);
-      border: 1px solid rgba(255, 8, 68, 0.4);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ff0844;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-    .adblock-modal-header h3 {
-      font-size: 17px;
-      font-weight: 800;
-      margin: 0;
-    }
-    .adblock-body-text {
-      font-size: 13px;
-      line-height: 1.6;
-      color: #c4c7de;
-      margin-bottom: 16px;
-    }
-    .adblock-highlight-box {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      padding: 12px 14px;
-      margin-bottom: 18px;
-      font-size: 12.5px;
-    }
-    .adblock-modal-btn {
-      width: 100%;
-      height: 42px;
-      background: #ff0844;
-      border: none;
-      border-radius: 10px;
+      font-family: 'Outfit', sans-serif;
       color: #fff;
-      font-size: 13.5px;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+      opacity: 0;
+      pointer-events: none;
+      max-width: 90vw;
+    }
+    #netflixRefreshAdvisor.visible {
+      transform: translate3d(-50%, 0, 0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .advisor-refresh-btn {
+      background: #ff0844;
+      color: #fff;
+      border: none;
+      border-radius: 9999px;
+      padding: 5px 14px;
+      font-size: 11.5px;
       font-weight: 800;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: opacity 0.2s ease;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: background 0.15s ease, transform 0.15s ease;
+      flex-shrink: 0;
     }
-    .adblock-modal-btn:hover {
-      opacity: 0.92;
+    .advisor-refresh-btn:hover {
+      background: #ff2a5f;
+      transform: scale(1.04);
+    }
+    .advisor-dismiss-btn {
+      color: #747994;
+      cursor: pointer;
+      font-size: 14px;
+      transition: color 0.15s ease;
+    }
+    .advisor-dismiss-btn:hover {
+      color: #fff;
     }
 
     /* ==========================================================================
-       NON-INTRUSIVE PC-EXCLUSIVE CAROUSEL SCROLLER (ZERO DOM REPARENTING)
+       MODAL IFRAME SUBPAGE CHAT DRAWER
        ========================================================================== */
+    #iframeChatDrawer {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 100%;
+      max-width: 440px;
+      height: 100vh;
+      height: 100dvh;
+      background: #090a10;
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: -15px 0 45px rgba(0, 0, 0, 0.95);
+      z-index: 999980;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #iframeChatDrawer.open {
+      transform: translate3d(-100%, 0, 0);
+    }
+    .chat-drawer-header {
+      height: 58px;
+      background: rgba(14, 15, 24, 0.98);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+    .chat-drawer-header h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chat-drawer-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .chat-drawer-action-btn {
+      background: none;
+      border: none;
+      color: #747994;
+      font-size: 15px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    .chat-drawer-action-btn:hover {
+      color: #fff;
+    }
+    .chat-iframe-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #06070a;
+      position: relative;
+    }
+    .chat-iframe-view {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Scroller Styling Overrides */
     .row-scroll-container,
     .content-row-scroll,
     .ep-grid,
@@ -375,22 +425,18 @@
       .ad-pc-enhanced-row {
         position: relative !important;
       }
-
       .ad-pc-scrollable-target {
         cursor: grab !important;
         user-select: none !important;
         -webkit-user-drag: none !important;
         will-change: scroll-position;
       }
-
       .ad-pc-scrollable-target.is-dragging {
         cursor: grabbing !important;
       }
-
       .ad-pc-scrollable-target.is-smooth {
         scroll-behavior: smooth !important;
       }
-
       .ad-pc-arrow-btn {
         position: absolute;
         top: 55%;
@@ -414,7 +460,6 @@
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
         transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, border-color 0.15s ease;
       }
-
       .ad-pc-arrow-btn:hover {
         background: #ff0844;
         border-color: #ff0844;
@@ -422,22 +467,11 @@
         transform: translateY(-50%) scale(1.05);
         box-shadow: 0 0 24px rgba(255, 8, 68, 0.7);
       }
-
       .ad-pc-arrow-btn.prev-btn { left: 4px; }
       .ad-pc-arrow-btn.next-btn { right: 4px; }
-
       .ad-pc-enhanced-row:hover > .ad-pc-arrow-btn {
         opacity: 1;
         pointer-events: auto;
-      }
-    }
-
-    @media not all and (hover: hover) and (pointer: fine) and (min-width: 992px) {
-      .ad-pc-arrow-btn {
-        display: none !important;
-      }
-      .ad-pc-scrollable-target {
-        cursor: auto !important;
       }
     }
   </style>
@@ -470,27 +504,16 @@
     <span id="globalTransitionText">Switching Category...</span>
   </div>
 
-  <!-- DEVICE-AWARE ADBLOCK ADVISORY MODAL -->
-  <div class="adblock-modal-backdrop" id="adblockTipModal">
-    <div class="adblock-modal-card">
-      <div class="adblock-modal-header">
-        <div class="adblock-shield-icon">
-          <i class="fas fa-shield-halved"></i>
-        </div>
-        <div>
-          <h3>Enjoy Clean Streaming</h3>
-          <small style="color: #8c8ca8;">Ad & Popup Free Experience</small>
-        </div>
-      </div>
-      <p class="adblock-body-text" id="adblockMessageBody">
-        Third-party streaming nodes may attempt to trigger external redirects. To prevent interruptions, use these settings:
-      </p>
-      <div class="adblock-highlight-box" id="adblockRecommendationBox"></div>
-      <button class="adblock-modal-btn" type="button" onclick="closeAdblockTipModal()">
-        <span>Continue to AnimeDrift</span> <i class="fas fa-arrow-right"></i>
-      </button>
+  <!-- NETFLIX MODE REFRESH ADVISOR -->
+  <aside id="netflixRefreshAdvisor" role="status" aria-live="polite">
+    <span><i class="fas fa-circle-info" style="color:#ff0844; margin-right:4px;"></i> Seeing duplicate shows in categories?</span>
+    <button class="advisor-refresh-btn" type="button" onclick="window.forceCatalogRefresh()">
+      <i class="fas fa-arrows-rotate"></i> Refresh Feed
+    </button>
+    <div class="advisor-dismiss-btn" onclick="window.dismissNetflixAdvisor()" title="Dismiss">
+      <i class="fas fa-xmark"></i>
     </div>
-  </div>
+  </aside>
 
   <!-- MULTIPLAYER VIRTUAL CURSOR LAYER -->
   <div id="p2pCursorLayer"></div>
@@ -550,12 +573,17 @@
       <div class="search-dropdown" id="searchDropdown"></div>
 
       <!-- Mode Toggle Button (Anime / Netflix Live-Action Universe) -->
-      <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch Mode" aria-label="Toggle Catalog Universe" onclick="triggerNavWithLoader('Shifting Universe...', () => window.toggleNetflixMode())">
+      <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch Universe" aria-label="Toggle Catalog Universe" onclick="triggerNavWithLoader('Shifting Universe...', () => window.toggleNetflixMode())">
         <svg class="netflix-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5.398 0v24c1.173-.24 2.346-.51 3.518-.78V0H5.398z" fill="#E50914"/>
           <path d="M15.084 0v21.57c1.172-.27 2.345-.54 3.518-.78V0h-3.518z" fill="#E50914"/>
           <path d="M5.398 0l9.686 21.57c1.173-.27 2.345-.54 3.518-.78L8.916 0H5.398z" fill="#B81D24"/>
         </svg>
+      </button>
+
+      <!-- Global Chat Drawer Launcher -->
+      <button class="icon-btn" title="Community Live Chat" aria-label="Open Chat" onclick="window.toggleIframeChat(true)">
+        <i class="fas fa-comments" style="color: #00d2ff;"></i>
       </button>
 
       <!-- Watchlist Button -->
@@ -570,6 +598,9 @@
   <aside class="floating-quick-dock" id="floatingQuickDock" aria-label="Quick Feature Tools">
     <button class="dock-btn" id="pwaInstallBtn" style="display:none;" title="Install AnimeDrift Native App" aria-label="Install App" onclick="triggerPwaInstall()">
       <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
+    </button>
+    <button class="dock-btn" title="Live Global Chat" aria-label="Live Chat" onclick="window.toggleIframeChat(true)">
+      <i class="fas fa-comment-dots" style="color:#00d2ff;"></i>
     </button>
     <button class="dock-btn" title="Reverse Anime Search by Screenshot" aria-label="Screenshot Frame Search" onclick="window.openTraceMoeModal()">
       <i class="fas fa-camera" style="color:var(--accent-cyan);"></i>
@@ -600,6 +631,18 @@
       </button>
     </div>
     
+    <div class="drawer-section-label">COMMUNITY & SOCIAL</div>
+    <div class="drawer-tools-grid" style="margin-bottom:10px;">
+      <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.toggleIframeChat(true)">
+        <i class="fas fa-comments" style="color:#00d2ff;"></i>
+        <span>Live Chat</span>
+      </button>
+      <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.openChatSubpage()">
+        <i class="fas fa-arrow-up-right-from-square" style="color:var(--accent-emerald);"></i>
+        <span>Full Page Chat</span>
+      </button>
+    </div>
+
     <div class="drawer-section-label">APPLICATION CONTROLS</div>
     <div class="drawer-tools-grid" style="margin-bottom:10px;">
       <button class="drawer-tool-btn" id="drawerInstallBtn" type="button" onclick="window.toggleMobileNav(false); triggerPwaInstall()">
@@ -642,13 +685,6 @@
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.openWatchlistModal()"><i class="fas fa-bookmark"></i> My Watchlist (<span id="mobileWatchlistCount">0</span>)</a></li>
       <li><a class="mobile-nav-link" onclick="window.toggleMobileNav(false); window.toggleShortcutsModal(true)"><i class="fas fa-keyboard"></i> Shortcuts</a></li>
     </ul>
-
-    <div class="mobile-drawer-footer">
-      <div class="lang-selector-pill" onclick="if(typeof toggleDefaultDubLanguage === 'function') toggleDefaultDubLanguage()" style="width:100%; justify-content:center;">
-        <i class="fas fa-globe"></i>
-        <span id="mobileGlobalLangLabel">HINDI DUB PREFERRED</span>
-      </div>
-    </div>
   </aside>
 
   <!-- HERO BILLBOARD -->
@@ -751,20 +787,6 @@
           <button class="p2p-emote-btn" type="button" onclick="window.p2pParty?.sendEmote('👏')">👏</button>
         </div>
 
-        <div class="p2p-buffer-notice" id="p2pBufferNotice">
-          <span>Waiting for <b id="p2pBufferPeerName">Peer</b> to buffer...</span>
-        </div>
-
-        <div class="p2p-catchup-pill" id="p2pCatchUpPill"></div>
-
-        <div class="p2p-prompt-card" id="p2pPromptCard">
-          <span id="p2pPromptDesc">The party host applied an audio boost. Match setting?</span>
-          <div class="p2p-prompt-actions">
-            <button class="p2p-btn-confirm" id="p2pAcceptBoostBtn" type="button">Sync Boost</button>
-            <button class="p2p-btn-dismiss" id="p2pDeclineBoostBtn" type="button">Ignore</button>
-          </div>
-        </div>
-
         <button id="aniSkipIntroBtn" class="aniskip-pill-btn" style="display:none;" onclick="triggerAniSkipJump()">
           <i class="fas fa-forward"></i> <span id="aniSkipLabel">Skip Opening (OP)</span>
         </button>
@@ -812,10 +834,10 @@
 
       <div class="modal-body">
         <div class="modal-tabs" role="tablist">
-          <button class="tab-btn active" type="button" role="tab" aria-selected="true" onclick="switchTab('tab-overview', this)"><i class="fas fa-play-circle"></i> <span id="tabEpisodesLabel">Episodes & Info</span></button>
-          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-cast', this)"><i class="fas fa-users"></i> <span>Cast</span></button>
-          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-more', this)"><i class="fas fa-layer-group"></i> <span>Recommendations</span></button>
-          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="switchTab('tab-trailers', this)"><i class="fas fa-film"></i> <span>Trailers</span></button>
+          <button class="tab-btn active" type="button" role="tab" aria-selected="true" onclick="window.switchTab('tab-overview', this)"><i class="fas fa-play-circle"></i> <span id="tabEpisodesLabel">Episodes & Info</span></button>
+          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="window.switchTab('tab-cast', this)"><i class="fas fa-users"></i> <span>Cast</span></button>
+          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="window.switchTab('tab-more', this)"><i class="fas fa-layer-group"></i> <span>Recommendations</span></button>
+          <button class="tab-btn" type="button" role="tab" aria-selected="false" onclick="window.switchTab('tab-trailers', this)"><i class="fas fa-film"></i> <span>Trailers</span></button>
         </div>
 
         <div id="tab-overview" class="tab-content active" role="tabpanel">
@@ -849,10 +871,10 @@
                 <span class="episodes-total-pill" id="episodesTotalPill">Total 24</span>
               </div>
               <div class="ep-header-controls" id="epHeaderControls">
-                <select class="ep-select" id="episodeRangeSelect" aria-label="Select Range" onchange="changeEpisodeRange(this.value)">
+                <select class="ep-select" id="episodeRangeSelect" aria-label="Select Range" onchange="window.changeEpisodeRange(this.value)">
                   <option value="0">Episodes 1 - 50</option>
                 </select>
-                <select class="ep-select" id="seasonSelect" aria-label="Select Season" onchange="changeSeason(this.value)">
+                <select class="ep-select" id="seasonSelect" aria-label="Select Season" onchange="window.changeSeason(this.value)">
                   <option value="1">Season 1</option>
                 </select>
               </div>
@@ -867,6 +889,25 @@
       </div>
     </div>
   </div>
+
+  <!-- FLOATING IFRAME COMMUNITY CHAT DRAWER -->
+  <div class="drawer-overlay" id="chatDrawerOverlay" onclick="window.toggleIframeChat(false)"></div>
+  <aside id="iframeChatDrawer" aria-label="Live Chat Hub">
+    <div class="chat-drawer-header">
+      <h3><i class="fas fa-comments" style="color: #00d2ff;"></i> Live Community</h3>
+      <div class="chat-drawer-actions">
+        <button class="chat-drawer-action-btn" type="button" title="Open Fullscreen Page" onclick="window.openChatSubpage()">
+          <i class="fas fa-up-right-from-square"></i>
+        </button>
+        <button class="chat-drawer-action-btn" type="button" title="Close" onclick="window.toggleIframeChat(false)">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <div class="chat-iframe-container">
+      <iframe id="globalChatIframe" class="chat-iframe-view" src="about:blank" title="Live Community Chat" allow="microphone; clipboard-write;"></iframe>
+    </div>
+  </aside>
 
   <!-- SIMULCAST CALENDAR MODAL -->
   <div class="drawer-overlay" id="scheduleModalOverlay" onclick="closeScheduleModal()"></div>
@@ -997,7 +1038,7 @@
   <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '47.0.9';
+      const CURRENT_APP_VERSION = '53.0.5';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1018,16 +1059,15 @@
     })();
   </script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v44.0.5) -->
-  <script src="core-engine.js?v=51.0.5"></script>
-  <script src="dash-player.js?v=44.0.5"></script>
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v53.0.5) -->
+  <script src="core-engine.js?v=53.0.5"></script>
+  <script src="dash-player.js?v=53.0.5"></script>
   <script src="streaming-ui.js?v=53.0.5"></script>
-  <script src="p2p.js?v=44.0.5"></script>
-  <script src="webapp.js?v=44.0.5"></script>
-  <script src="adblock-engine.js?v=44.0.5"></script>
-  
+  <script src="p2p.js?v=53.0.5"></script>
+  <script src="webapp.js?v=53.0.5"></script>
+  <script src="adblock-engine.js?v=53.0.5"></script>
 
-  <!-- APP CONTROLLER & SAFE NON-INTRUSIVE PC SCROLL CONTROLLER -->
+  <!-- APP CONTROLLER & INTERACTION MANAGERS -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
@@ -1052,30 +1092,76 @@
       if (globalLoaderTimeout) clearTimeout(globalLoaderTimeout);
       globalLoaderTimeout = setTimeout(() => {
         if (loader) loader.classList.remove('active');
-      }, 4000);
+      }, 3500);
     };
 
-    // Card click interceptor
-    document.addEventListener('click', (e) => {
-      if (isSearchBot) return;
-      const card = e.target.closest('.anime-card, .btn-play, .hero-btns .btn-info, .ep-badge-btn');
-      if (card && !e.target.closest('#modalContainer')) {
-        const loader = document.getElementById('globalTransitionLoader');
-        const text = document.getElementById('globalTransitionText');
-        if (loader && text) {
-          text.innerText = 'Synchronizing Episode Nodes & Streams...';
-          loader.classList.add('active');
-          setTimeout(() => {
-            if (loader) loader.classList.remove('active');
-          }, 4000);
+    // 2. Chat Subpage & Iframe Controllers
+    window.toggleIframeChat = function(open) {
+      const drawer = document.getElementById('iframeChatDrawer');
+      const overlay = document.getElementById('chatDrawerOverlay');
+      const iframe = document.getElementById('globalChatIframe');
+      
+      const shouldOpen = open !== undefined ? Boolean(open) : !drawer.classList.contains('open');
+      
+      if (shouldOpen) {
+        if (iframe && iframe.src === 'about:blank') {
+          iframe.src = '/chat.html';
         }
+        drawer.classList.add('open');
+        overlay.classList.add('active');
+      } else {
+        drawer.classList.remove('open');
+        overlay.classList.remove('active');
       }
-    });
+    };
 
-    // 2. Preloader Lifecycle
+    window.openChatSubpage = function() {
+      window.location.href = '/chat.html';
+    };
+
+    // 3. Netflix Advisory & Smart Refresh Trigger
+    window.checkAndShowNetflixAdvisor = function() {
+      const advisor = document.getElementById('netflixRefreshAdvisor');
+      if (!advisor) return;
+      if (window.STATE?.isNetflixMode) {
+        advisor.classList.add('visible');
+        clearTimeout(window.__netflixAdvisorTimer);
+        window.__netflixAdvisorTimer = setTimeout(() => {
+          advisor.classList.remove('visible');
+        }, 9000);
+      } else {
+        advisor.classList.remove('visible');
+      }
+    };
+
+    window.dismissNetflixAdvisor = function() {
+      const advisor = document.getElementById('netflixRefreshAdvisor');
+      if (advisor) advisor.classList.remove('visible');
+    };
+
+    window.forceCatalogRefresh = async function() {
+      if (window.showToast) window.showToast('Refreshing category feeds...');
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        } catch (e) {}
+      }
+      window.location.reload(true);
+    };
+
+    // Intercept Universe Toggles to Alert for Netflix Feed Condition
+    const origToggleNetflixMode = window.toggleNetflixMode;
+    window.toggleNetflixMode = async function(...args) {
+      if (typeof origToggleNetflixMode === 'function') {
+        await origToggleNetflixMode.apply(this, args);
+      }
+      window.checkAndShowNetflixAdvisor();
+    };
+
+    // 4. Preloader Lifecycle
     window.addEventListener('DOMContentLoaded', () => {
       const splash = document.getElementById('siteSplashPreloader');
-
       if (isSearchBot) {
         if (splash) splash.remove();
         return;
@@ -1084,21 +1170,7 @@
       const fillBar = document.getElementById('splashFillBar');
       const statusLabel = document.getElementById('splashStatusLabel');
       const startTime = Date.now();
-      const TOTAL_DURATION = 4000;
-
-      const preloadCandidates = [
-        'theme-base.css?v=44.0.5',
-        'components-modal.css?v=44.0.5',
-        'p2p.css?v=44.0.5',
-        'webapp.css?v=44.0.5',
-        'mobile.css?v=44.0.5'
-      ];
-      preloadCandidates.forEach(url => {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = url;
-        document.head.appendChild(link);
-      });
+      const TOTAL_DURATION = 1400;
 
       const interval = setInterval(() => {
         const elapsed = Date.now() - startTime;
@@ -1107,9 +1179,8 @@
         if (fillBar) fillBar.style.width = `${progress}%`;
 
         if (statusLabel) {
-          if (progress < 25) statusLabel.innerText = 'Connecting Edge Mesh...';
-          else if (progress < 55) statusLabel.innerText = 'Syncing Anime & Catalog Buffers...';
-          else if (progress < 85) statusLabel.innerText = 'Pre-caching Interface Components...';
+          if (progress < 30) statusLabel.innerText = 'Connecting Edge Mesh...';
+          else if (progress < 70) statusLabel.innerText = 'Syncing Catalogs & Nodes...';
           else statusLabel.innerText = 'Launching Universe...';
         }
 
@@ -1118,204 +1189,29 @@
           setTimeout(() => {
             if (splash) {
               splash.classList.add('preloader-hidden');
-              setTimeout(() => splash.remove(), 800);
+              setTimeout(() => splash.remove(), 600);
             }
-            checkAndShowAdblockNotice();
-          }, 300);
+            if (new URLSearchParams(window.location.search).get('mode') === 'netflix') {
+              window.checkAndShowNetflixAdvisor();
+            }
+          }, 150);
         }
-      }, 50);
+      }, 35);
     });
 
-    // 3. Device-Aware Adblock Advisory
-    function checkAndShowAdblockNotice() {
-      if (isSearchBot) return;
-
-      const STORAGE_KEY = 'animedrift_adblock_notice_date';
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const lastShownDate = localStorage.getItem(STORAGE_KEY);
-
-      if (lastShownDate === todayStr) return;
-
-      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      const isMobile = /android|iphone|ipad|ipod/i.test(userAgent);
-      const box = document.getElementById('adblockRecommendationBox');
-      const modal = document.getElementById('adblockTipModal');
-
-      if (box) {
-        if (isMobile) {
-          box.innerHTML = `
-            <strong><i class="fas fa-mobile-screen"></i> Mobile Tip:</strong>
-            <p style="margin: 4px 0 0 0; color: #a3a3c2;">
-              Use <b>Brave Browser</b> or set Private DNS to <code style="color:#00f2fe; background:rgba(255,255,255,0.05); padding:2px 5px; border-radius:4px;">dns.adguard-dns.com</code> to eliminate stream redirects.
-            </p>
-          `;
-        } else {
-          box.innerHTML = `
-            <strong><i class="fas fa-desktop"></i> Desktop Tip:</strong>
-            <p style="margin: 4px 0 0 0; color: #a3a3c2;">
-              Install <b>uBlock Origin</b> or use <b>Brave Browser</b> for seamless ad-free streaming.
-            </p>
-          `;
-        }
-      }
-
-      if (modal) modal.style.display = 'flex';
-      localStorage.setItem(STORAGE_KEY, todayStr);
-    }
-
-    function closeAdblockTipModal() {
-      const modal = document.getElementById('adblockTipModal');
-      if (modal) modal.style.display = 'none';
-    }
-
-    // =========================================================================
-    // 4. SAFE PC-EXCLUSIVE NON-DESTRUCTIVE HORIZONTAL SCROLLER
-    // =========================================================================
-    (function initSafePCScrollEngine() {
-      const isDesktopPC = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 992px)').matches;
-      if (!isDesktopPC || isSearchBot) return;
-
-      const ROW_QUERY = [
-        '.content-rows > section',
-        '.content-rows .row',
-        '.row-scroll-container',
-        '.content-row-scroll',
-        '.anime-cards-row',
-        '.movie-row',
-        '.category-row'
-      ].join(',');
-
-      function attachControls(rowNode) {
-        let scroller = rowNode;
-        if (rowNode.scrollWidth <= rowNode.clientWidth) {
-          const inner = rowNode.querySelector('.row-scroll-container, .content-row-scroll, .anime-cards-row, [style*="overflow-x"]');
-          if (inner) scroller = inner;
-        }
-
-        if (scroller.dataset.adPcBound === 'true') return;
-        scroller.dataset.adPcBound = 'true';
-        scroller.classList.add('ad-pc-scrollable-target');
-
-        const hostContainer = scroller.parentElement || scroller;
-        hostContainer.classList.add('ad-pc-enhanced-row');
-
-        if (!hostContainer.querySelector(':scope > .ad-pc-arrow-btn.prev-btn')) {
-          const prev = document.createElement('button');
-          prev.className = 'ad-pc-arrow-btn prev-btn';
-          prev.type = 'button';
-          prev.setAttribute('aria-label', 'Previous Titles');
-          prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
-
-          const next = document.createElement('button');
-          next.className = 'ad-pc-arrow-btn next-btn';
-          next.type = 'button';
-          next.setAttribute('aria-label', 'Next Titles');
-          next.innerHTML = '<i class="fas fa-chevron-right"></i>';
-
-          hostContainer.appendChild(prev);
-          hostContainer.appendChild(next);
-
-          prev.addEventListener('click', (e) => {
-            e.stopPropagation();
-            scroller.classList.add('is-smooth');
-            scroller.scrollBy({ left: -(scroller.clientWidth * 0.8), behavior: 'smooth' });
-          });
-
-          next.addEventListener('click', (e) => {
-            e.stopPropagation();
-            scroller.classList.add('is-smooth');
-            scroller.scrollBy({ left: scroller.clientWidth * 0.8, behavior: 'smooth' });
-          });
-        }
-
-        scroller.addEventListener('wheel', (e) => {
-          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-            if (scroller.scrollWidth > scroller.clientWidth) {
-              e.preventDefault();
-              scroller.classList.remove('is-smooth');
-              scroller.scrollLeft += (e.deltaY * 1.3);
-            }
-          }
-        }, { passive: false });
-
-        let isDown = false;
-        let startX = 0;
-        let scrollStart = 0;
-        let hasMoved = false;
-
-        scroller.addEventListener('mousedown', (e) => {
-          if (e.button !== 0) return;
-          isDown = true;
-          hasMoved = false;
-          scroller.classList.remove('is-smooth');
-          scroller.classList.add('is-dragging');
-          startX = e.pageX;
-          scrollStart = scroller.scrollLeft;
-        });
-
-        window.addEventListener('mouseup', () => {
-          if (isDown) {
-            isDown = false;
-            scroller.classList.remove('is-dragging');
-          }
-        });
-
-        scroller.addEventListener('mousemove', (e) => {
-          if (!isDown) return;
-          e.preventDefault();
-          const walk = (e.pageX - startX) * 1.4;
-          if (Math.abs(walk) > 6) hasMoved = true;
-          scroller.scrollLeft = scrollStart - walk;
-        });
-
-        scroller.addEventListener('click', (e) => {
-          if (hasMoved) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }, true);
-      }
-
-      function scanRows() {
-        const rows = document.querySelectorAll(ROW_QUERY);
-        rows.forEach(attachControls);
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', scanRows);
-      } else {
-        scanRows();
-      }
-
-      let debounce = null;
-      const obs = new MutationObserver(() => {
-        clearTimeout(debounce);
-        debounce = setTimeout(scanRows, 150);
-      });
-
-      const container = document.getElementById('contentRows') || document.body;
-      obs.observe(container, { childList: true });
-    })();
-
-    // =========================================================================
-    // 5. ULTRA-RELIABLE SERVICE WORKER UPDATE ENGINE & PWA MANAGER
-    // =========================================================================
-    const CURRENT_CLIENT_VERSION = '44.0.5';
+    // 5. PWA Install & Update Lifecycle
+    const CURRENT_CLIENT_VERSION = '53.0.5';
     let deferredPrompt = null;
     let newWorkerWaiting = null;
 
-    // PWA Install Event Guard
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      const installBtns = [
+      [
         document.getElementById('headerInstallBtn'),
         document.getElementById('pwaInstallBtn'),
         document.getElementById('drawerInstallBtn')
-      ];
-      installBtns.forEach(btn => {
-        if (btn) btn.style.display = 'inline-flex';
-      });
+      ].forEach(btn => { if (btn) btn.style.display = 'inline-flex'; });
     });
 
     window.triggerPwaInstall = async function() {
@@ -1323,113 +1219,57 @@
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        const installBtns = [
+        [
           document.getElementById('headerInstallBtn'),
           document.getElementById('pwaInstallBtn'),
           document.getElementById('drawerInstallBtn')
-        ];
-        installBtns.forEach(btn => {
-          if (btn) btn.style.display = 'none';
-        });
+        ].forEach(btn => { if (btn) btn.style.display = 'none'; });
       }
       deferredPrompt = null;
     };
 
-    // Update Banner Activator
     function showUpdateAvailableUI(worker = null) {
       if (worker) newWorkerWaiting = worker;
       const banner = document.getElementById('updateNotificationBar');
-      if (banner) {
-        banner.classList.add('visible');
-      }
-    }
-
-    // Version Check via LocalStorage comparison
-    function evaluateVersionHandshake() {
-      const storedVersion = localStorage.getItem('animedrift_app_installed_version');
-      if (storedVersion && storedVersion !== CURRENT_CLIENT_VERSION) {
-        showUpdateAvailableUI();
-      }
+      if (banner) banner.classList.add('visible');
     }
 
     document.getElementById('applyUpdateBtn')?.addEventListener('click', async () => {
-      const banner = document.getElementById('updateNotificationBar');
-      if (banner) banner.classList.remove('visible');
-
-      // Purge cached storage
+      document.getElementById('updateNotificationBar')?.classList.remove('visible');
       if ('caches' in window) {
         try {
           const keys = await caches.keys();
           await Promise.all(keys.map(k => caches.delete(k)));
         } catch (e) {}
       }
-
       localStorage.setItem('animedrift_app_installed_version', CURRENT_CLIENT_VERSION);
-
       if (newWorkerWaiting) {
         newWorkerWaiting.postMessage({ type: 'SKIP_WAITING' });
-      } else if (navigator.serviceWorker) {
-        navigator.serviceWorker.getRegistrations().then(regs => {
-          for (let reg of regs) {
-            reg.unregister();
-          }
-          window.location.reload(true);
-        });
       } else {
         window.location.reload(true);
       }
     });
 
     document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {
-      const banner = document.getElementById('updateNotificationBar');
-      if (banner) banner.classList.remove('visible');
+      document.getElementById('updateNotificationBar')?.classList.remove('visible');
       localStorage.setItem('animedrift_app_installed_version', CURRENT_CLIENT_VERSION);
     });
 
-    // Register SW and hook deep life-cycle listeners
     if ('serviceWorker' in navigator && !isSearchBot) {
       window.addEventListener('load', async () => {
-        evaluateVersionHandshake();
-
         try {
-          const reg = await navigator.serviceWorker.register(`sw.js?v=${CURRENT_CLIENT_VERSION}`, {
-            updateViaCache: 'none'
-          });
-
-          // Check if an updated worker is already waiting in background
-          if (reg.waiting) {
-            showUpdateAvailableUI(reg.waiting);
-          }
-
-          // Check if a new worker is currently downloading
+          const reg = await navigator.serviceWorker.register(`sw.js?v=${CURRENT_CLIENT_VERSION}`, { updateViaCache: 'none' });
+          if (reg.waiting) showUpdateAvailableUI(reg.waiting);
           reg.addEventListener('updatefound', () => {
-            const installingWorker = reg.installing;
-            if (!installingWorker) return;
-
-            installingWorker.addEventListener('statechange', () => {
-              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                showUpdateAvailableUI(installingWorker);
+            const installing = reg.installing;
+            if (!installing) return;
+            installing.addEventListener('statechange', () => {
+              if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateAvailableUI(installing);
               }
             });
           });
-
-          // Actively check for SW updates
-          reg.update().catch(() => {});
-          setInterval(() => {
-            reg.update().catch(() => {});
-          }, 30000); // Check every 30 seconds
-
-        } catch (err) {
-          console.warn('[PWA] Service Worker registration:', err);
-        }
-
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload(true);
-          }
-        });
+        } catch (err) {}
       });
     }
   </script>
