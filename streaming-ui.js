@@ -7,7 +7,7 @@
  *    streaming-ui.js
  *
  * Version:
- *    46.2.0 Complete High-Density Interactive Matrix
+ *    46.3.0 Complete Enterprise Engine — Full Tab, Randomizer & Node Fix
  * ============================================================================
  */
 
@@ -153,7 +153,6 @@
     const url = new URL('/api/tmdb', win.location.origin);
     url.searchParams.set('endpoint', path);
 
-    // Forward embedded query parameters individually
     if (queryStr) {
       const embedded = new URLSearchParams(queryStr);
       embedded.forEach((val, key) => {
@@ -161,7 +160,6 @@
       });
     }
 
-    // Default configuration for discovery endpoints
     if (path.startsWith('discover/')) {
       if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
       if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
@@ -972,6 +970,12 @@
     if (container) container.classList.add('active');
     doc.documentElement.style.overflowY = 'hidden';
 
+    // Activate Overview tab by default
+    const overviewTabBtn = doc.querySelector('.modal-tabs .tab-btn') || doc.querySelector('[onclick*="tab-overview"]');
+    if (typeof win.switchTab === 'function') {
+      win.switchTab('tab-overview', overviewTabBtn);
+    }
+
     const title = anime.title?.english || anime.title?.romaji || 'Title';
     const banner = anime.bannerImage || anime.coverImage?.extraLarge || '';
 
@@ -1038,7 +1042,127 @@
   };
 
   // ==========================================================================
-  // 10. FUZZY ANIME RESOLUTION & MULTI-SEASON EPISODE HYDRATION
+  // 09. MULTI-SERVER SWITCHER WITH HIGHLIGHT MATRIX
+  // ==========================================================================
+  win.renderServerSwitcherGrid = function () {
+    const container = doc.getElementById('serverSelectionContainer') || doc.getElementById('serverButtonsContainer');
+    if (!container || !win.SERVER_CONFIG) return;
+
+    container.innerHTML = Object.values(win.SERVER_CONFIG).map(srv => {
+      const isActive = srv.id === win.STATE.activeServer;
+      return `
+        <button 
+          type="button" 
+          id="server-btn-${srv.id}"
+          class="server-node-btn ${isActive ? 'active-server playing' : ''}" 
+          onclick="window.switchStreamServer(${srv.id})"
+          style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; border: 1px solid ${isActive ? '#ff0844' : 'rgba(255,255,255,0.1)'}; background: ${isActive ? 'rgba(255,8,68,0.18)' : 'rgba(255,255,255,0.04)'}; color: ${isActive ? '#ff0844' : '#ffffff'}; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; box-shadow: ${isActive ? '0 0 16px rgba(255,8,68,0.35)' : 'none'};">
+          <span class="server-status-dot ${srv.healthStatus || 'optimal'}" style="width: 8px; height: 8px; border-radius: 50%; background: ${isActive ? '#ff0844' : '#46d369'}; display: inline-block;"></span>
+          <span class="server-node-name">${escapeHTML(srv.name)}</span>
+        </button>
+      `;
+    }).join('');
+  };
+
+  win.switchStreamServer = function (serverId) {
+    const targetId = parseInt(serverId, 10);
+    if (!win.SERVER_CONFIG[targetId]) return;
+    win.STATE.activeServer = targetId;
+    localStorage.setItem(win.CONFIG.STORAGE_KEYS.ACTIVE_SERVER, targetId);
+
+    // Update active highlight and red glow on server buttons immediately
+    doc.querySelectorAll('.server-node-btn').forEach(btn => {
+      btn.classList.remove('active-server', 'playing');
+      btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+      btn.style.background = 'rgba(255, 255, 255, 0.04)';
+      btn.style.color = '#ffffff';
+      btn.style.boxShadow = 'none';
+      const dot = btn.querySelector('.server-status-dot');
+      if (dot) dot.style.background = '#46d369';
+    });
+
+    const activeBtn = doc.getElementById(`server-btn-${targetId}`) || doc.querySelector(`.server-node-btn[onclick*="switchStreamServer(${targetId})"]`);
+    if (activeBtn) {
+      activeBtn.classList.add('active-server', 'playing');
+      activeBtn.style.borderColor = '#ff0844';
+      activeBtn.style.background = 'rgba(255, 8, 68, 0.18)';
+      activeBtn.style.color = '#ff0844';
+      activeBtn.style.boxShadow = '0 0 16px rgba(255, 8, 68, 0.35)';
+      const dot = activeBtn.querySelector('.server-status-dot');
+      if (dot) dot.style.background = '#ff0844';
+    }
+
+    if (typeof win.showToast === 'function') {
+      win.showToast(`Active server: ${win.SERVER_CONFIG[targetId].name}`);
+    }
+    win.executeStream(0);
+  };
+
+  // ==========================================================================
+  // 10. MODAL TABS DISPATCHER & RANDOM TITLE GENERATOR
+  // ==========================================================================
+  win.switchTab = function (tabId, btn) {
+    doc.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    doc.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    const targetContent = doc.getElementById(tabId);
+    if (targetContent) targetContent.classList.add('active');
+
+    if (btn) {
+      btn.classList.add('active');
+    } else {
+      const matchBtn = doc.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+      if (matchBtn) matchBtn.classList.add('active');
+    }
+  };
+
+  win.playRandomAnime = async function () {
+    if (typeof win.toggleMobileNav === 'function') win.toggleMobileNav(false);
+    if (typeof win.showToast === 'function') win.showToast('Rolling random title...');
+
+    if (win.STATE.isNetflixMode) {
+      try {
+        const url = cleanTMDBUrl('discover/movie', { sort_by: 'popularity.desc' });
+        const data = await fetchWithRetry(url);
+        const results = data?.results || [];
+        if (results.length > 0) {
+          const item = results[Math.floor(Math.random() * results.length)];
+          const poster = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+          const mockMediaObj = {
+            id: item.id,
+            tmdbId: item.id,
+            title: { romaji: item.title || item.name, english: item.title || item.name },
+            description: item.overview,
+            bannerImage: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : poster,
+            coverImage: { extraLarge: poster, large: poster },
+            format: 'MOVIE',
+            episodes: 1,
+            averageScore: Math.round((item.vote_average || 8) * 10),
+            isLiveAction: true
+          };
+          win.animeCache.set(mockMediaObj.id, mockMediaObj);
+          win.openModal(mockMediaObj, 1, 1, false);
+          return;
+        }
+      } catch (e) {}
+    }
+
+    const randomPage = Math.floor(Math.random() * 20) + 1;
+    const data = await fetchGQL(GQL_BASIC, { page: randomPage, perPage: 10, sort: ['POPULARITY_DESC'] });
+    const list = data?.Page?.media || [];
+
+    if (list.length > 0) {
+      const selected = list[Math.floor(Math.random() * list.length)];
+      win.animeCache.set(selected.id, selected);
+      win.openModal(selected, 1, 1, false);
+      if (typeof win.showToast === 'function') {
+        win.showToast(`Selected: ${selected.title?.english || selected.title?.romaji}`);
+      }
+    }
+  };
+
+  // ==========================================================================
+  // 11. FUZZY ANIME RESOLUTION & MULTI-SEASON EPISODE HYDRATION
   // ==========================================================================
   win.resolveTMDBId = async function (rawTitle, isMovie = false) {
     if (win.STATE.isNetflixMode && win.STATE.currentAnime?.tmdbId) {
@@ -1122,7 +1246,7 @@
         const parsed = data.episodes.map(ep => ({
           number: ep.episode_number,
           title: ep.name ? String(ep.name).trim() : `Episode ${ep.episode_number}`,
-          overview: ep.overview ? String(ep.overview).trim() : 'Tap to stream this episode in full high-definition.',
+          overview: ep.overview ? String(ep.overview).trim() : 'No synopsis available for this episode.',
           still: ep.still_path ? `https://image.tmdb.org/t/p/w500${ep.still_path}` : null,
           runtime: ep.runtime ? `${ep.runtime}m` : null,
           airDate: ep.air_date ? ep.air_date.slice(0, 4) : ''
@@ -1135,7 +1259,7 @@
   };
 
   // ==========================================================================
-  // 11. EPISODE GRID RENDERING & SELECTION DISPATCHER
+  // 12. EPISODE GRID RENDERING & SELECTION DISPATCHER
   // ==========================================================================
   win.renderEpisodeGrid = async function () {
     const epList = document.getElementById('epList');
@@ -1166,7 +1290,6 @@
 
     if (episodesTotalPill) episodesTotalPill.innerText = `Total ${total}`;
 
-    // Populate Season dropdown
     if (seasonSelect) {
       seasonSelect.innerHTML = seasons.map(s => `
         <option value="${s.season_number}" ${s.season_number === win.STATE.season ? 'selected' : ''}>
@@ -1175,7 +1298,6 @@
       `).join('');
     }
 
-    // Populate Episode Range dropdown (1-50, 51-100, etc.)
     if (episodeRangeSelect) {
       episodeRangeSelect.innerHTML = '';
       const batches = Math.ceil(total / 50);
@@ -1254,9 +1376,8 @@
     const ep = parseInt(epNum, 10);
     win.STATE.episode = ep;
 
-    // 1. Reset all episode cards to normal unselected state
-    const allCards = doc.querySelectorAll('.ep-modern-card');
-    allCards.forEach(card => {
+    // Reset inactive card highlights
+    doc.querySelectorAll('.ep-modern-card').forEach(card => {
       card.classList.remove('playing');
       card.style.background = 'rgba(255, 255, 255, 0.03)';
       card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
@@ -1275,7 +1396,7 @@
       if (badge) badge.remove();
     });
 
-    // 2. Select and highlight active card with glowing red border and "Playing" badge
+    // Apply active glowing red styles and "Playing" badge
     const targetCard = doc.querySelector(`.ep-modern-card[onclick*="switchEpisode(${ep})"]`);
     if (targetCard) {
       targetCard.classList.add('playing');
@@ -1304,7 +1425,6 @@
       targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // 3. Update Modal Now Playing Labels
     const modalNowPlayingTitle = doc.getElementById('modalNowPlayingTitle');
     const playerStreamTitle = doc.getElementById('playerStreamTitle');
     const mainTitle = win.STATE.currentAnime?.title?.english || win.STATE.currentAnime?.title?.romaji || 'Stream Master';
@@ -1316,7 +1436,6 @@
       playerStreamTitle.innerText = `Season ${win.STATE.season} • Episode ${ep}`;
     }
 
-    // 4. Update Route Parameter State
     if (win.Router) {
       win.Router.set({ ep: ep, s: win.STATE.season }, false);
     }
@@ -1325,7 +1444,6 @@
       win.showToast(`Now Playing: Episode ${ep}`);
     }
 
-    // 5. Execute Stream Buffer Transition
     win.executeStream(0);
   };
 
@@ -1351,27 +1469,100 @@
   async function fetchAndPopulateDeepData(anime) {
     const numericId = parseInt(anime.id, 10);
     const castGrid = doc.getElementById('castGrid');
+    const moreGrid = doc.getElementById('moreGrid');
+    const trailersGrid = doc.getElementById('trailersGrid');
+
     if (castGrid) castGrid.innerHTML = '';
+    if (moreGrid) moreGrid.innerHTML = '';
+    if (trailersGrid) trailersGrid.innerHTML = '';
 
     if (win.STATE.isNetflixMode || (win.STATE.currentTMDBId && win.STATE.currentTMDBId !== 533535)) {
       try {
         const isMovie = anime.format === 'MOVIE';
-        const tmdbData = await fetchWithRetry(cleanTMDBUrl(`${isMovie ? 'movie' : 'tv'}/${win.STATE.currentTMDBId}`, { append_to_response: 'credits' }));
+        const tmdbData = await fetchWithRetry(cleanTMDBUrl(`${isMovie ? 'movie' : 'tv'}/${win.STATE.currentTMDBId}`, { append_to_response: 'credits,videos,recommendations' }));
+
         if (tmdbData?.credits?.cast?.length && castGrid) {
           tmdbData.credits.cast.slice(0, 16).forEach(item => {
             const img = item.profile_path ? `https://image.tmdb.org/t/p/w185${item.profile_path}` : FALLBACK_POSTER;
-            castGrid.innerHTML += `<div class="cast-card"><img src="${img}" alt="${item.character}" onerror="this.src='${FALLBACK_POSTER}'" /><div class="cast-names"><h4>${item.character || item.name}</h4><p><i class="fas fa-user"></i> ${item.name}</p></div></div>`;
+            castGrid.innerHTML += `
+              <div class="cast-card">
+                <img src="${img}" alt="${escapeHTML(item.character || item.name)}" onerror="this.src='${FALLBACK_POSTER}'" />
+                <div class="cast-names">
+                  <h4>${escapeHTML(item.character || item.name)}</h4>
+                  <p><i class="fas fa-user"></i> ${escapeHTML(item.name)}</p>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        if (tmdbData?.videos?.results?.length && trailersGrid) {
+          const yt = tmdbData.videos.results.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
+          if (yt?.key) {
+            trailersGrid.innerHTML = `
+              <div class="modal-player-wrap" style="border-radius:12px; max-width:750px; margin:0 auto; aspect-ratio:16/9;">
+                <iframe src="https://www.youtube-nocookie.com/embed/${yt.key}?autoplay=0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+              </div>
+            `;
+          }
+        }
+
+        if (tmdbData?.recommendations?.results?.length && moreGrid) {
+          const recs = tmdbData.recommendations.results.filter(r => !(r.genre_ids || []).includes(16));
+          recs.slice(0, 12).forEach(item => {
+            const disp = item.title || item.name;
+            const img = item.poster_path ? `https://image.tmdb.org/t/p/w300${item.poster_path}` : FALLBACK_POSTER;
+            moreGrid.innerHTML += `
+              <div class="anime-card card ui-card-locked" style="cursor:pointer;" onclick="window.handleAnimeClick(${item.id})">
+                <img src="${img}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="border-radius:8px; width:100%; aspect-ratio:2/3; object-fit:cover;" />
+                <div class="card-overlay"><div class="card-title">${escapeHTML(disp)}</div></div>
+              </div>
+            `;
           });
         }
       } catch (e) {}
     } else if (!isNaN(numericId) && numericId > 0 && numericId < 300000) {
       try {
         const aniData = await fetchGQL(GQL_DEEP, { id: numericId });
-        const edges = aniData?.Media?.characters?.edges || [];
+        const media = aniData?.Media;
+        const edges = media?.characters?.edges || [];
+
         if (edges.length > 0 && castGrid) {
           edges.slice(0, 16).forEach(edge => {
             const charImg = edge.node?.image?.large || FALLBACK_POSTER;
-            castGrid.innerHTML += `<div class="cast-card"><img src="${charImg}" alt="${edge.node?.name?.full}" onerror="this.src='${FALLBACK_POSTER}'" /><div class="cast-names"><h4>${edge.node?.name?.full}</h4></div></div>`;
+            castGrid.innerHTML += `
+              <div class="cast-card">
+                <img src="${charImg}" alt="${escapeHTML(edge.node?.name?.full)}" onerror="this.src='${FALLBACK_POSTER}'" />
+                <div class="cast-names">
+                  <h4>${escapeHTML(edge.node?.name?.full)}</h4>
+                  <p><i class="fas fa-microphone"></i> ${escapeHTML(edge.voiceActors?.[0]?.name?.full || 'Japanese')}</p>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        if (media?.trailer?.site?.toLowerCase() === 'youtube' && media?.trailer?.id && trailersGrid) {
+          trailersGrid.innerHTML = `
+            <div class="modal-player-wrap" style="border-radius:12px; max-width:750px; margin:0 auto; aspect-ratio:16/9;">
+              <iframe src="https://www.youtube-nocookie.com/embed/${media.trailer.id}?autoplay=0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+          `;
+        }
+
+        const nodes = media?.recommendations?.nodes || [];
+        if (nodes.length > 0 && moreGrid) {
+          nodes.slice(0, 12).forEach(recNode => {
+            const rec = recNode.mediaRecommendation;
+            if (!rec) return;
+            win.animeCache.set(rec.id, rec);
+            const cover = rec.coverImage?.extraLarge || rec.coverImage?.large || FALLBACK_POSTER;
+            moreGrid.innerHTML += `
+              <div class="anime-card card ui-card-locked" style="cursor:pointer;" onclick="window.handleAnimeClick(${rec.id})">
+                <img src="${cover}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="border-radius:8px; width:100%; aspect-ratio:2/3; object-fit:cover;" />
+                <div class="card-overlay"><div class="card-title">${escapeHTML(rec.title?.english || rec.title?.romaji)}</div></div>
+              </div>
+            `;
           });
         }
       } catch (err) {}
@@ -1379,7 +1570,7 @@
   }
 
   // ==========================================================================
-  // 12. REAL-TIME SEARCH AUTOCOMPLETE
+  // 13. REAL-TIME SEARCH AUTOCOMPLETE
   // ==========================================================================
   win.toggleSearch = function () {
     const wrapper = doc.getElementById('searchWrapper');
@@ -1518,7 +1709,7 @@
   });
 
   // ==========================================================================
-  // 13. SCHEDULER & REVERSE TRACE.MOE ENGINE
+  // 14. SCHEDULER & REVERSE TRACE.MOE ENGINE
   // ==========================================================================
   const DAYS_MAP = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
@@ -1722,7 +1913,7 @@
   }
 
   // ==========================================================================
-  // 14. ANISKIP SKIP CHAPTER TELEMETRY
+  // 15. ANISKIP SKIP CHAPTER TELEMETRY
   // ==========================================================================
   async function resolveAndPollAniSkip(malId, episode) {
     clearTimeout(aniSkipPollTimer);
@@ -1788,7 +1979,7 @@
   };
 
   // ==========================================================================
-  // 15. AUDIO GAIN BOOSTER (UP TO 250%)
+  // 16. AUDIO GAIN BOOSTER (UP TO 250%)
   // ==========================================================================
   win.toggleAudioVolumeBooster = function () {
     const levels = [1.0, 1.5, 2.0, 2.5];
@@ -1824,7 +2015,7 @@
   };
 
   // ==========================================================================
-  // 16. DEEP LINKING & EPISODE SHARER
+  // 17. DEEP LINKING & EPISODE SHARER
   // ==========================================================================
   win.shareCurrentTitleLink = function () {
     if (win.Router && win.STATE.currentAnime) {
@@ -1847,7 +2038,7 @@
   };
 
   // ==========================================================================
-  // 17. SYNCHRONIZED PLAYER POSTMESSAGE EVENT LISTENER
+  // 18. SYNCHRONIZED PLAYER POSTMESSAGE EVENT LISTENER
   // ==========================================================================
   win.addEventListener('message', ({ data }) => {
     if (data && data.type === 'PLAYER_EVENT') {
