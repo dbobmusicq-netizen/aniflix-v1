@@ -485,24 +485,39 @@
   };
 
   // ==========================================================================
-  // 07. HERO SPOTLIGHT & BILLBOARD ENGINE
+  // 07. HERO SPOTLIGHT & BILLBOARD ENGINE (FAIL-SAFE NON-BLOCKING PIPELINE)
   // ==========================================================================
   win.renderHeroSpotlight = async function () {
     const heroDubBadge = doc.querySelector('.hero-tags .tag-hindi');
+    const heroTitle = doc.getElementById('heroTitle');
+    const heroDesc = doc.getElementById('heroDesc');
+    const heroBg = doc.getElementById('heroBg');
+    const heroScore = doc.getElementById('heroScore');
+    const heroYear = doc.getElementById('heroYear');
+    const heroFormat = doc.getElementById('heroFormat');
+    const heroStatus = doc.getElementById('heroStatus');
+    const heroFormatBadge = doc.getElementById('heroFormatBadge');
+    const playBtn = doc.getElementById('heroPlayBtn');
+    const infoBtn = doc.getElementById('heroInfoBtn');
+    const bookmarkBtn = doc.getElementById('heroBookmarkBtn');
 
+    // ------------------------------------------------------------------------
+    // CASE A: NETFLIX / LIVE-ACTION SPOTLIGHT
+    // ------------------------------------------------------------------------
     if (win.STATE.isNetflixMode) {
       try {
         const url = cleanTMDBUrl('discover/movie', {
           sort_by: 'popularity.desc',
           'vote_count.gte': '100'
         });
-        const data = await fetchWithRetry(url);
+        const data = await fetchWithRetry(url, {}, 2, 800);
         const item = data?.results?.[0];
+
         if (item) {
           const title = item.title || item.name || 'Featured Live-Action';
           const poster = item.backdrop_path
             ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
-            : `https://image.tmdb.org/t/p/original${item.poster_path}`;
+            : (item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : FALLBACK_POSTER);
           const isMovie = item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
 
           const mockMediaObj = {
@@ -527,92 +542,92 @@
           win.STATE.currentAnime = mockMediaObj;
           win.STATE.currentTMDBId = mockMediaObj.id;
 
-          const heroBg = doc.getElementById('heroBg');
           if (heroBg) {
             heroBg.src = poster;
-            if (typeof win.extractChromaAmbilight === 'function') {
-              win.extractChromaAmbilight(poster);
-            }
+            if (typeof win.extractChromaAmbilight === 'function') win.extractChromaAmbilight(poster);
           }
-
-          const heroTitle = doc.getElementById('heroTitle');
-          const heroScore = doc.getElementById('heroScore');
-          const heroYear = doc.getElementById('heroYear');
-          const heroFormat = doc.getElementById('heroFormat');
-          const heroStatus = doc.getElementById('heroStatus');
-          const heroDesc = doc.getElementById('heroDesc');
-          const heroFormatBadge = doc.getElementById('heroFormatBadge');
-
           if (heroTitle) heroTitle.innerText = title;
           if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> ${mockMediaObj.averageScore}% Match`;
           if (heroYear) heroYear.innerText = mockMediaObj.seasonYear;
           if (heroFormat) heroFormat.innerText = mockMediaObj.format;
           if (heroStatus) heroStatus.innerText = 'NETFLIX LIVE';
           if (heroFormatBadge) heroFormatBadge.innerHTML = `<i class="fas fa-play"></i> NETFLIX LIVE SPOTLIGHT`;
-
-          if (heroDubBadge) {
-            heroDubBadge.innerHTML = `<i class="fas fa-film"></i> 4K ULTRA HD / MULTI AUDIO`;
-          }
-
-          if (heroDesc) heroDesc.innerText = win.cleanHTML ? win.cleanHTML(mockMediaObj.description) : mockMediaObj.description;
-
-          const playBtn = doc.getElementById('heroPlayBtn');
-          const infoBtn = doc.getElementById('heroInfoBtn');
-          const bookmarkBtn = doc.getElementById('heroBookmarkBtn');
+          if (heroDubBadge) heroDubBadge.innerHTML = `<i class="fas fa-film"></i> 4K ULTRA HD / MULTI AUDIO`;
+          if (heroDesc) heroDesc.innerText = cleanText(mockMediaObj.description);
 
           if (playBtn) playBtn.onclick = () => win.openModal(mockMediaObj, 1, 1, true);
           if (infoBtn) infoBtn.onclick = () => win.openModal(mockMediaObj, 1, 1, false);
           if (bookmarkBtn) bookmarkBtn.onclick = () => win.toggleWatchlist(mockMediaObj);
           return;
         }
-      } catch (e) {}
-    }
-
-    const data = await fetchGQL(GQL_BASIC, { page: 1, perPage: 1, sort: ['TRENDING_DESC'] });
-    const anime = data?.Page?.media?.[0];
-    if (!anime) return;
-
-    win.animeCache.set(anime.id, anime);
-
-    const title = anime.title?.english || anime.title?.romaji || 'Stream Master';
-    const banner = anime.bannerImage || anime.coverImage?.extraLarge;
-
-    const heroBg = doc.getElementById('heroBg');
-    if (heroBg) {
-      heroBg.src = banner;
-      if (typeof win.extractChromaAmbilight === 'function') {
-        win.extractChromaAmbilight(banner);
+      } catch (e) {
+        console.warn('[Netflix Spotlight Failover Engaged]:', e);
       }
     }
 
-    const heroTitle = doc.getElementById('heroTitle');
-    const heroScore = doc.getElementById('heroScore');
-    const heroYear = doc.getElementById('heroYear');
-    const heroFormat = doc.getElementById('heroFormat');
-    const heroStatus = doc.getElementById('heroStatus');
-    const heroDesc = doc.getElementById('heroDesc');
-    const heroFormatBadge = doc.getElementById('heroFormatBadge');
+    // ------------------------------------------------------------------------
+    // CASE B: ANIME UNIVERSE SPOTLIGHT
+    // ------------------------------------------------------------------------
+    try {
+      const data = await fetchGQL(GQL_BASIC, { page: 1, perPage: 1, sort: ['TRENDING_DESC'] });
+      const anime = data?.Page?.media?.[0];
 
-    if (heroTitle) heroTitle.innerText = title;
-    if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> ${anime.averageScore || 95}% Rating`;
-    if (heroYear) heroYear.innerText = anime.seasonYear || '2026';
-    if (heroFormat) heroFormat.innerText = anime.format || 'TV SERIES';
-    if (heroStatus) heroStatus.innerText = anime.status || 'AIRING';
-    if (heroFormatBadge) heroFormatBadge.innerHTML = `<i class="fas fa-play"></i> FEATURED SPOTLIGHT`;
+      if (anime) {
+        win.animeCache.set(anime.id, anime);
+        win.STATE.currentAnime = anime;
 
-    if (heroDubBadge) {
-      heroDubBadge.innerHTML = `<i class="fas fa-microphone"></i> HINDI / SUB / DUB`;
+        const title = anime.title?.english || anime.title?.romaji || 'Stream Spotlight';
+        const banner = anime.bannerImage || anime.coverImage?.extraLarge || FALLBACK_POSTER;
+
+        if (heroBg) {
+          heroBg.src = banner;
+          if (typeof win.extractChromaAmbilight === 'function') win.extractChromaAmbilight(banner);
+        }
+        if (heroTitle) heroTitle.innerText = title;
+        if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> ${anime.averageScore || 95}% Rating`;
+        if (heroYear) heroYear.innerText = anime.seasonYear || '2026';
+        if (heroFormat) heroFormat.innerText = anime.format || 'TV SERIES';
+        if (heroStatus) heroStatus.innerText = anime.status || 'AIRING';
+        if (heroFormatBadge) heroFormatBadge.innerHTML = `<i class="fas fa-play"></i> FEATURED SPOTLIGHT`;
+        if (heroDubBadge) heroDubBadge.innerHTML = `<i class="fas fa-microphone"></i> HINDI / SUB / DUB`;
+        if (heroDesc) heroDesc.innerText = cleanText(anime.description);
+
+        if (playBtn) playBtn.onclick = () => win.openModal(anime, 1, 1, true);
+        if (infoBtn) infoBtn.onclick = () => win.openModal(anime, 1, 1, false);
+        if (bookmarkBtn) bookmarkBtn.onclick = () => win.toggleWatchlist(anime);
+        return;
+      }
+    } catch (err) {
+      console.warn('[AniList Spotlight Query Error]:', err);
     }
 
-    if (heroDesc) heroDesc.innerText = win.cleanHTML ? win.cleanHTML(anime.description) : anime.description;
+    // ------------------------------------------------------------------------
+    // CASE C: EMERGENCY STATIC FALLBACK (NEVER LEAVE STUCK ON CONNECTING)
+    // ------------------------------------------------------------------------
+    if (heroTitle && heroTitle.innerText.includes('Connecting')) {
+      const fallbackTitle = win.STATE.isNetflixMode ? 'Deadpool & Wolverine' : 'Demon Slayer: Kimetsu no Yaiba';
+      const fallbackPoster = 'https://image.tmdb.org/t/p/original/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg';
 
-    const playBtn = doc.getElementById('heroPlayBtn');
-    const infoBtn = doc.getElementById('heroInfoBtn');
-    const bookmarkBtn = doc.getElementById('heroBookmarkBtn');
+      const defaultObj = {
+        id: 533535,
+        title: { english: fallbackTitle, romaji: fallbackTitle },
+        description: 'Stream trending titles with zero popups and ultra-fast multi-server sync.',
+        bannerImage: fallbackPoster,
+        coverImage: { extraLarge: fallbackPoster, large: fallbackPoster },
+        format: 'MOVIE',
+        averageScore: 98,
+        seasonYear: '2026'
+      };
 
-    if (playBtn) playBtn.onclick = () => win.openModal(anime, 1, 1, true);
-    if (infoBtn) infoBtn.onclick = () => win.openModal(anime, 1, 1, false);
-    if (bookmarkBtn) bookmarkBtn.onclick = () => win.toggleWatchlist(anime);
+      win.STATE.currentAnime = defaultObj;
+      if (heroBg) heroBg.src = fallbackPoster;
+      heroTitle.innerText = fallbackTitle;
+      if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> 98% Rating`;
+      if (heroYear) heroYear.innerText = '2026';
+      if (heroDesc) heroDesc.innerText = defaultObj.description;
+      if (playBtn) playBtn.onclick = () => win.openModal(defaultObj, 1, 1, true);
+      if (infoBtn) infoBtn.onclick = () => win.openModal(defaultObj, 1, 1, false);
+    }
   };
 
   // ==========================================================================
