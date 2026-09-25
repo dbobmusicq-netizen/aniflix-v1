@@ -1,20 +1,22 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 46.0.9 Resilient Architecture)
+ * Production-Grade JavaScript Controller (Version 46.1.1 Enterprise Release)
  *
- * Architecture & Features:
- *  - Immediate URL-Synchronized State Bootstrapping (Zero Universe Bleed).
- *  - Sub-Query Parameter Isolation Engine for Strict TMDB v3 Route Forwarding.
- *  - Anti-Wipe DOM Protection Shield (Blocks unauthorized document writes).
- *  - Circuit Breaker & Adaptive Token-Bucket Request Guard for REST/GraphQL.
- *  - Multi-Server Routing Matrix (NxSha Ultra, Filmu Native, VidCore, VidFast).
- *  - Multi-Season TMDB Hydration Engine with Dynamic Route Verification.
- *  - Hardware-Accelerated Canvas Chroma Extraction & Ambilight Engine.
- *  - Dexie IndexedDB Persistence Layer with Watch Progress Telemetry.
- *  - Bi-directional URL Router with Deep Linking & State Synchronization.
- *  - Native AniList Airing Schedule Engine (Jikan Independent).
- *  - AniSkip Telemetry Integration with Jump Execution.
+ * Included Subsystems:
+ *  - Anti-DOM-Wipe execution shield & global variable protection.
+ *  - Token-Bucket Leaky API Guard with Circuit Breaker (AniList / Kitsu / AniSkip / TMDB).
+ *  - Deterministic Sub-Query Isolator for TMDB edge gateways.
+ *  - 4-Tier Stream Server Mirror Engine (NxSha Ultra, Filmu Native, VidCore, VidFast).
+ *  - High-precision fuzzy regex title sanitizer for franchise/multi-season matching.
+ *  - Season catalog query & batch episode metadata resolver.
+ *  - 24-bit canvas chroma ambilight extractor for reactive backdrop illumination.
+ *  - Dexie.js IndexedDB offline progress storage & sync telemetry.
+ *  - Bidirectional browser history router with URL state deserialization.
+ *  - Client-side AniSkip skip chapter polling & execution dispatcher.
+ *  - Native AniList airing schedule fetching without third-party proxy dependencies.
+ *  - Hardware-accelerated keyboard navigation & accessibility controller.
+ *  - Dual-Universe bootstrap lifecycle with race-free cold start loading.
  * ============================================================================
  */
 
@@ -55,7 +57,7 @@ const CONFIG = {
     ANILIST: 'https://graphql.anilist.co',
     KITSU: 'https://kitsu.io/api/edge',
     ANISKIP: 'https://api.aniskip.com/v2/skip-times',
-    TMDB_PROXY: '/api/tmdb' // Secure Vercel Serverless Edge Gateway
+    TMDB_PROXY: '/api/tmdb'
   },
   TMDB_GENRES: {
     ACTION: { movie: 28, tv: 10759 },
@@ -84,7 +86,6 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     rawPath = rawPath.replace(/^3\//, '');
   }
 
-  // Strictly isolate routing path from embedded query string to prevent %3F escaping
   let pathOnly = rawPath;
   let queryString = '';
 
@@ -99,7 +100,6 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
   const url = new URL(CONFIG.APIS.TMDB_PROXY, window.location.origin);
   url.searchParams.set('endpoint', pathOnly);
 
-  // Parse and append embedded query string parameters individually
   if (queryString) {
     const embedded = new URLSearchParams(queryString);
     embedded.forEach((val, key) => {
@@ -107,7 +107,6 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     });
   }
 
-  // Set Discover Defaults
   if (pathOnly.startsWith('discover/')) {
     if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
     if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
@@ -116,7 +115,6 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
   }
 
-  // Forward extra function-level customParams
   for (const [key, value] of Object.entries(customParams)) {
     if (value !== undefined && value !== null && value !== '') {
       url.searchParams.set(key, String(value));
@@ -137,8 +135,8 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
   const nativeFetch = window.fetch.bind(window);
 
   const GUARD = {
-    minDelay: 500,
-    maxConcurrent: 3,
+    minDelay: 420,
+    maxConcurrent: 4,
     maxRetries: 2,
     cacheTTL: 5 * 60 * 1000,
     queue: [],
@@ -204,7 +202,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
 
   async function runLimited(job) {
     while (GUARD.active >= GUARD.maxConcurrent) {
-      await sleep(100);
+      await sleep(80);
     }
 
     const now = Date.now();
@@ -234,7 +232,6 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
     let url = getUrl(input);
     const method = String(init.method || 'GET').toUpperCase();
 
-    // Reroute any legacy direct TMDB domain calls through the local proxy
     if (url.includes('db.speedracelight.com/3/')) {
       try {
         const parsed = new URL(url);
@@ -277,12 +274,12 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
           if (response.status === 429) {
             let retryAfterMs = Number(response.headers.get('Retry-After')) * 1000;
             if (!Number.isFinite(retryAfterMs) || retryAfterMs <= 0) {
-              retryAfterMs = Math.min(20000, 4000 * Math.pow(2, attempt));
+              retryAfterMs = Math.min(18000, 3000 * Math.pow(2, attempt));
             }
-            retryAfterMs += Math.floor(Math.random() * 1000);
+            retryAfterMs += Math.floor(Math.random() * 800);
 
             GUARD.circuitOpenUntil = Date.now() + retryAfterMs;
-            console.warn(`[AnimeDrift Guard] 429 encountered. Backoff for ${retryAfterMs}ms.`);
+            console.warn(`[AnimeDrift Guard] 429 rate limit hit. Throttling for ${retryAfterMs}ms.`);
 
             await sleep(retryAfterMs);
             attempt++;
@@ -345,7 +342,7 @@ const SERVER_CONFIG = {
   1: {
     id: 1,
     name: 'Server 1 (NxSha Ultra 4K)',
-    caption: 'Server 1 (NxSha Ultra CDN - Default Hindi Dubbed 4K)',
+    caption: 'Server 1 (NxSha Ultra CDN - Multi-Lang 4K Direct)',
     type: 'extractor',
     subHost: 'MbPly-[Multi-Lang]',
     healthStatus: 'optimal',
@@ -418,7 +415,6 @@ window.episodeDataCache = episodeDataCache;
 window.seriesSeasonsCache = seriesSeasonsCache;
 window.tmdbResolvedIdCache = tmdbResolvedIdCache;
 
-// Immediate URL Mode Detection prevents the Anime Spotlight from running on Netflix Mode load
 const urlParamsInit = new URLSearchParams(window.location.search);
 const initialNetflixMode = urlParamsInit.get('mode') === 'netflix';
 
@@ -433,7 +429,7 @@ let STATE = {
   activeServer: parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_SERVER), 10) || 1,
   isTheaterMode: false,
   isCinemaLights: false,
-  isNetflixMode: initialNetflixMode, // Synchronized with URL on script evaluation
+  isNetflixMode: initialNetflixMode,
   isSmartAutoPlayNext: true,
   isMuted: false,
   savedScrollY: 0,
@@ -468,7 +464,7 @@ class LocalStorageDatabase {
         });
         this.ready = true;
       } catch (err) {
-        console.warn('[DB Engine] IndexedDB fallback engaged:', err);
+        console.warn('[DB Engine] IndexedDB initialization warning:', err);
       }
     }
   }
@@ -861,7 +857,16 @@ window.resolveTMDBId = async function (rawTitle, isMovie = false) {
     return;
   }
 
-  const cacheKey = `${isMovie ? 'movie' : 'tv'}_${rawTitle}`;
+  let cleanQuery = rawTitle
+    .replace(/:\s*[^:]+$/, '')
+    .replace(/\b(?:part|cour|season)\s*\d+/gi, '')
+    .replace(/[^a-zA-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanQuery) cleanQuery = rawTitle;
+
+  const cacheKey = `${isMovie ? 'movie' : 'tv'}_${cleanQuery.toLowerCase()}`;
   if (tmdbResolvedIdCache.has(cacheKey)) {
     STATE.currentTMDBId = tmdbResolvedIdCache.get(cacheKey);
     return;
@@ -869,17 +874,26 @@ window.resolveTMDBId = async function (rawTitle, isMovie = false) {
 
   try {
     const searchType = isMovie ? 'movie' : 'tv';
-    const proxyUrl = buildSecureTmdbUrl(`search/${searchType}`, {
-      query: rawTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim()
-    });
-
+    const proxyUrl = buildSecureTmdbUrl(`search/${searchType}`, { query: cleanQuery });
     const res = await fetch(proxyUrl);
     if (!res.ok) throw new Error('Proxy search failed');
     const data = await res.json();
+
     if (data.results?.length > 0) {
       STATE.currentTMDBId = data.results[0].id;
     } else {
-      STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
+      const words = cleanQuery.split(' ').slice(0, 2).join(' ');
+      if (words.length > 2 && words !== cleanQuery) {
+        const fallbackRes = await fetch(buildSecureTmdbUrl(`search/${searchType}`, { query: words }));
+        const fallbackData = await fallbackRes.json();
+        if (fallbackData?.results?.length > 0) {
+          STATE.currentTMDBId = fallbackData.results[0].id;
+        } else {
+          STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
+        }
+      } else {
+        STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
+      }
     }
   } catch (e) {
     STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
@@ -948,168 +962,6 @@ window.fetchSeasonEpisodesData = async function (tmdbId, seasonNum) {
   return null;
 };
 
-window.renderEpisodeGrid = async function () {
-  const container = document.getElementById('episodesMasterSection');
-  const epList = document.getElementById('epList');
-  const seasonSelect = document.getElementById('seasonSelect');
-  const episodeRangeSelect = document.getElementById('episodeRangeSelect');
-  const episodesTotalPill = document.getElementById('episodesTotalPill');
-
-  if (!STATE.currentAnime || !STATE.currentAnime.id) {
-    if (epList) {
-      epList.innerHTML = `
-        <div style="text-align:center; padding: 24px; color: var(--text-muted);">
-          <i class="fas fa-circle-exclamation" style="font-size:24px; margin-bottom:8px; color:var(--accent-red);"></i>
-          <p>Please select an anime or movie to load episode listings.</p>
-        </div>`;
-    }
-    return;
-  }
-
-  const isMovie = STATE.currentAnime.format === 'MOVIE';
-  if (isMovie) {
-    if (container) container.style.display = 'none';
-    return;
-  }
-  if (container) container.style.display = 'block';
-  if (!epList) return;
-
-  let seasons = [];
-  if (STATE.currentTMDBId && STATE.currentTMDBId !== CONFIG.DEFAULT_TMDB_FALLBACK) {
-    seasons = await window.fetchSeriesSeasons(STATE.currentTMDBId);
-  }
-  STATE.availableSeasons = seasons;
-
-  const currentSeasonMatch = seasons.find(s => s.season_number === STATE.season);
-  const total = currentSeasonMatch ? currentSeasonMatch.episode_count : (STATE.currentAnime?.episodes || 12);
-  STATE.totalEpisodes = total;
-
-  if (episodesTotalPill) episodesTotalPill.innerText = `Total ${total}`;
-
-  if (seasonSelect) {
-    if (seasons.length > 1) {
-      seasonSelect.innerHTML = seasons.map(s => `
-        <option value="${s.season_number}" ${s.season_number === STATE.season ? 'selected' : ''}>
-          ${s.name} (${s.episode_count} Eps)
-        </option>
-      `).join('');
-    } else {
-      seasonSelect.innerHTML = `
-        <option value="${STATE.season}" selected>Season ${STATE.season}</option>
-      `;
-    }
-  }
-
-  if (episodeRangeSelect) {
-    episodeRangeSelect.innerHTML = '';
-    const batches = Math.ceil(total / 50);
-    for (let b = 0; b < batches; b++) {
-      const start = b * 50 + 1;
-      const end = Math.min((b + 1) * 50, total);
-      const opt = document.createElement('option');
-      opt.value = b;
-      opt.innerText = `Episodes ${start} - ${end}`;
-      if (b === STATE.episodeBatchOffset) opt.selected = true;
-      episodeRangeSelect.appendChild(opt);
-    }
-  }
-
-  const posterFallback = STATE.currentAnime.bannerImage ||
-    STATE.currentAnime.coverImage?.extraLarge ||
-    STATE.currentAnime.coverImage?.large || '';
-
-  let richEpisodes = null;
-  if (STATE.currentTMDBId && STATE.currentTMDBId !== CONFIG.DEFAULT_TMDB_FALLBACK) {
-    richEpisodes = await window.fetchSeasonEpisodesData(STATE.currentTMDBId, STATE.season);
-  }
-
-  const batchStart = STATE.episodeBatchOffset * 50 + 1;
-  const batchEnd = Math.min((STATE.episodeBatchOffset + 1) * 50, total);
-
-  let cardsHTML = '';
-  for (let ep = batchStart; ep <= batchEnd; ep++) {
-    const isPlaying = ep === STATE.episode;
-    const isWatched = STATE.watchHistory[STATE.currentAnime.id]?.episode > ep;
-    const epData = richEpisodes ? richEpisodes.find(x => x.number === ep) : null;
-
-    const title = epData?.title || `Episode ${ep}`;
-    const stillImg = epData?.still || posterFallback;
-    const airDate = epData?.airDate ? ` • ${epData.airDate}` : '';
-    const runtime = epData?.runtime ? ` • ${epData.runtime}` : '';
-    const overview = epData?.overview || 'Tap to stream this episode in full high-definition.';
-
-    cardsHTML += `
-      <div class="ep-modern-card ${isPlaying ? 'playing' : ''} ${isWatched ? 'watched' : ''}" 
-           onclick="window.switchEpisode(${ep})"
-           style="display: flex; gap: 14px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,${isPlaying ? '0.14' : '0.04'}); border: 1px solid rgba(255,255,255,${isPlaying ? '0.38' : '0.08'}); margin-bottom: 10px; cursor: pointer; transition: all 0.25s ease; align-items: center; box-sizing: border-box;">
-        
-        <div class="ep-thumb-preview" style="position: relative; width: 124px; min-width: 124px; height: 72px; border-radius: 8px; overflow: hidden; background: #0b0b12; flex-shrink: 0;">
-          <img src="${stillImg}" alt="${title}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
-          <div class="ep-play-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
-            <i class="fas ${isPlaying ? 'fa-play' : 'fa-circle-play'}" style="color: ${isPlaying ? 'var(--accent-red)' : '#ffffff'}; font-size: 20px;"></i>
-          </div>
-          <span style="position: absolute; bottom: 4px; right: 6px; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">EP ${ep}</span>
-        </div>
-
-        <div class="ep-meta-content" style="flex: 1; min-width: 0; overflow: hidden;">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <h4 style="font-size: 14px; font-weight: 800; color: ${isPlaying ? 'var(--accent-red)' : '#ffffff'}; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${ep}. ${title}
-            </h4>
-            ${isPlaying ? '<span style="font-size: 10px; font-weight: 800; color: var(--accent-red); text-transform: uppercase; flex-shrink: 0;">Streaming</span>' : ''}
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px; font-weight: 600;">
-            Season ${STATE.season}${runtime}${airDate}
-          </div>
-          <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 0 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
-            ${overview}
-          </p>
-        </div>
-      </div>
-    `;
-  }
-
-  epList.className = 'ep-grid-flow';
-  epList.innerHTML = cardsHTML;
-};
-
-window.changeEpisodeRange = function (offsetIndex) {
-  STATE.episodeBatchOffset = parseInt(offsetIndex, 10);
-  window.renderEpisodeGrid();
-};
-
-window.changeSeason = function (seasonNum) {
-  STATE.season = parseInt(seasonNum, 10);
-  STATE.episode = 1;
-  STATE.episodeBatchOffset = 0;
-  window.renderEpisodeGrid();
-  window.executeStream(0);
-};
-
-window.switchEpisode = function (epNum) {
-  const ep = parseInt(epNum, 10);
-  if (ep === STATE.episode) return;
-  STATE.episode = ep;
-  window.executeStream(0);
-  if (typeof window.showToast === 'function') {
-    window.showToast(`Switched to Episode ${ep}`);
-  }
-};
-
-window.nextEpisode = function () {
-  if (STATE.episode < STATE.totalEpisodes) {
-    window.switchEpisode(STATE.episode + 1);
-  } else {
-    const nextSeason = STATE.availableSeasons.find(s => s.season_number === STATE.season + 1);
-    if (nextSeason) {
-      if (typeof window.showToast === 'function') window.showToast(`Season ${STATE.season} complete! Advancing to Season ${nextSeason.season_number}...`);
-      window.changeSeason(nextSeason.season_number);
-    } else {
-      if (typeof window.showToast === 'function') window.showToast('You have reached the final episode.');
-    }
-  }
-};
-
 // ============================================================================
 // 11. DUAL-UNIVERSE TMDB CATALOG ENGINE (NETFLIX & LIVE ACTION VIA EDGE PROXY)
 // ============================================================================
@@ -1174,7 +1026,6 @@ window.fetchTmdbLiveActionRail = async function (endpoint, title, forceFormat = 
 };
 
 window.renderTmdbLiveActionHome = async function () {
-  // Delegate completely to streaming-ui.js to avoid duplicate row rendering and race conditions
   if (typeof window.renderHomeRows === 'function') {
     await window.renderHomeRows();
   }
@@ -1211,61 +1062,50 @@ window.updateHeroBillboard = function (item) {
   }
 };
 
-window.generateRowHTML = function (title, items, rowIndex) {
-  const cardsHTML = items.map(item => {
-    const displayTitle = item.title?.english || item.title?.romaji || 'Title';
-    const poster = item.coverImage?.large || item.coverImage?.extraLarge || '';
-    const score = item.averageScore ? `${item.averageScore}%` : '85%';
-    const format = item.format || 'TV';
-
-    return `
-      <div class="anime-card card ui-card-locked" 
-           style="flex: 0 0 185px !important; min-width: 185px !important; max-width: 185px !important; height: 275px !important; position: relative !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer !important; transition: transform 0.28s ease, box-shadow 0.28s ease !important; user-select: none !important; background: #16161c !important;"
-           onmouseover="this.style.transform='translateY(-4px) scale(1.03)'; this.style.boxShadow='0 14px 28px rgba(0,0,0,0.8)';"
-           onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='none';"
-           onclick="if (typeof window.openModalById === 'function') window.openModalById(${item.id});">
-        
-        <img src="${poster}" alt="${displayTitle}" loading="lazy" style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block;" />
-        <div class="card-badge" style="position: absolute !important; top: 8px !important; right: 8px !important; background: rgba(0,0,0,0.78) !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 3 !important;">${format}</div>
-        <div class="card-overlay" style="position: absolute !important; inset: auto 0 0 0 !important; width: 100% !important; padding: 42px 12px 10px 12px !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.72) 60%, transparent 100%) !important; z-index: 2 !important;">
-          <div class="card-title" style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;">${displayTitle}</div>
-          <div class="card-meta" style="font-size: 11px !important; color: #a1a1aa !important; margin-top: 4px !important;"><span style="color: #46d369 !important; font-weight: 700 !important;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span> &bull; ${item.year || '2026'}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <section class="content-row" style="margin: 24px 0; padding: 0 4%;">
-      <div class="row-header" style="margin-bottom: 12px;">
-        <h2 class="row-title" style="font-size: 19px; font-weight: 800; color: #fff; letter-spacing: 0.2px;">${title}</h2>
-      </div>
-      <div class="carousel-container" style="position: relative; width: 100%; overflow: hidden;">
-        <div class="carousel-rail" id="rail-${rowIndex}" 
-             style="display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 6px 0 16px 0; -webkit-overflow-scrolling: touch; scrollbar-width: thin;">
-          ${cardsHTML}
-        </div>
-      </div>
-    </section>
-  `;
-};
-
 // ============================================================================
 // 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER
 // ============================================================================
 window.applyQuickFilter = async function (filterKey, element) {
-  if (typeof window.navigateGenre === 'function') {
-    const key = (filterKey || 'ALL').toUpperCase();
-    if (STATE.isNetflixMode) {
-      if (key === 'ALL') return window.navigateGenre(null, 'Home');
-      if (key === 'MOVIES') return window.navigateGenre('Movies', 'Movies');
-      if (key === 'TOP_AIRING' || key === 'TV') return window.navigateGenre('TV', 'TV Shows');
-      if (key === 'HINDI') return window.navigateGenre('Hindi', 'Hindi Dubs');
-      if (key === 'ACTION') return window.navigateGenre('Action', 'Action');
-      if (key === 'THRILLER') return window.navigateGenre('Thriller', 'Thriller');
-      if (key === 'SCI_FI') return window.navigateGenre('Sci-Fi', 'Sci-Fi');
-      if (key === 'ROMANCE') return window.navigateGenre('Romance', 'Romance');
-    }
+  const key = (filterKey || 'ALL').toUpperCase();
+
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  if (element) {
+    element.classList.add('active');
+  } else {
+    const match = document.querySelector(`.chip[data-filter="${key}"]`) ||
+                  document.querySelector(`.chip[onclick*="'${filterKey}'"]`);
+    if (match) match.classList.add('active');
+  }
+
+  if (STATE.isNetflixMode) {
+    if (key === 'ALL') return window.navigateGenre(null, 'Home');
+    if (key === 'MOVIES') return window.navigateGenre('Movies', 'Movies');
+    if (key === 'TOP_AIRING' || key === 'TV') return window.navigateGenre('TV', 'TV Shows');
+    if (key === 'HINDI') return window.navigateGenre('Hindi', 'Hindi Dubs');
+    if (key === 'ACTION') return window.navigateGenre('Action', 'Action');
+    if (key === 'THRILLER') return window.navigateGenre('Thriller', 'Thriller');
+    if (key === 'SCI_FI') return window.navigateGenre('Sci-Fi', 'Sci-Fi');
+    if (key === 'ROMANCE') return window.navigateGenre('Romance', 'Romance');
+    return;
+  }
+
+  if (key === 'ALL') {
+    if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (key === 'HINDI') {
+    if (typeof window.loadHindiDubbed === 'function') await window.loadHindiDubbed();
+  } else if (key === 'MOVIES') {
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Movie', 'Top Anime Movies');
+  } else if (key === 'TOP_AIRING' || key === 'TOP_RATED') {
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Top', 'Top Airing Anime');
+  } else if (key === 'ACTION') {
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Action', 'Action Anime');
+  } else if (key === 'ROMANCE') {
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Romance', 'Romance & Drama');
+  } else if (key === 'SCI_FI') {
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Sci-Fi', 'Sci-Fi & Cyberpunk');
+  } else if (key === 'SECONDARY' || key === 'FANTASY') {
+    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Fantasy', 'Isekai & Fantasy');
   }
 };
 
@@ -1925,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 2. ALWAYS dispatch Hero Spotlight and Content Rows (Ignore noscript tags)
+  // 2. Dispatch Hero Spotlight and Content Rows
   if (typeof window.renderHeroSpotlight === 'function') {
     window.renderHeroSpotlight().catch((err) => {
       console.warn('[Hero Spotlight Error]:', err);
@@ -1937,4 +1777,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.warn('[Home Rows Error]:', err);
     });
   }
+});
+
+window.addEventListener('resize', () => {
+  STATE.isMobile = window.innerWidth <= 768;
 });
