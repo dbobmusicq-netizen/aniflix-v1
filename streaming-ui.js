@@ -7,7 +7,7 @@
  *    streaming-ui.js
  *
  * Version:
- *    46.0.7 Strict TMDB v3 Compliance & Distinct Pipeline Dispatcher
+ *    46.0.9 Complete Zero-Duplicate Unified Engine
  * ============================================================================
  */
 
@@ -153,7 +153,6 @@
     const url = new URL('/api/tmdb', win.location.origin);
     url.searchParams.set('endpoint', path);
 
-    // Forward discrete parameters
     if (queryStr) {
       const embedded = new URLSearchParams(queryStr);
       embedded.forEach((val, key) => {
@@ -161,10 +160,10 @@
       });
     }
 
-    // Default adult & language configuration
     if (path.startsWith('discover/')) {
+      if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
+      if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
       if (!url.searchParams.has('include_adult')) url.searchParams.set('include_adult', 'false');
-      if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
       if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
     }
 
@@ -176,6 +175,7 @@
 
     return url.toString();
   }
+  win.cleanTMDBUrl = cleanTMDBUrl;
 
   function enqueueGQL(taskFn) {
     gqlQueue = gqlQueue.then(async () => {
@@ -626,17 +626,17 @@
       if (typeof win.showToast === 'function') win.showToast('Loading Netflix Live-Action Universe...');
 
       // Precise TMDB v3 genre and language queries:
-      // TV Action = 10759, Movie Action = 28
-      // TV Sci-Fi = 10765, Movie Sci-Fi = 878
-      // TV Crime/Thriller = 80, Movie Thriller = 53
-      // Romance Movie = 10749, Romance TV = 10766
+      // Movie Action = 28, TV Action & Adventure = 10759
+      // Movie Sci-Fi = 878, TV Sci-Fi & Fantasy = 10765
+      // Movie Thriller = 53, TV Crime = 80
+      // Movie Romance = 10749, TV Soap/Romance = 10766
       await renderTMDBRow('Trending Movies Worldwide', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
       await renderTMDBRow('Bollywood Blockbusters & Hindi Cinema', 'discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-language"></i>', 'MOVIE');
       await renderTMDBRow('Top Hindi Web Series & Dramas', 'discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
       await renderTMDBRow('South Indian Cinema (Telugu & Tamil Hits)', 'discover/movie?with_original_language=te|ta&sort_by=popularity.desc', '<i class="fas fa-fire"></i>', 'MOVIE');
       await renderTMDBRow('Trending TV Shows Worldwide', 'discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
       await renderTMDBRow('Explosive Action & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
-      await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'TV');
+      await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-shield"></i>', 'TV');
       await renderTMDBRow('Sci-Fi & High Concept Cinema', 'discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE');
       await renderTMDBRow('Gripping Crime & Mystery Thrillers', 'discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
       await renderTMDBRow('Romance & Heartwarming Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
@@ -664,7 +664,6 @@
   win.renderHindiDubRow = renderHindiDubRow;
 
   async function renderTMDBRow(title, endpoint, iconHtml = '<i class="fas fa-clapperboard"></i>', forceFormat = null) {
-    // Generate isolated container element so items render directly to the corresponding row
     const container = doc.getElementById('contentRows');
     if (!container) return;
 
@@ -698,7 +697,6 @@
       }
     }
 
-    // Remove row gracefully if no titles match the query
     if (section && section.parentNode) {
       section.parentNode.removeChild(section);
     }
@@ -795,59 +793,58 @@
     if (anime) win.openModal(anime);
   };
 
-  win.navigateGenre = async function(genre, label) {
-    if (win.toggleMobileNav) win.toggleMobileNav(false);
-    win.syncCategoryState(genre ? genre.toUpperCase() : 'ALL');
+  win.navigateGenre = async function (genre, title) {
+    if (typeof win.toggleMobileNav === 'function') win.toggleMobileNav(false);
+
+    const key = genre ? genre.toUpperCase() : 'ALL';
+    win.syncCategoryState(key);
+
     const contentRows = doc.getElementById('contentRows');
     if (contentRows) contentRows.innerHTML = '';
 
-    if (!genre) { await win.renderHomeRows(); win.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-    if (win.showToast) win.showToast(`Loading ${label || genre}...`);
+    if (!genre) {
+      await win.renderHomeRows();
+      win.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (typeof win.showToast === 'function') win.showToast(`Loading ${title}...`);
 
     if (win.STATE.isNetflixMode) {
-      if (genre === 'Movies') { await renderTMDBRow('Trending Feature Films', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE'); await renderTMDBRow('Top Rated Blockbusters', 'discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE'); }
-      else if (genre === 'TV') { await renderTMDBRow('Top Binge TV Series', 'discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV'); await renderTMDBRow('Critically Acclaimed Series', 'discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV'); }
-      else if (genre === 'Action') { await renderTMDBRow('Action Movies & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE'); await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV'); }
-      else if (genre === 'Thriller' || genre === 'Crime') { await renderTMDBRow('Gripping Crime & Mystery Films', 'discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE'); await renderTMDBRow('Psychological Thriller Series', 'discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV'); }
-      else if (genre === 'Romance') { await renderTMDBRow('Romantic Comedies & Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE'); await renderTMDBRow('Romantic TV Series', 'discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV'); }
-      else if (genre === 'Hindi') { await win.loadHindiDubbed(); }
+      if (genre === 'Movies' || genre === 'Movie') {
+        await renderTMDBRow('Trending Feature Films', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+        await renderTMDBRow('Top Rated Blockbusters', 'discover/movie?sort_by=vote_average.desc&vote_count.gte=200', '<i class="fas fa-star"></i>', 'MOVIE');
+      } else if (genre === 'TV' || genre === 'TV Shows') {
+        await renderTMDBRow('Top Binge TV Series', 'discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        await renderTMDBRow('Critically Acclaimed Series', 'discover/tv?sort_by=vote_average.desc&vote_count.gte=100', '<i class="fas fa-star"></i>', 'TV');
+      } else if (genre === 'Action') {
+        await renderTMDBRow('Action Movies & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+        await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+      } else if (genre === 'Thriller' || genre === 'Crime') {
+        await renderTMDBRow('Gripping Crime & Mystery Films', 'discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
+        await renderTMDBRow('Psychological Thriller Series', 'discover/tv?with_genres=80&sort_by=popularity.desc', '<i class="fas fa-user-secret"></i>', 'TV');
+      } else if (genre === 'Romance') {
+        await renderTMDBRow('Romantic Comedies & Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
+        await renderTMDBRow('Romantic TV Series', 'discover/tv?with_genres=10766&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+      } else if (genre === 'Hindi') {
+        await win.loadHindiDubbed();
+      }
     } else {
-      await renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
-      await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
+      await renderRow(title, { page: 1, perPage: 24, genre, sort: ['TRENDING_DESC'] }, false);
+      await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre, sort: ['SCORE_DESC'] }, false);
     }
+
     win.scrollTo({ top: 350, behavior: 'smooth' });
   };
 
-  win.applyQuickFilter = async function (type, chipBtn) {
-    const normType = (type || 'ALL').toUpperCase();
-    if (win.STATE.isNetflixMode) {
-      if (normType === 'ALL') { win.syncCategoryState('ALL'); await win.renderTmdbLiveActionHome(); }
-      else if (normType === 'MOVIES') await win.navigateGenre('Movies', 'Feature Films');
-      else if (normType === 'TOP_AIRING' || normType === 'TV') await win.navigateGenre('TV', 'TV Series');
-      else if (normType === 'HINDI') await win.navigateGenre('Hindi', 'Hindi Dubs');
-      else if (normType === 'ACTION') await win.navigateGenre('Action', 'Action');
-      else if (normType === 'THRILLER') await win.navigateGenre('Thriller', 'Thriller');
-      else if (normType === 'SCI_FI') { win.syncCategoryState('SCI_FI'); const c = doc.getElementById('contentRows'); if(c) c.innerHTML = ''; await renderTMDBRow('Sci-Fi Explorations', 'discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE'); await renderTMDBRow('Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV'); win.scrollTo({ top: 350, behavior: 'smooth' }); }
-      else if (normType === 'ROMANCE') await win.navigateGenre('Romance', 'Romance');
-      return;
-    }
-    switch (normType) {
-      case 'ALL': await win.navigateGenre(null, 'Home'); break;
-      case 'HINDI': await win.loadHindiDubbed(); break;
-      case 'TOP_AIRING': win.syncCategoryState('TOP_AIRING'); const c = doc.getElementById('contentRows'); if(c) c.innerHTML = ''; await renderRow('Top Airing Worldwide', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false); win.scrollTo({ top: 350, behavior: 'smooth' }); break;
-      case 'MOVIES': await win.navigateGenre('Movie', 'Top Anime Movies'); break;
-      case 'ACTION': await win.navigateGenre('Action', 'Action'); break;
-      case 'SECONDARY': await win.navigateGenre('Fantasy', 'Fantasy'); break;
-      case 'SCI_FI': await win.navigateGenre('Sci-Fi', 'Sci-Fi'); break;
-      case 'ROMANCE': await win.navigateGenre('Romance', 'Romance'); break;
-    }
-  };
-
-  win.loadHindiDubbed = async function() {
-    if (win.toggleMobileNav) win.toggleMobileNav(false);
+  win.loadHindiDubbed = async function () {
+    if (typeof win.toggleMobileNav === 'function') win.toggleMobileNav(false);
     win.syncCategoryState('HINDI');
+
     const contentRows = doc.getElementById('contentRows');
     if (contentRows) contentRows.innerHTML = '';
+
+    if (typeof win.showToast === 'function') win.showToast('Loading Hindi & Regional Indian Releases...');
 
     if (win.STATE.isNetflixMode) {
       await renderTMDBRow('Hindi Blockbuster Movies', 'discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
@@ -862,7 +859,46 @@
     win.scrollTo({ top: 350, behavior: 'smooth' });
   };
 
-  win.toggleNetflixMode = async function(skipUrlSync = false) {
+  win.applyQuickFilter = async function (type, chipBtn) {
+    const normType = (type || 'ALL').toUpperCase();
+    if (win.STATE.isNetflixMode) {
+      if (normType === 'ALL') { win.syncCategoryState('ALL'); await win.renderHomeRows(); }
+      else if (normType === 'MOVIES') await win.navigateGenre('Movies', 'Feature Films');
+      else if (normType === 'TOP_AIRING' || normType === 'TV') await win.navigateGenre('TV', 'TV Series');
+      else if (normType === 'HINDI') await win.navigateGenre('Hindi', 'Hindi Dubs');
+      else if (normType === 'ACTION') await win.navigateGenre('Action', 'Action');
+      else if (normType === 'THRILLER') await win.navigateGenre('Thriller', 'Thriller');
+      else if (normType === 'SCI_FI') {
+        win.syncCategoryState('SCI_FI');
+        const c = doc.getElementById('contentRows');
+        if (c) c.innerHTML = '';
+        await renderTMDBRow('Sci-Fi Explorations', 'discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE');
+        await renderTMDBRow('Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+        win.scrollTo({ top: 350, behavior: 'smooth' });
+      }
+      else if (normType === 'ROMANCE') await win.navigateGenre('Romance', 'Romance');
+      return;
+    }
+    switch (normType) {
+      case 'ALL': await win.navigateGenre(null, 'Home'); break;
+      case 'HINDI': await win.loadHindiDubbed(); break;
+      case 'TOP_AIRING': {
+        win.syncCategoryState('TOP_AIRING');
+        const c = doc.getElementById('contentRows');
+        if (c) c.innerHTML = '';
+        await renderRow('Top Airing Worldwide', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false);
+        win.scrollTo({ top: 350, behavior: 'smooth' });
+        break;
+      }
+      case 'MOVIES': await win.navigateGenre('Movie', 'Top Anime Movies'); break;
+      case 'ACTION': await win.navigateGenre('Action', 'Action'); break;
+      case 'SECONDARY': await win.navigateGenre('Fantasy', 'Fantasy'); break;
+      case 'SCI_FI': await win.navigateGenre('Sci-Fi', 'Sci-Fi'); break;
+      case 'ROMANCE': await win.navigateGenre('Romance', 'Romance'); break;
+    }
+  };
+
+  win.toggleNetflixMode = async function (skipUrlSync = false) {
     win.STATE.isNetflixMode = !win.STATE.isNetflixMode;
     if (!skipUrlSync && win.Router) win.Router.set({ mode: win.STATE.isNetflixMode ? 'netflix' : null });
 
@@ -880,7 +916,7 @@
 
       if (desktopNav) desktopNav.innerHTML = `<li><a class="nav-link active" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('MOVIES')"><i class="fas fa-film"></i> <span>Movies</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('TOP_AIRING')"><i class="fas fa-tv"></i> <span>TV Shows</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('ACTION')"><span>Action</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('THRILLER')"><span>Thriller & Crime</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('HINDI')"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>`;
       if (filterChips) filterChips.innerHTML = `<button class="chip active" data-filter="ALL" onclick="window.applyQuickFilter('ALL')"><i class="fas fa-border-all"></i> All</button><button class="chip" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES')"><i class="fas fa-film"></i> Movies</button><button class="chip" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING')"><i class="fas fa-tv"></i> TV Series</button><button class="chip" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI')"><i class="fas fa-language"></i> Hindi Dubs</button><button class="chip" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION')"><i class="fas fa-bolt"></i> Action</button><button class="chip" data-filter="THRILLER" onclick="window.applyQuickFilter('THRILLER')"><i class="fas fa-mask"></i> Thriller</button><button class="chip" data-filter="SCI_FI" onclick="window.applyQuickFilter('SCI_FI')"><i class="fas fa-microchip"></i> Sci-Fi</button>`;
-      
+
       if (win.showToast) win.showToast('Switched to Netflix Live-Action Mode');
       await win.renderHomeRows();
     } else {
@@ -891,7 +927,7 @@
 
       if (desktopNav) desktopNav.innerHTML = `<li><a class="nav-link active" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li><li><a class="nav-link" onclick="window.loadHindiDubbed()"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li><li><a class="nav-link" onclick="window.navigateGenre('Action', 'Action Blockbusters')"><span>Action</span></a></li><li><a class="nav-link" onclick="window.navigateGenre('Romance', 'Romance & Drama')"><span>Romance</span></a></li><li><a class="nav-link" onclick="window.navigateGenre('Fantasy', 'Isekai & Fantasy')"><span>Fantasy</span></a></li>`;
       if (filterChips) filterChips.innerHTML = `<button class="chip active" data-filter="ALL" onclick="window.applyQuickFilter('ALL')"><i class="fas fa-border-all"></i> All</button><button class="chip" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI')"><i class="fas fa-language"></i> Hindi Dubs</button><button class="chip" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING')"><i class="fas fa-tower-broadcast"></i> Airing</button><button class="chip" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES')"><i class="fas fa-film"></i> Movies</button><button class="chip" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION')"><i class="fas fa-bolt"></i> Action</button><button class="chip" data-filter="SECONDARY" onclick="window.applyQuickFilter('SECONDARY')"><i class="fas fa-dungeon"></i> Fantasy</button>`;
-      
+
       if (win.showToast) win.showToast('Switched to Anime Universe');
       if (win.renderHeroSpotlight) await win.renderHeroSpotlight();
       if (win.renderHomeRows) await win.renderHomeRows();
@@ -903,23 +939,30 @@
     let anime = win.animeCache.get(id);
     if (!anime) {
       if (win.STATE.isNetflixMode) {
-        try { const item = await fetchWithRetry(cleanTMDBUrl(`movie/${id}`)); if (item) anime = win.formatTmdbMediaItem?.(item, 'MOVIE'); } catch (e) {}
+        try {
+          const item = await fetchWithRetry(cleanTMDBUrl(`movie/${id}`));
+          if (item) anime = win.formatTmdbMediaItem?.(item, 'MOVIE');
+        } catch (e) {}
       } else {
-        const data = await fetchGQL(GQL_DEEP, { id: parseInt(id, 10) }); anime = data?.Media;
+        const data = await fetchGQL(GQL_DEEP, { id: parseInt(id, 10) });
+        anime = data?.Media;
       }
     }
     if (anime) await win.openModal(anime, season, episode, true, true);
   };
 
   win.openModal = async function (anime, season = 1, episode = 1, autoStart = false, skipUrlSync = false) {
-    win.STATE.savedScrollY = win.scrollY; win.STATE.currentAnime = anime;
+    win.STATE.savedScrollY = win.scrollY;
+    win.STATE.currentAnime = anime;
     const isMovie = anime.format === 'MOVIE';
     const seasonInfo = win.extractSeasonInfo ? win.extractSeasonInfo(anime) : { season: 1, cleanTitle: anime.title?.english || '' };
     win.STATE.season = isMovie ? 1 : (season || seasonInfo.season);
     win.STATE.episode = isMovie ? 1 : (episode || 1);
 
-    const overlay = doc.getElementById('modalOverlay'); const container = doc.getElementById('modalContainer');
-    if (overlay) overlay.classList.add('active'); if (container) container.classList.add('active');
+    const overlay = doc.getElementById('modalOverlay');
+    const container = doc.getElementById('modalContainer');
+    if (overlay) overlay.classList.add('active');
+    if (container) container.classList.add('active');
     doc.documentElement.style.overflowY = 'hidden';
 
     const title = anime.title?.english || anime.title?.romaji || 'Title';
@@ -939,7 +982,9 @@
       if (episodesMasterSection) episodesMasterSection.style.display = 'block';
     }
 
-    const scoreEl = doc.getElementById('modalScore'); const yearEl = doc.getElementById('modalYear'); const descEl = doc.getElementById('modalDesc');
+    const scoreEl = doc.getElementById('modalScore');
+    const yearEl = doc.getElementById('modalYear');
+    const descEl = doc.getElementById('modalDesc');
     if (scoreEl) scoreEl.innerHTML = `<i class="fas fa-star"></i> ${anime.averageScore || 90}% Score`;
     if (yearEl) yearEl.innerText = anime.seasonYear || anime.year || '2026';
     if (descEl) descEl.innerText = cleanText(anime.description);
@@ -985,26 +1030,43 @@
     wrap.innerHTML = `<iframe id="streamFrame" src="${streamUrl}" allowfullscreen allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" style="position:absolute; inset:0; width:100%; height:100%; border:none; z-index:5; background:#000;"></iframe>`;
   };
 
-  win.resolveTMDBId = async function(rawTitle, isMovie = false) {
-    if (win.STATE.isNetflixMode && win.STATE.currentAnime?.tmdbId) { win.STATE.currentTMDBId = win.STATE.currentAnime.tmdbId; return; }
-    if (!rawTitle) { win.STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK; return; }
+  win.resolveTMDBId = async function (rawTitle, isMovie = false) {
+    if (win.STATE.isNetflixMode && win.STATE.currentAnime?.tmdbId) {
+      win.STATE.currentTMDBId = win.STATE.currentAnime.tmdbId;
+      return;
+    }
+    if (!rawTitle) {
+      win.STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
+      return;
+    }
     const cacheKey = `${isMovie ? 'movie' : 'tv'}_${rawTitle}`;
-    if (tmdbResolvedIdCache.has(cacheKey)) { win.STATE.currentTMDBId = tmdbResolvedIdCache.get(cacheKey); return; }
+    if (tmdbResolvedIdCache.has(cacheKey)) {
+      win.STATE.currentTMDBId = tmdbResolvedIdCache.get(cacheKey);
+      return;
+    }
     try {
       const proxyUrl = cleanTMDBUrl(`search/${isMovie ? 'movie' : 'tv'}`, { query: rawTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim() });
       const data = await fetchWithRetry(proxyUrl);
       win.STATE.currentTMDBId = data.results?.length ? data.results[0].id : CONFIG.DEFAULT_TMDB_FALLBACK;
-    } catch (e) { win.STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK; }
+    } catch (e) {
+      win.STATE.currentTMDBId = CONFIG.DEFAULT_TMDB_FALLBACK;
+    }
     tmdbResolvedIdCache.set(cacheKey, win.STATE.currentTMDBId);
   };
 
-  win.fetchSeriesSeasons = async function(tmdbId) {
+  win.fetchSeriesSeasons = async function (tmdbId) {
     if (!tmdbId || tmdbId === CONFIG.DEFAULT_TMDB_FALLBACK) return [];
     if (win.seriesSeasonsCache.has(`series_seasons_${tmdbId}`)) return win.seriesSeasonsCache.get(`series_seasons_${tmdbId}`);
     try {
       const data = await fetchWithRetry(cleanTMDBUrl(`tv/${tmdbId}`));
       if (data?.seasons?.length) {
-        const validSeasons = data.seasons.filter(s => s.season_number > 0).map(s => ({ season_number: s.season_number, name: s.name || `Season ${s.season_number}`, episode_count: s.episode_count || 12, overview: s.overview || '', poster: s.poster_path ? `https://image.tmdb.org/t/p/w500${s.poster_path}` : null }));
+        const validSeasons = data.seasons.filter(s => s.season_number > 0).map(s => ({
+          season_number: s.season_number,
+          name: s.name || `Season ${s.season_number}`,
+          episode_count: s.episode_count || 12,
+          overview: s.overview || '',
+          poster: s.poster_path ? `https://image.tmdb.org/t/p/w500${s.poster_path}` : null
+        }));
         win.seriesSeasonsCache.set(`series_seasons_${tmdbId}`, validSeasons);
         return validSeasons;
       }
@@ -1012,12 +1074,19 @@
     return [];
   };
 
-  win.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
+  win.fetchSeasonEpisodesData = async function (tmdbId, seasonNum) {
     if (win.episodeDataCache.has(`ep_cache_${tmdbId}_s${seasonNum}`)) return win.episodeDataCache.get(`ep_cache_${tmdbId}_s${seasonNum}`);
     try {
       const data = await fetchWithRetry(cleanTMDBUrl(`tv/${tmdbId}/season/${seasonNum}`));
       if (data?.episodes?.length) {
-        const parsed = data.episodes.map(ep => ({ number: ep.episode_number, title: ep.name || `Episode ${ep.episode_number}`, overview: ep.overview || 'Tap to stream this episode in full high-definition.', still: ep.still_path ? `https://image.tmdb.org/t/p/w500${ep.still_path}` : null, runtime: ep.runtime ? `${ep.runtime}m` : null, airDate: ep.air_date ? ep.air_date.slice(0, 4) : '' }));
+        const parsed = data.episodes.map(ep => ({
+          number: ep.episode_number,
+          title: ep.name || `Episode ${ep.episode_number}`,
+          overview: ep.overview || 'Tap to stream this episode in full high-definition.',
+          still: ep.still_path ? `https://image.tmdb.org/t/p/w500${ep.still_path}` : null,
+          runtime: ep.runtime ? `${ep.runtime}m` : null,
+          airDate: ep.air_date ? ep.air_date.slice(0, 4) : ''
+        }));
         win.episodeDataCache.set(`ep_cache_${tmdbId}_s${seasonNum}`, parsed);
         return parsed;
       }
@@ -1025,7 +1094,7 @@
     return null;
   };
 
-  win.renderEpisodeGrid = async function() {
+  win.renderEpisodeGrid = async function () {
     const epList = document.getElementById('epList');
     if (!win.STATE.currentAnime || !epList) return;
     if (win.STATE.currentAnime.format === 'MOVIE') return;
@@ -1068,13 +1137,13 @@
     epList.innerHTML = cardsHTML;
   };
 
-  win.switchEpisode = function(epNum) {
+  win.switchEpisode = function (epNum) {
     if (epNum === win.STATE.episode) return;
     win.STATE.episode = epNum;
     win.executeStream(0);
   };
 
-  win.nextEpisode = function() {
+  win.nextEpisode = function () {
     if (win.STATE.episode < win.STATE.totalEpisodes) win.switchEpisode(win.STATE.episode + 1);
   };
 
@@ -1107,5 +1176,510 @@
       } catch (err) {}
     }
   }
+
+  // ==========================================================================
+  // 13. REAL-TIME SEARCH AUTOCOMPLETE
+  // ==========================================================================
+  win.toggleSearch = function () {
+    const wrapper = doc.getElementById('searchWrapper');
+    const input = doc.getElementById('searchInput');
+    if (!wrapper || !input) return;
+    wrapper.classList.toggle('open');
+    if (wrapper.classList.contains('open')) {
+      input.focus();
+    } else {
+      win.clearSearch();
+    }
+  };
+
+  win.clearSearch = function () {
+    const input = doc.getElementById('searchInput');
+    if (input) input.value = '';
+    const drop = doc.getElementById('searchDropdown');
+    if (drop) drop.classList.remove('visible');
+    const clearBtn = doc.getElementById('searchClearBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (win.Router) win.Router.set({ q: null });
+  };
+
+  doc.getElementById('searchInput')?.addEventListener('input', (e) => {
+    clearTimeout(win.STATE.searchDebounce);
+    const q = e.target.value.trim();
+    const drop = doc.getElementById('searchDropdown');
+    const clearBtn = doc.getElementById('searchClearBtn');
+
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+    if (!q) {
+      if (drop) drop.classList.remove('visible');
+      if (win.Router) win.Router.set({ q: null });
+      return;
+    }
+
+    if (win.Router && win.Router.get('q') !== q) {
+      win.Router.set({ q }, false);
+    }
+
+    win.STATE.searchDebounce = setTimeout(async () => {
+      if (win.STATE.isNetflixMode) {
+        try {
+          const searchUrl = cleanTMDBUrl('search/multi', { query: q });
+          const data = await fetchWithRetry(searchUrl);
+          drop.innerHTML = '';
+          const results = (data?.results || []).filter(item => {
+            const isMedia = item.media_type === 'movie' || item.media_type === 'tv';
+            const notAnime = !(item.genre_ids || []).includes(16);
+            return isMedia && notAnime;
+          }).slice(0, 6);
+
+          if (!results.length) {
+            drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No live-action titles found for "${escapeHTML(q)}"</div>`;
+            drop.classList.add('visible');
+            return;
+          }
+
+          results.forEach(item => {
+            const title = item.title || item.name;
+            const img = item.poster_path ? `https://image.tmdb.org/t/p/w300${item.poster_path}` : FALLBACK_POSTER;
+            const isMovie = item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
+            const mockMediaObj = {
+              id: item.id,
+              tmdbId: item.id,
+              title: { romaji: title, english: title },
+              coverImage: { extraLarge: img, large: img },
+              format: isMovie ? 'MOVIE' : 'TV',
+              episodes: isMovie ? 1 : 16,
+              averageScore: Math.round((item.vote_average || 8) * 10),
+              isLiveAction: true
+            };
+            win.animeCache.set(item.id, mockMediaObj);
+
+            const el = doc.createElement('div');
+            el.className = 'search-item';
+            el.onclick = () => {
+              win.openModal(mockMediaObj);
+              win.clearSearch();
+            };
+            el.innerHTML = `
+              <img src="${img}" alt="" onerror="this.src='${FALLBACK_POSTER}'" />
+              <div class="search-info">
+                <div class="search-title">${escapeHTML(title)}</div>
+                <div class="search-meta">
+                  <span>${(item.release_date || item.first_air_date || '2026').split('-')[0]}</span> &bull; 
+                  <span>${item.media_type.toUpperCase()}</span> &bull; 
+                  <span style="color:#46d369;"><i class="fas fa-star"></i> ${Math.round((item.vote_average || 8) * 10)}%</span>
+                </div>
+              </div>
+            `;
+            drop.appendChild(el);
+          });
+          drop.classList.add('visible');
+          return;
+        } catch (e) {}
+      }
+
+      const data = await fetchGQL(GQL_BASIC, { search: q, perPage: 6 });
+      if (!drop) return;
+      drop.innerHTML = '';
+
+      if (!data || !data.Page?.media?.length) {
+        drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No anime found for "${escapeHTML(q)}"</div>`;
+        drop.classList.add('visible');
+        return;
+      }
+
+      data.Page.media.forEach(anime => {
+        win.animeCache.set(anime.id, anime);
+        const title = anime.title?.english || anime.title?.romaji || 'Anime';
+        const img = anime.coverImage?.large || anime.coverImage?.extraLarge || FALLBACK_POSTER;
+        const item = doc.createElement('div');
+        item.className = 'search-item';
+        item.onclick = () => {
+          win.openModal(anime);
+          win.clearSearch();
+        };
+        item.innerHTML = `
+          <img src="${img}" alt="" onerror="this.src='${FALLBACK_POSTER}'" />
+          <div class="search-info">
+            <div class="search-title">${escapeHTML(title)}</div>
+            <div class="search-meta">
+              <span>${anime.seasonYear || '2026'}</span> &bull; 
+              <span>${anime.format || 'TV'}</span> &bull; 
+              <span style="color:#46d369;"><i class="fas fa-star"></i> ${anime.averageScore || '90'}%</span>
+            </div>
+          </div>
+        `;
+        drop.appendChild(item);
+      });
+
+      drop.classList.add('visible');
+    }, 300);
+  });
+
+  // ==========================================================================
+  // 14. SCHEDULER & REVERSE TRACE.MOE ENGINE
+  // ==========================================================================
+  const DAYS_MAP = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+  win.openScheduleModal = function (skipUrlSync = false) {
+    const modal = doc.getElementById('scheduleModal');
+    const overlay = doc.getElementById('scheduleModalOverlay');
+    if (!modal || !overlay) return;
+
+    modal.style.display = 'flex';
+    overlay.classList.add('active');
+    doc.documentElement.style.overflowY = 'hidden';
+
+    if (!skipUrlSync && win.Router) win.Router.set({ modal: 'schedule' }, true);
+
+    const todayIndex = new Date().getDay();
+    renderScheduleTabs(todayIndex);
+    loadJikanScheduleDay(DAYS_MAP[todayIndex]);
+  };
+
+  win.closeScheduleModal = function (skipUrlSync = false) {
+    const modal = doc.getElementById('scheduleModal');
+    const overlay = doc.getElementById('scheduleModalOverlay');
+    if (modal && overlay && modal.style.display === 'flex') {
+      modal.style.display = 'none';
+      overlay.classList.remove('active');
+      doc.documentElement.style.overflowY = 'scroll';
+      if (!skipUrlSync && win.Router) win.Router.set({ modal: null });
+    }
+  };
+
+  function renderScheduleTabs(activeIdx) {
+    const tabs = doc.getElementById('scheduleDayTabs');
+    if (!tabs) return;
+    tabs.innerHTML = '';
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    dayNames.forEach((name, idx) => {
+      const btn = doc.createElement('button');
+      btn.className = `modal-pill-btn ${idx === activeIdx ? 'next-ep-btn' : ''}`;
+      btn.innerText = name + (idx === new Date().getDay() ? ' (Today)' : '');
+      btn.onclick = () => {
+        doc.querySelectorAll('#scheduleDayTabs button').forEach(b => b.classList.remove('next-ep-btn'));
+        btn.classList.add('next-ep-btn');
+        loadJikanScheduleDay(DAYS_MAP[idx]);
+      };
+      tabs.appendChild(btn);
+    });
+  }
+
+  async function loadJikanScheduleDay(dayName) {
+    const container = doc.getElementById('scheduleItemsContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Fetching broadcast schedules...</div>';
+
+    try {
+      const data = await fetchWithRetry(`${win.CONFIG?.APIS?.JIKAN || 'https://api.jikan.moe/v4'}/schedules?filter=${dayName}&limit=20`);
+      const items = data?.data || [];
+      container.innerHTML = '';
+
+      if (!items.length) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">No broadcast data found for this day.</div>';
+        return;
+      }
+
+      items.forEach(anime => {
+        const title = anime.title_english || anime.title;
+        const img = anime.images?.webp?.image_url || anime.images?.jpg?.image_url || FALLBACK_POSTER;
+        const time = anime.broadcast?.time || 'TBA';
+
+        const row = doc.createElement('div');
+        row.className = 'search-item';
+        row.style.borderRadius = '12px';
+        row.onclick = () => {
+          win.closeScheduleModal();
+          searchAndOpenByTitle(title);
+        };
+        row.innerHTML = `
+          <img src="${img}" alt="" onerror="this.src='${FALLBACK_POSTER}'" />
+          <div class="search-info">
+            <div class="search-title">${escapeHTML(title)}</div>
+            <div class="search-meta">
+              <span style="color:var(--accent-cyan, #00d2ff);"><i class="fas fa-clock"></i> Broadcast: ${time} (JST)</span> &bull; 
+              <span style="color:var(--accent-emerald, #46d369);"><i class="fas fa-star"></i> ${anime.score ? Math.round(anime.score * 10) + '%' : 'N/A'}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    } catch (e) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:30px; color:var(--accent-red,#e50914);">
+          <p>Jikan API Gateway is busy.</p>
+          <button class="btn btn-info" style="margin-top:12px; font-size:12px; padding:6px 14px;" onclick="loadJikanScheduleDay('${dayName}')">
+            <i class="fas fa-rotate-right"></i> Retry
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  async function searchAndOpenByTitle(title) {
+    const data = await fetchGQL(GQL_BASIC, { search: title, perPage: 1 });
+    const anime = data?.Page?.media?.[0];
+    if (anime) {
+      win.openModal(anime, 1, 1, false);
+    } else {
+      if (typeof win.showToast === 'function') {
+        win.showToast(`Could not locate "${title}" in library.`);
+      }
+    }
+  }
+  win.searchAndOpenByTitle = searchAndOpenByTitle;
+
+  win.openTraceMoeModal = function (skipUrlSync = false) {
+    const modal = doc.getElementById('traceMoeModal');
+    const overlay = doc.getElementById('traceMoeOverlay');
+    if (!modal || !overlay) return;
+
+    modal.style.display = 'flex';
+    overlay.classList.add('active');
+    doc.documentElement.style.overflowY = 'hidden';
+
+    if (!skipUrlSync && win.Router) win.Router.set({ modal: 'tracemoe' }, true);
+    win.addEventListener('paste', handleTraceClipboardPaste);
+  };
+
+  win.closeTraceMoeModal = function (skipUrlSync = false) {
+    const modal = doc.getElementById('traceMoeModal');
+    const overlay = doc.getElementById('traceMoeOverlay');
+    if (modal && overlay && modal.style.display === 'flex') {
+      modal.style.display = 'none';
+      overlay.classList.remove('active');
+      doc.documentElement.style.overflowY = 'scroll';
+      if (!skipUrlSync && win.Router) win.Router.set({ modal: null });
+    }
+    win.removeEventListener('paste', handleTraceClipboardPaste);
+  };
+
+  function handleTraceClipboardPaste(e) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        executeTraceSearch(file);
+        break;
+      }
+    }
+  }
+
+  win.handleTraceFileUpload = function (event) {
+    const file = event.target.files?.[0];
+    if (file) executeTraceSearch(file);
+  };
+
+  async function executeTraceSearch(fileBlob) {
+    const resultsArea = doc.getElementById('traceResultsArea');
+    if (!resultsArea) return;
+    resultsArea.innerHTML = '<div style="text-align:center; padding:20px; color:var(--accent-cyan,#00d2ff);"><i class="fas fa-spinner fa-spin"></i> Analyzing frame...</div>';
+
+    const formData = new FormData();
+    formData.append('image', fileBlob);
+
+    try {
+      const res = await fetch('https://api.trace.moe/search?anilistInfo', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      const matches = data?.result || [];
+      resultsArea.innerHTML = '';
+
+      if (!matches.length) {
+        resultsArea.innerHTML = '<div style="text-align:center; padding:15px; color:var(--text-muted);">No match found.</div>';
+        return;
+      }
+
+      const best = matches[0];
+      const similarity = Math.round(best.similarity * 100);
+      const title = best.anilist?.title?.english || best.anilist?.title?.romaji || best.filename;
+      const ep = best.episode || 1;
+      const timestamp = Math.floor(best.from || 0);
+      const timeMins = Math.floor(timestamp / 60) + ':' + ('0' + (timestamp % 60)).slice(-2);
+
+      resultsArea.innerHTML = `
+        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.1);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-weight:800; color:#fff;">${escapeHTML(title)}</span>
+            <span style="color:var(--accent-emerald, #46d369); font-weight:800;">${similarity}% Match</span>
+          </div>
+          <video src="${best.video}" autoplay loop muted style="width:100%; border-radius:8px; margin-bottom:8px; aspect-ratio:16/9;"></video>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Episode ${ep} &bull; Matched at ${timeMins}</div>
+          <button class="btn btn-play" style="width:100%; font-size:13px; padding:8px 0;" onclick="window.closeTraceMoeModal(); window.openModalById(${best.anilist?.id || best.anilist}, ${ep})">
+            <i class="fas fa-play"></i> Watch Episode ${ep} Now
+          </button>
+        </div>
+      `;
+    } catch (err) {
+      resultsArea.innerHTML = '<div style="text-align:center; padding:15px; color:var(--accent-red,#e50914);">Search failed.</div>';
+    }
+  }
+
+  // ==========================================================================
+  // 15. ANISKIP SKIP CHAPTER TELEMETRY
+  // ==========================================================================
+  async function resolveAndPollAniSkip(malId, episode) {
+    clearTimeout(aniSkipPollTimer);
+    const skipBtn = doc.getElementById('aniSkipIntroBtn');
+    if (skipBtn) skipBtn.style.display = 'none';
+    aniSkipIntervals = [];
+
+    if (!malId || win.STATE.isNetflixMode) return;
+
+    try {
+      const res = await fetch(`https://api.aniskip.com/v2/skip-times/${malId}/${episode}?types[]=op&types[]=ed&types[]=recap&episodeLength=1440`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.found && data?.results?.length) {
+        aniSkipIntervals = data.results;
+      }
+    } catch (e) {}
+  }
+  win.resolveAndPollAniSkip = resolveAndPollAniSkip;
+
+  function handlePlayerTimeUpdate(currentTimeSeconds) {
+    const skipBtn = doc.getElementById('aniSkipIntroBtn');
+    const label = doc.getElementById('aniSkipLabel');
+    if (!skipBtn || !aniSkipIntervals.length) return;
+
+    const activeInterval = aniSkipIntervals.find(item =>
+      currentTimeSeconds >= item.interval.startTime && currentTimeSeconds <= item.interval.endTime
+    );
+
+    if (activeInterval) {
+      const type = activeInterval.skipType.toUpperCase();
+      if (label) label.innerText = `Skip ${type === 'OP' ? 'Opening' : type === 'ED' ? 'Ending' : 'Recap'}`;
+      skipBtn.style.display = 'inline-flex';
+      skipBtn.dataset.targetTime = activeInterval.interval.endTime;
+    } else {
+      skipBtn.style.display = 'none';
+    }
+  }
+
+  win.triggerAniSkipJump = function () {
+    const skipBtn = doc.getElementById('aniSkipIntroBtn');
+    const targetTime = parseFloat(skipBtn?.dataset?.targetTime);
+    if (!isNaN(targetTime)) {
+      const video = doc.getElementById('nativeStreamVideo');
+      if (video) {
+        video.currentTime = targetTime;
+      } else {
+        const iframe = doc.getElementById('streamFrame');
+        if (iframe) {
+          iframe.contentWindow?.postMessage({ type: 'SEEK_TO', time: targetTime }, '*');
+        }
+      }
+
+      skipBtn.style.display = 'none';
+      if (typeof win.showToast === 'function') {
+        win.showToast(`Skipped to ${Math.floor(targetTime)}s`);
+      }
+
+      if (win.p2pParty) {
+        win.p2pParty.sendSeek(targetTime);
+      }
+    }
+  };
+
+  // ==========================================================================
+  // 16. AUDIO GAIN BOOSTER (UP TO 250%)
+  // ==========================================================================
+  win.toggleAudioVolumeBooster = function () {
+    const levels = [1.0, 1.5, 2.0, 2.5];
+    const nextIdx = (levels.indexOf(currentAudioGainLevel) + 1) % levels.length;
+    currentAudioGainLevel = levels[nextIdx];
+
+    const label = doc.getElementById('audioBoosterLabel');
+    if (label) label.innerText = `${Math.round(currentAudioGainLevel * 100)}% Volume`;
+
+    if (win.streamEngine && typeof win.streamEngine.setVolumeBoost === 'function') {
+      win.streamEngine.setVolumeBoost(currentAudioGainLevel);
+    } else {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (win.AudioContext || win.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        if (gainNode) {
+          gainNode.gain.setValueAtTime(currentAudioGainLevel, audioCtx.currentTime);
+        }
+      } catch (e) {}
+    }
+
+    if (typeof win.showToast === 'function') {
+      win.showToast(`Audio Boost: ${Math.round(currentAudioGainLevel * 100)}%`);
+    }
+
+    if (win.p2pParty && win.p2pParty.isHost) {
+      win.p2pParty.broadcastAudioBoost(currentAudioGainLevel);
+    }
+  };
+
+  // ==========================================================================
+  // 17. DEEP LINKING & EPISODE SHARER
+  // ==========================================================================
+  win.shareCurrentTitleLink = function () {
+    if (win.Router && win.STATE.currentAnime) {
+      win.Router.set({ watch: win.STATE.currentAnime.id, s: win.STATE.season, ep: win.STATE.episode }, false);
+    }
+    navigator.clipboard.writeText(win.location.href);
+    if (typeof win.showToast === 'function') {
+      win.showToast('Direct title link copied!');
+    }
+  };
+
+  win.shareDeepLinkEpisode = function () {
+    if (win.Router && win.STATE.currentAnime) {
+      win.Router.set({ watch: win.STATE.currentAnime.id, s: win.STATE.season, ep: win.STATE.episode }, false);
+    }
+    navigator.clipboard.writeText(win.location.href);
+    if (typeof win.showToast === 'function') {
+      win.showToast(`Episode ${win.STATE.episode} link copied!`);
+    }
+  };
+
+  // ==========================================================================
+  // 18. SYNCHRONIZED PLAYER POSTMESSAGE EVENT LISTENER
+  // ==========================================================================
+  win.addEventListener('message', ({ data }) => {
+    if (data && data.type === 'PLAYER_EVENT') {
+      const ev = data.data;
+      if (ev && typeof ev.currentTime === 'number') {
+        handlePlayerTimeUpdate(ev.currentTime);
+
+        if (win.STATE.currentAnime) {
+          const isFin = Boolean(ev.duration > 0 && ev.currentTime / ev.duration > 0.90);
+          win.recordWatchedEpisode(
+            win.STATE.currentAnime.id,
+            win.STATE.season,
+            win.STATE.episode,
+            ev.currentTime,
+            ev.duration || 0,
+            isFin
+          );
+        }
+
+        if (win.p2pParty) {
+          win.p2pParty.lastKnownTime = ev.currentTime;
+
+          if (ev.state === 'playing') {
+            win.p2pParty.notifyBufferStatus(false);
+            win.p2pParty.sendPlay(ev.currentTime);
+          } else if (ev.state === 'paused') {
+            win.p2pParty.sendPause(ev.currentTime);
+          } else if (ev.state === 'buffering') {
+            win.p2pParty.notifyBufferStatus(true);
+          }
+        }
+      }
+    }
+  });
 
 })();
