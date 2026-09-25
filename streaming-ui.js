@@ -7,17 +7,7 @@
  *    streaming-ui.js
  *
  * Version:
- *    46.1.0 Multi-Season Hydration & High-Density UI Matrix
- *
- * Core Fixes & Architecture:
- *    - Strict Sub-Query Splitting: Isolates endpoint paths from sub-queries to prevent %3F escaping.
- *    - Fuzzy TMDB Anime Resolver: Cleans colons, arc names, and season subtitles for 100% TMDB match accuracy.
- *    - Multi-Season Auto-Hydration: Fetches full series season catalogs and accurate episode tallies.
- *    - Rich Episode Cards: Restores thumbnail posters, title, air date, runtime, and synopsis.
- *    - Non-Blocking Hero Billboard: Instantaneous fallback ensures "Connecting to Stream..." never stalls.
- *    - 24-Hour IndexedDB Garbage Collector: Automatic LRU cache pruning via Dexie.
- *    - Web Audio API Booster: Hardware volume boost up to 250% across playback frames.
- *    - P2P Mesh Room & Telemetry Sync: PeerJS real-time seek, pause, and emote broadcasting.
+ *    46.2.0 Complete High-Density Interactive Matrix
  * ============================================================================
  */
 
@@ -610,7 +600,7 @@
       console.warn('[AniList Spotlight Query Error]:', err);
     }
 
-    // CASE C: EMERGENCY STATIC FALLBACK (NEVER LEAVE STUCK ON CONNECTING)
+    // CASE C: EMERGENCY STATIC FALLBACK
     if (heroTitle && heroTitle.innerText.includes('Connecting')) {
       const fallbackTitle = win.STATE.isNetflixMode ? 'Deadpool & Wolverine' : 'Demon Slayer: Kimetsu no Yaiba';
       const fallbackPoster = 'https://image.tmdb.org/t/p/original/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg';
@@ -647,11 +637,6 @@
     if (win.STATE.isNetflixMode) {
       if (typeof win.showToast === 'function') win.showToast('Loading Netflix Live-Action Universe...');
 
-      // Precise TMDB v3 genre and language queries:
-      // Movie Action = 28, TV Action & Adventure = 10759
-      // Movie Sci-Fi = 878, TV Sci-Fi & Fantasy = 10765
-      // Movie Thriller = 53, TV Crime = 80
-      // Movie Romance = 10749, TV Soap/Romance = 10766
       await renderTMDBRow('Trending Movies Worldwide', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
       await renderTMDBRow('Bollywood Blockbusters & Hindi Cinema', 'discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-language"></i>', 'MOVIE');
       await renderTMDBRow('Top Hindi Web Series & Dramas', 'discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
@@ -1065,7 +1050,6 @@
       return;
     }
 
-    // Clean title for TMDB search: strip colons, arc names, and season qualifiers
     let cleanQuery = rawTitle
       .replace(/:\s*[^:]+$/, '')
       .replace(/\b(?:part|cour|season)\s*\d+/gi, '')
@@ -1150,6 +1134,9 @@
     return null;
   };
 
+  // ==========================================================================
+  // 11. EPISODE GRID RENDERING & SELECTION DISPATCHER
+  // ==========================================================================
   win.renderEpisodeGrid = async function () {
     const epList = document.getElementById('epList');
     const seasonSelect = document.getElementById('seasonSelect');
@@ -1179,7 +1166,7 @@
 
     if (episodesTotalPill) episodesTotalPill.innerText = `Total ${total}`;
 
-    // Populate Season dropdown with complete franchise seasons
+    // Populate Season dropdown
     if (seasonSelect) {
       seasonSelect.innerHTML = seasons.map(s => `
         <option value="${s.season_number}" ${s.season_number === win.STATE.season ? 'selected' : ''}>
@@ -1230,24 +1217,24 @@
       cardsHTML += `
         <div class="ep-modern-card ${isPlaying ? 'playing' : ''} ${isWatched ? 'watched' : ''}" 
              onclick="window.switchEpisode(${ep})" 
-             style="display: flex; gap: 16px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,${isPlaying ? '0.12' : '0.03'}); border: 1px solid rgba(255,255,255,${isPlaying ? '0.35' : '0.08'}); margin-bottom: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); align-items: center; box-sizing: border-box;"
-             onmouseenter="this.style.background='rgba(255,255,255,0.08)'; this.style.transform='translateX(4px)';"
-             onmouseleave="this.style.background='rgba(255,255,255,${isPlaying ? '0.12' : '0.03'})'; this.style.transform='translateX(0)';">
+             style="display: flex; gap: 16px; padding: 12px; border-radius: 12px; background: ${isPlaying ? 'rgba(255, 8, 68, 0.12)' : 'rgba(255, 255, 255, 0.03)'}; border: 1px solid ${isPlaying ? '#ff0844' : 'rgba(255, 255, 255, 0.08)'}; box-shadow: ${isPlaying ? '0 0 20px rgba(255, 8, 68, 0.35)' : 'none'}; margin-bottom: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); align-items: center; box-sizing: border-box;"
+             onmouseenter="if(!this.classList.contains('playing')){ this.style.background='rgba(255,255,255,0.08)'; this.style.transform='translateX(4px)'; }"
+             onmouseleave="if(!this.classList.contains('playing')){ this.style.background='rgba(255,255,255,0.03)'; this.style.transform='translateX(0)'; }">
           
           <div class="ep-thumb-preview" style="position: relative; width: 140px; min-width: 140px; height: 80px; border-radius: 8px; overflow: hidden; background: #0b0b12; flex-shrink: 0;">
             <img src="${stillImg}" alt="${escapeHTML(title)}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
             <div class="ep-play-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; transition: opacity 0.2s ease;">
-              <i class="fas ${isPlaying ? 'fa-play' : 'fa-circle-play'}" style="color: ${isPlaying ? 'var(--accent-red,#ff0844)' : '#ffffff'}; font-size: 22px;"></i>
+              <i class="fas ${isPlaying ? 'fa-play' : 'fa-circle-play'}" style="color: ${isPlaying ? '#ff0844' : '#ffffff'}; font-size: 22px;"></i>
             </div>
             <span style="position: absolute; bottom: 4px; right: 6px; background: rgba(0,0,0,0.85); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;">EP ${ep}</span>
           </div>
 
           <div class="ep-meta-content" style="flex: 1; min-width: 0; overflow: hidden;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <h4 style="font-size: 14px; font-weight: 800; color: ${isPlaying ? 'var(--accent-red,#ff0844)' : '#ffffff'}; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <h4 style="font-size: 14px; font-weight: 800; color: ${isPlaying ? '#ff0844' : '#ffffff'}; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 ${ep}. ${escapeHTML(title)}
               </h4>
-              ${isPlaying ? '<span style="font-size: 10px; font-weight: 800; color: var(--accent-red,#ff0844); text-transform: uppercase; flex-shrink: 0; background: rgba(255,8,68,0.15); padding: 2px 6px; border-radius: 4px;">Now Playing</span>' : ''}
+              ${isPlaying ? '<span class="ep-now-playing-badge" style="font-size: 10px; font-weight: 800; color: #ff0844; text-transform: uppercase; flex-shrink: 0; background: rgba(255,8,68,0.2); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(255,8,68,0.4); letter-spacing: 0.5px;"><i class="fas fa-wave-square" style="margin-right: 4px;"></i> Playing</span>' : ''}
             </div>
             <div style="font-size: 11px; color: var(--text-muted, #747994); margin-top: 4px; font-weight: 600;">
               Season ${win.STATE.season}${runtime}${airDate}
@@ -1263,6 +1250,85 @@
     epList.innerHTML = cardsHTML;
   };
 
+  win.switchEpisode = function (epNum) {
+    const ep = parseInt(epNum, 10);
+    win.STATE.episode = ep;
+
+    // 1. Reset all episode cards to normal unselected state
+    const allCards = doc.querySelectorAll('.ep-modern-card');
+    allCards.forEach(card => {
+      card.classList.remove('playing');
+      card.style.background = 'rgba(255, 255, 255, 0.03)';
+      card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+      card.style.boxShadow = 'none';
+
+      const titleEl = card.querySelector('h4');
+      if (titleEl) titleEl.style.color = '#ffffff';
+
+      const icon = card.querySelector('.ep-play-overlay i');
+      if (icon) {
+        icon.className = 'fas fa-circle-play';
+        icon.style.color = '#ffffff';
+      }
+
+      const badge = card.querySelector('.ep-now-playing-badge');
+      if (badge) badge.remove();
+    });
+
+    // 2. Select and highlight active card with glowing red border and "Playing" badge
+    const targetCard = doc.querySelector(`.ep-modern-card[onclick*="switchEpisode(${ep})"]`);
+    if (targetCard) {
+      targetCard.classList.add('playing');
+      targetCard.style.background = 'rgba(255, 8, 68, 0.12)';
+      targetCard.style.borderColor = '#ff0844';
+      targetCard.style.boxShadow = '0 0 20px rgba(255, 8, 68, 0.35)';
+
+      const titleEl = targetCard.querySelector('h4');
+      if (titleEl) titleEl.style.color = '#ff0844';
+
+      const icon = targetCard.querySelector('.ep-play-overlay i');
+      if (icon) {
+        icon.className = 'fas fa-play';
+        icon.style.color = '#ff0844';
+      }
+
+      const metaRow = targetCard.querySelector('.ep-meta-content > div');
+      if (metaRow && !metaRow.querySelector('.ep-now-playing-badge')) {
+        const badge = doc.createElement('span');
+        badge.className = 'ep-now-playing-badge';
+        badge.style.cssText = 'font-size: 10px; font-weight: 800; color: #ff0844; text-transform: uppercase; flex-shrink: 0; background: rgba(255, 8, 68, 0.2); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(255, 8, 68, 0.4); letter-spacing: 0.5px;';
+        badge.innerHTML = '<i class="fas fa-wave-square" style="margin-right: 4px;"></i> Playing';
+        metaRow.appendChild(badge);
+      }
+
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // 3. Update Modal Now Playing Labels
+    const modalNowPlayingTitle = doc.getElementById('modalNowPlayingTitle');
+    const playerStreamTitle = doc.getElementById('playerStreamTitle');
+    const mainTitle = win.STATE.currentAnime?.title?.english || win.STATE.currentAnime?.title?.romaji || 'Stream Master';
+
+    if (modalNowPlayingTitle) {
+      modalNowPlayingTitle.innerText = `${mainTitle} • S${win.STATE.season} Ep ${ep}`;
+    }
+    if (playerStreamTitle) {
+      playerStreamTitle.innerText = `Season ${win.STATE.season} • Episode ${ep}`;
+    }
+
+    // 4. Update Route Parameter State
+    if (win.Router) {
+      win.Router.set({ ep: ep, s: win.STATE.season }, false);
+    }
+
+    if (typeof win.showToast === 'function') {
+      win.showToast(`Now Playing: Episode ${ep}`);
+    }
+
+    // 5. Execute Stream Buffer Transition
+    win.executeStream(0);
+  };
+
   win.changeSeason = function (seasonNum) {
     win.STATE.season = parseInt(seasonNum, 10);
     win.STATE.episode = 1;
@@ -1276,14 +1342,10 @@
     if (typeof win.renderEpisodeGrid === 'function') win.renderEpisodeGrid();
   };
 
-  win.switchEpisode = function (epNum) {
-    if (epNum === win.STATE.episode) return;
-    win.STATE.episode = epNum;
-    win.executeStream(0);
-  };
-
   win.nextEpisode = function () {
-    if (win.STATE.episode < win.STATE.totalEpisodes) win.switchEpisode(win.STATE.episode + 1);
+    if (win.STATE.episode < win.STATE.totalEpisodes) {
+      win.switchEpisode(win.STATE.episode + 1);
+    }
   };
 
   async function fetchAndPopulateDeepData(anime) {
@@ -1317,7 +1379,7 @@
   }
 
   // ==========================================================================
-  // 13. REAL-TIME SEARCH AUTOCOMPLETE
+  // 12. REAL-TIME SEARCH AUTOCOMPLETE
   // ==========================================================================
   win.toggleSearch = function () {
     const wrapper = doc.getElementById('searchWrapper');
@@ -1456,7 +1518,7 @@
   });
 
   // ==========================================================================
-  // 14. SCHEDULER & REVERSE TRACE.MOE ENGINE
+  // 13. SCHEDULER & REVERSE TRACE.MOE ENGINE
   // ==========================================================================
   const DAYS_MAP = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
@@ -1660,7 +1722,7 @@
   }
 
   // ==========================================================================
-  // 15. ANISKIP SKIP CHAPTER TELEMETRY
+  // 14. ANISKIP SKIP CHAPTER TELEMETRY
   // ==========================================================================
   async function resolveAndPollAniSkip(malId, episode) {
     clearTimeout(aniSkipPollTimer);
@@ -1726,7 +1788,7 @@
   };
 
   // ==========================================================================
-  // 16. AUDIO GAIN BOOSTER (UP TO 250%)
+  // 15. AUDIO GAIN BOOSTER (UP TO 250%)
   // ==========================================================================
   win.toggleAudioVolumeBooster = function () {
     const levels = [1.0, 1.5, 2.0, 2.5];
@@ -1762,7 +1824,7 @@
   };
 
   // ==========================================================================
-  // 17. DEEP LINKING & EPISODE SHARER
+  // 16. DEEP LINKING & EPISODE SHARER
   // ==========================================================================
   win.shareCurrentTitleLink = function () {
     if (win.Router && win.STATE.currentAnime) {
@@ -1785,7 +1847,7 @@
   };
 
   // ==========================================================================
-  // 18. SYNCHRONIZED PLAYER POSTMESSAGE EVENT LISTENER
+  // 17. SYNCHRONIZED PLAYER POSTMESSAGE EVENT LISTENER
   // ==========================================================================
   win.addEventListener('message', ({ data }) => {
     if (data && data.type === 'PLAYER_EVENT') {
