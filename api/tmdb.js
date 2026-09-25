@@ -3,18 +3,14 @@
  * AnimeDrift — Global Omnipresent TMDB Edge Gateway
  * Path: /api/tmdb.js
  *
- * Architecture & Features tailored for Free Developer Plan:
- *   - Expanded Endpoint Matrix: Support for configuration, regions, languages,
- *     genres, certifications, watch providers, networks, and companies worldwide.
- *   - Global Region & Language Resolvers: Automated fallbacks for Indian regional
- *     audio (hi, ta, te, ml, kn, bn) and global cinema (ja, ko, es, fr, etc.).
- *   - Free Plan Rate-Limit Guard (Token Bucket): Built-in client throttling to
- *     respect TMDB's ~40 requests per 10-second ceiling across distributed users.
- *   - Dual Auth: Auto-detects v3 API keys and v4 Bearer tokens seamlessly.
- *   - Smart Edge CDN Caching: Static catalogs cache up to 24h, search caches
- *     lightly (10m), saving quota and speeding up edge delivery.
- *   - Multi-Subrequest Optimizer: Automatically cleans and forwards
- *     'append_to_response' parameters (credits, videos, images, recommendations).
+ * Architecture & Features:
+ *   - Universal Method Support: Handles both GET queries and POST bodies.
+ *   - Embedded Query Parsing: Flawlessly extracts embedded query strings inside `endpoint`
+ *     (e.g., discover/movie?with_genres=28), ensuring every category rail gets distinct content.
+ *   - Auto-Auth Detection: Seamlessly supports v3 API keys and v4 Bearer tokens.
+ *   - SSRF & Path Traversal Lockdown: Regex whitelist prevents unauthorized target endpoints.
+ *   - Dynamic CDN Caching: Optimizes edge cache lifetimes according to endpoint volatility.
+ *   - Timeout Guard: AbortController terminates slow upstream calls before serverless timeouts.
  * ============================================================================
  */
 
@@ -23,23 +19,22 @@ export const config = {
   maxDuration: 10
 };
 
-// Comprehensive regex supporting all standard TMDB v3 discovery and lookup endpoints
 const ALLOWED_ENDPOINT_PATTERN = /^(trending|movie|tv|search|discover|genre|find|person|collection|configuration|watch\/providers|network|company|certification)(\/.*)?$/;
 
 export default async function handler(req, res) {
   // CORS Configuration
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({
       success: false,
-      error: 'Method Not Allowed. Only GET requests are supported.'
+      error: 'Method Not Allowed. Only GET and POST requests are supported.'
     });
   }
 
@@ -52,45 +47,70 @@ export default async function handler(req, res) {
     });
   }
 
-  // Parse Path & Incoming Query Params
-  const { endpoint, ...queryParams } = req.query;
+  // Parse parameters from query string (GET) or request body (POST)
+  let rawParams = {};
+  if (req.method === 'POST') {
+    if (typeof req.body === 'string') {
+      try {
+        rawParams = JSON.parse(req.body);
+      } catch (e) {
+        rawParams = {};
+      }
+    } else {
+      rawParams = req.body || {};
+    }
+  } else {
+    rawParams = req.query || {};
+  }
+
+  const { endpoint, ...queryParams } = rawParams;
 
   if (!endpoint || typeof endpoint !== 'string') {
     return res.status(400).json({
       success: false,
-      error: 'Missing required query parameter: "endpoint". Example: /api/tmdb?endpoint=discover/movie'
+      error: 'Missing required parameter: "endpoint". Example: /api/tmdb?endpoint=discover/movie'
     });
   }
 
-  // Sanitize path (strip leading/trailing slashes and prevent directory traversal)
-  const sanitizedEndpoint = endpoint.replace(/^\/+|\/+$/g, '').trim();
+  // CRITICAL FIX: Split route path from any embedded query strings
+  let rawClean = endpoint.trim().replace(/^\/+/, '');
+  if (rawClean.startsWith('3/')) {
+    rawClean = rawClean.replace(/^3\//, '');
+  }
 
-  if (!ALLOWED_ENDPOINT_PATTERN.test(sanitizedEndpoint) || sanitizedEndpoint.includes('..')) {
+  let sanitizedPath = rawClean;
+  let embeddedQueryString = '';
+
+  if (rawClean.includes('?')) {
+    const parts = rawClean.split('?');
+    sanitizedPath = parts[0].replace(/\/+$/, '');
+    embeddedQueryString = parts.slice(1).join('?');
+  } else {
+    sanitizedPath = sanitizedPath.replace(/\/+$/, '');
+  }
+
+  // Security pattern validation
+  if (!ALLOWED_ENDPOINT_PATTERN.test(sanitizedPath) || sanitizedPath.includes('..')) {
     return res.status(403).json({
       success: false,
-      error: 'Access denied: The requested TMDB endpoint is not permitted through this gateway.'
+      error: 'Access denied: Targeted TMDB endpoint is not permitted through this gateway.'
     });
   }
 
-  // Construct target upstream TMDB URL
-  const targetUrl = new URL(`https://api.themoviedb.org/3/${sanitizedEndpoint}`);
+  // Construct target upstream TMDB URL with the clean path
+  const targetUrl = new URL(`https://api.themoviedb.org/3/${sanitizedPath}`);
 
-  // Authentication: Auto-detect Bearer Token vs Query Key
-  const isBearerToken = apiKey.length > 40 || apiKey.startsWith('ey');
-  const requestHeaders = {
-    'Accept': 'application/json',
-    'User-Agent': 'AnimeDrift-Global-Proxy/3.0'
-  };
-
-  if (isBearerToken) {
-    requestHeaders['Authorization'] = `Bearer ${apiKey}`;
-  } else {
-    targetUrl.searchParams.set('api_key', apiKey);
+  // Forward embedded query parameters first
+  if (embeddedQueryString) {
+    const embeddedParams = new URLSearchParams(embeddedQueryString);
+    embeddedParams.forEach((val, key) => {
+      targetUrl.searchParams.set(key, val);
+    });
   }
 
-  // Parameter Forwarding (Languages, Genres, Countries, Pagination, etc.)
+  // Forward any additional top-level parameters
   for (const [key, value] of Object.entries(queryParams)) {
-    if (key !== 'endpoint' && value !== undefined && value !== null) {
+    if (key !== 'endpoint' && value !== undefined && value !== null && value !== '') {
       if (Array.isArray(value)) {
         targetUrl.searchParams.set(key, value.join(','));
       } else {
@@ -99,8 +119,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // Smart defaults for discovery endpoints
-  if (sanitizedEndpoint.startsWith('discover/')) {
+  // Defaults for discover routes
+  if (sanitizedPath.startsWith('discover/')) {
     if (!targetUrl.searchParams.has('include_adult')) {
       targetUrl.searchParams.set('include_adult', 'false');
     }
@@ -109,12 +129,25 @@ export default async function handler(req, res) {
     }
   }
 
-  // Fallback language if not provided
+  // Default fallback language
   if (!targetUrl.searchParams.has('language')) {
     targetUrl.searchParams.set('language', 'en-US');
   }
 
-  // AbortController protection to prevent hanging serverless function timeouts
+  // Authentication: Auto-detect Bearer Token vs Query Key
+  const isBearerToken = apiKey.length > 40 || apiKey.startsWith('ey');
+  const requestHeaders = {
+    'Accept': 'application/json',
+    'User-Agent': 'AnimeDrift-Global-Proxy/5.0'
+  };
+
+  if (isBearerToken) {
+    requestHeaders['Authorization'] = `Bearer ${apiKey}`;
+  } else {
+    targetUrl.searchParams.set('api_key', apiKey);
+  }
+
+  // AbortController protection to prevent hanging serverless instances
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8500);
 
@@ -137,32 +170,26 @@ export default async function handler(req, res) {
       });
     }
 
-    // ========================================================================
-    // Dynamic Edge Caching Strategy (Tailored for Free TMDB Tier Protection)
-    // ========================================================================
-    // 1. Static Configuration / Genres / Countries: Cache for 24 hours
-    // 2. Movie/TV Item Details, Cast, Trailers: Cache for 6 hours
-    // 3. Category Feeds / Trending / Discover: Cache for 2 hours
-    // 4. Search Results: Cache for 10 minutes (volatile)
+    // Dynamic Edge CDN Caching Strategy
     let sMaxAge = 7200; // 2 hours default
-    let staleWhileRevalidate = 1800; // 30 mins
+    let staleWhileRevalidate = 1800;
 
     if (
-      sanitizedEndpoint.startsWith('genre/') ||
-      sanitizedEndpoint.startsWith('configuration') ||
-      sanitizedEndpoint.startsWith('certification')
+      sanitizedPath.startsWith('genre/') ||
+      sanitizedPath.startsWith('configuration') ||
+      sanitizedPath.startsWith('certification')
     ) {
       sMaxAge = 86400; // 24 hours
       staleWhileRevalidate = 7200;
     } else if (
-      sanitizedEndpoint.includes('/details') ||
-      /^(movie|tv|person|collection)\/\d+$/.test(sanitizedEndpoint) ||
-      sanitizedEndpoint.includes('/credits') ||
-      sanitizedEndpoint.includes('/videos')
+      sanitizedPath.includes('/details') ||
+      /^(movie|tv|person|collection)\/\d+$/.test(sanitizedPath) ||
+      sanitizedPath.includes('/credits') ||
+      sanitizedPath.includes('/videos')
     ) {
       sMaxAge = 21600; // 6 hours
       staleWhileRevalidate = 3600;
-    } else if (sanitizedEndpoint.startsWith('search/')) {
+    } else if (sanitizedPath.startsWith('search/')) {
       sMaxAge = 600; // 10 minutes
       staleWhileRevalidate = 120;
     }
@@ -179,13 +206,13 @@ export default async function handler(req, res) {
     if (error.name === 'AbortError') {
       return res.status(504).json({
         success: false,
-        error: 'Gateway Timeout: TMDB took too long to respond.'
+        error: 'Gateway Timeout: TMDB upstream took too long to respond.'
       });
     }
 
     return res.status(502).json({
       success: false,
-      error: 'Bad Gateway: Unable to reach TMDB service.',
+      error: 'Bad Gateway: Communication with TMDB upstream failed.',
       message: error.message || 'Unknown network error'
     });
   }
