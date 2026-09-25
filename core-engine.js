@@ -2,6 +2,19 @@
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
  * Production-Grade JavaScript Controller (Version 46.0.9 Resilient Architecture)
+ *
+ * Architecture & Features:
+ *  - Immediate URL-Synchronized State Bootstrapping (Zero Universe Bleed).
+ *  - Sub-Query Parameter Isolation Engine for Strict TMDB v3 Route Forwarding.
+ *  - Anti-Wipe DOM Protection Shield (Blocks unauthorized document writes).
+ *  - Circuit Breaker & Adaptive Token-Bucket Request Guard for REST/GraphQL.
+ *  - Multi-Server Routing Matrix (NxSha Ultra, Filmu Native, VidCore, VidFast).
+ *  - Multi-Season TMDB Hydration Engine with Dynamic Route Verification.
+ *  - Hardware-Accelerated Canvas Chroma Extraction & Ambilight Engine.
+ *  - Dexie IndexedDB Persistence Layer with Watch Progress Telemetry.
+ *  - Bi-directional URL Router with Deep Linking & State Synchronization.
+ *  - Native AniList Airing Schedule Engine (Jikan Independent).
+ *  - AniSkip Telemetry Integration with Jump Execution.
  * ============================================================================
  */
 
@@ -17,8 +30,18 @@
     const noopWarn = function (method) {
       console.warn(`[AnimeDrift Shield] Blocked unauthorized document.${method} invocation.`);
     };
-    Object.defineProperty(document, 'write', { value: () => noopWarn('write'), writable: false, configurable: false });
-    Object.defineProperty(document, 'writeln', { value: () => noopWarn('writeln'), writable: false, configurable: false });
+
+    Object.defineProperty(document, 'write', {
+      value: () => noopWarn('write'),
+      writable: false,
+      configurable: false
+    });
+
+    Object.defineProperty(document, 'writeln', {
+      value: () => noopWarn('writeln'),
+      writable: false,
+      configurable: false
+    });
   } catch (e) {
     console.error('[AnimeDrift Shield] Initialization failed:', e);
   }
@@ -61,7 +84,7 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     rawPath = rawPath.replace(/^3\//, '');
   }
 
-  // Force clean separation of route path and query string to prevent %3F escaping
+  // Strictly isolate routing path from embedded query string to prevent %3F escaping
   let pathOnly = rawPath;
   let queryString = '';
 
@@ -76,7 +99,7 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
   const url = new URL(CONFIG.APIS.TMDB_PROXY, window.location.origin);
   url.searchParams.set('endpoint', pathOnly);
 
-  // Parse and append embedded query strings individually
+  // Parse and append embedded query string parameters individually
   if (queryString) {
     const embedded = new URLSearchParams(queryString);
     embedded.forEach((val, key) => {
@@ -84,7 +107,7 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     });
   }
 
-  // Smart Discovery Defaults
+  // Set Discover Defaults
   if (pathOnly.startsWith('discover/')) {
     if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
     if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
@@ -93,7 +116,7 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
   }
 
-  // Explicit function-level Custom Params
+  // Forward extra function-level customParams
   for (const [key, value] of Object.entries(customParams)) {
     if (value !== undefined && value !== null && value !== '') {
       url.searchParams.set(key, String(value));
@@ -211,7 +234,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
     let url = getUrl(input);
     const method = String(init.method || 'GET').toUpperCase();
 
-    // Reroute legacy direct TMDB domain calls through local proxy
+    // Reroute any legacy direct TMDB domain calls through the local proxy
     if (url.includes('db.speedracelight.com/3/')) {
       try {
         const parsed = new URL(url);
@@ -382,7 +405,7 @@ const SERVER_CONFIG = {
 window.SERVER_CONFIG = SERVER_CONFIG;
 
 // ============================================================================
-// 4. APPLICATION STATE & MEMORY CACHES
+// 4. APPLICATION STATE & MEMORY CACHES (ZERO-BLEED INITIALIZATION)
 // ============================================================================
 const animeCache = new Map();
 const episodeDataCache = new Map();
@@ -395,6 +418,10 @@ window.episodeDataCache = episodeDataCache;
 window.seriesSeasonsCache = seriesSeasonsCache;
 window.tmdbResolvedIdCache = tmdbResolvedIdCache;
 
+// Immediate URL Mode Detection prevents the Anime Spotlight from running on Netflix Mode load
+const urlParamsInit = new URLSearchParams(window.location.search);
+const initialNetflixMode = urlParamsInit.get('mode') === 'netflix';
+
 let STATE = {
   currentAnime: null,
   currentTMDBId: CONFIG.DEFAULT_TMDB_FALLBACK,
@@ -406,7 +433,7 @@ let STATE = {
   activeServer: parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_SERVER), 10) || 1,
   isTheaterMode: false,
   isCinemaLights: false,
-  isNetflixMode: false,
+  isNetflixMode: initialNetflixMode, // Synchronized with URL on script evaluation
   isSmartAutoPlayNext: true,
   isMuted: false,
   savedScrollY: 0,
@@ -557,11 +584,15 @@ const Router = {
 
   async syncUIFromURL() {
     const p = this.getAll();
+    const shouldBeNetflix = p.mode === 'netflix';
 
-    if (p.mode === 'netflix' && !STATE.isNetflixMode) await window.toggleNetflixMode(true);
-    else if (p.mode !== 'netflix' && STATE.isNetflixMode) await window.toggleNetflixMode(true);
+    if (STATE.isNetflixMode !== shouldBeNetflix) {
+      await window.toggleNetflixMode(shouldBeNetflix, true);
+    }
 
-    if (p.drawer === 'menu') window.toggleMobileNav(true, true);
+    if (p.drawer === 'menu' && typeof window.toggleMobileNav === 'function') {
+      window.toggleMobileNav(true, true);
+    }
     if (p.drawer === 'watchlist' && typeof window.openWatchlistModal === 'function') {
       window.openWatchlistModal(true);
     }
@@ -601,7 +632,7 @@ window.addEventListener('popstate', async () => {
 // ============================================================================
 // 7. HARDWARE-ACCELERATED CHROMA EXTRACTION & AMBILIGHT
 // ============================================================================
-window.extractChromaAmbilight = function(imageUrl) {
+window.extractChromaAmbilight = function (imageUrl) {
   if (!STATE.userPreferences.ambientAmbilight || !imageUrl) return;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -649,13 +680,13 @@ window.extractChromaAmbilight = function(imageUrl) {
 // ============================================================================
 // 8. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION
 // ============================================================================
-window.resolveActiveStreamUrl = function() {
+window.resolveActiveStreamUrl = function () {
   const isMovie = STATE.currentAnime?.format === 'MOVIE';
   const server = SERVER_CONFIG[STATE.activeServer] || SERVER_CONFIG[1];
   return server.endpoint(STATE.currentTMDBId, STATE.season, STATE.episode, isMovie, STATE.currentAnime?.id);
 };
 
-window.executeStream = function(seekTimestamp = 0) {
+window.executeStream = function (seekTimestamp = 0) {
   const wrap = document.getElementById('modalPlayerWrap');
   if (!wrap || !STATE.currentAnime) return;
 
@@ -714,7 +745,7 @@ window.executeStream = function(seekTimestamp = 0) {
   }
 };
 
-window.switchStreamServer = function(serverId) {
+window.switchStreamServer = function (serverId) {
   const targetId = parseInt(serverId, 10);
   if (!SERVER_CONFIG[targetId]) return;
   STATE.activeServer = targetId;
@@ -725,7 +756,7 @@ window.switchStreamServer = function(serverId) {
   window.executeStream(0);
 };
 
-window.renderServerSwitcherGrid = function() {
+window.renderServerSwitcherGrid = function () {
   const container = document.getElementById('serverSelectionContainer') || document.getElementById('serverButtonsContainer');
   if (!container) return;
 
@@ -793,7 +824,7 @@ async function resolveAndPollAniSkip(malId, episodeNumber) {
 }
 window.resolveAndPollAniSkip = resolveAndPollAniSkip;
 
-window.triggerAniSkipJump = function() {
+window.triggerAniSkipJump = function () {
   if (!STATE.activeAniSkipData) return;
   const opData = STATE.activeAniSkipData.find(x => x.skipType === 'op');
   if (!opData) return;
@@ -820,7 +851,7 @@ window.triggerAniSkipJump = function() {
 // ============================================================================
 // 10. MULTI-SEASON QUERY & REAL-TIME EPISODE HYDRATION (EDGE PROXIED)
 // ============================================================================
-window.resolveTMDBId = async function(rawTitle, isMovie = false) {
+window.resolveTMDBId = async function (rawTitle, isMovie = false) {
   if (STATE.isNetflixMode && STATE.currentAnime?.tmdbId) {
     STATE.currentTMDBId = STATE.currentAnime.tmdbId;
     return;
@@ -857,7 +888,7 @@ window.resolveTMDBId = async function(rawTitle, isMovie = false) {
   tmdbResolvedIdCache.set(cacheKey, STATE.currentTMDBId);
 };
 
-window.fetchSeriesSeasons = async function(tmdbId) {
+window.fetchSeriesSeasons = async function (tmdbId) {
   if (!tmdbId || tmdbId === CONFIG.DEFAULT_TMDB_FALLBACK) return [];
   const cacheKey = `series_seasons_${tmdbId}`;
   if (seriesSeasonsCache.has(cacheKey)) {
@@ -888,7 +919,7 @@ window.fetchSeriesSeasons = async function(tmdbId) {
   return [];
 };
 
-window.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
+window.fetchSeasonEpisodesData = async function (tmdbId, seasonNum) {
   const cacheKey = `ep_cache_${tmdbId}_s${seasonNum}`;
   if (episodeDataCache.has(cacheKey)) {
     return episodeDataCache.get(cacheKey);
@@ -917,7 +948,7 @@ window.fetchSeasonEpisodesData = async function(tmdbId, seasonNum) {
   return null;
 };
 
-window.renderEpisodeGrid = async function() {
+window.renderEpisodeGrid = async function () {
   const container = document.getElementById('episodesMasterSection');
   const epList = document.getElementById('epList');
   const seasonSelect = document.getElementById('seasonSelect');
@@ -1042,12 +1073,12 @@ window.renderEpisodeGrid = async function() {
   epList.innerHTML = cardsHTML;
 };
 
-window.changeEpisodeRange = function(offsetIndex) {
+window.changeEpisodeRange = function (offsetIndex) {
   STATE.episodeBatchOffset = parseInt(offsetIndex, 10);
   window.renderEpisodeGrid();
 };
 
-window.changeSeason = function(seasonNum) {
+window.changeSeason = function (seasonNum) {
   STATE.season = parseInt(seasonNum, 10);
   STATE.episode = 1;
   STATE.episodeBatchOffset = 0;
@@ -1055,7 +1086,7 @@ window.changeSeason = function(seasonNum) {
   window.executeStream(0);
 };
 
-window.switchEpisode = function(epNum) {
+window.switchEpisode = function (epNum) {
   const ep = parseInt(epNum, 10);
   if (ep === STATE.episode) return;
   STATE.episode = ep;
@@ -1065,7 +1096,7 @@ window.switchEpisode = function(epNum) {
   }
 };
 
-window.nextEpisode = function() {
+window.nextEpisode = function () {
   if (STATE.episode < STATE.totalEpisodes) {
     window.switchEpisode(STATE.episode + 1);
   } else {
@@ -1082,7 +1113,7 @@ window.nextEpisode = function() {
 // ============================================================================
 // 11. DUAL-UNIVERSE TMDB CATALOG ENGINE (NETFLIX & LIVE ACTION VIA EDGE PROXY)
 // ============================================================================
-window.formatTmdbMediaItem = function(item, forceFormat = null) {
+window.formatTmdbMediaItem = function (item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
   const title = item.title || item.name || 'Untitled';
   const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '';
@@ -1115,7 +1146,7 @@ window.formatTmdbMediaItem = function(item, forceFormat = null) {
   };
 };
 
-window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = null) {
+window.fetchTmdbLiveActionRail = async function (endpoint, title, forceFormat = null) {
   try {
     const proxyUrl = buildSecureTmdbUrl(endpoint);
     const res = await fetch(proxyUrl);
@@ -1142,14 +1173,14 @@ window.fetchTmdbLiveActionRail = async function(endpoint, title, forceFormat = n
   }
 };
 
-window.renderTmdbLiveActionHome = async function() {
-  // Delegate rendering directly to streaming-ui.js to avoid duplicate row injection
+window.renderTmdbLiveActionHome = async function () {
+  // Delegate completely to streaming-ui.js to avoid duplicate row rendering and race conditions
   if (typeof window.renderHomeRows === 'function') {
     await window.renderHomeRows();
   }
 };
 
-window.updateHeroBillboard = function(item) {
+window.updateHeroBillboard = function (item) {
   const heroTitle = document.getElementById('heroTitle');
   const heroDesc = document.getElementById('heroDesc');
   const heroBg = document.getElementById('heroBg');
@@ -1180,7 +1211,7 @@ window.updateHeroBillboard = function(item) {
   }
 };
 
-window.generateRowHTML = function(title, items, rowIndex) {
+window.generateRowHTML = function (title, items, rowIndex) {
   const cardsHTML = items.map(item => {
     const displayTitle = item.title?.english || item.title?.romaji || 'Title';
     const poster = item.coverImage?.large || item.coverImage?.extraLarge || '';
@@ -1188,33 +1219,17 @@ window.generateRowHTML = function(title, items, rowIndex) {
     const format = item.format || 'TV';
 
     return `
-      <div class="anime-card" 
-           style="position: relative; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease; user-select: none; background: #16161c; box-sizing: border-box;"
-           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 12px 28px rgba(0,0,0,0.75)';"
-           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"
-           onclick="if(typeof window.openModalById === 'function') window.openModalById(${item.id});">
+      <div class="anime-card card ui-card-locked" 
+           style="flex: 0 0 185px !important; min-width: 185px !important; max-width: 185px !important; height: 275px !important; position: relative !important; border-radius: 12px !important; overflow: hidden !important; cursor: pointer !important; transition: transform 0.28s ease, box-shadow 0.28s ease !important; user-select: none !important; background: #16161c !important;"
+           onmouseover="this.style.transform='translateY(-4px) scale(1.03)'; this.style.boxShadow='0 14px 28px rgba(0,0,0,0.8)';"
+           onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='none';"
+           onclick="if (typeof window.openModalById === 'function') window.openModalById(${item.id});">
         
-        <img src="${poster}" 
-             alt="${displayTitle}" 
-             loading="lazy" 
-             style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12px;" />
-             
-        <div class="card-badge-top" 
-             style="position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, 0.78); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; z-index: 3; border: 1px solid rgba(255, 255, 255, 0.12);">
-          ${format}
-        </div>
-        
-        <div class="card-overlay" 
-             style="position: absolute; inset: auto 0 0 0; left: 0; right: 0; bottom: 0; width: 100%; margin: 0; padding: 42px 12px 10px 12px; box-sizing: border-box; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.7) 62%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; z-index: 2; pointer-events: none;">
-          <div class="card-title" 
-               style="font-size: 13px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95); width: 100%; text-align: left; margin: 0; padding: 0; display: block;">
-            ${displayTitle}
-          </div>
-          <div class="card-meta" 
-               style="font-size: 11px; color: #a1a1aa; display: flex; gap: 8px; align-items: center; margin-top: 4px; width: 100%; text-align: left;">
-            <span class="card-score" style="color: #46d369; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span>
-            <span class="card-year" style="color: #a1a1aa;">${item.year || '2026'}</span>
-          </div>
+        <img src="${poster}" alt="${displayTitle}" loading="lazy" style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block;" />
+        <div class="card-badge" style="position: absolute !important; top: 8px !important; right: 8px !important; background: rgba(0,0,0,0.78) !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 3 !important;">${format}</div>
+        <div class="card-overlay" style="position: absolute !important; inset: auto 0 0 0 !important; width: 100% !important; padding: 42px 12px 10px 12px !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.72) 60%, transparent 100%) !important; z-index: 2 !important;">
+          <div class="card-title" style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;">${displayTitle}</div>
+          <div class="card-meta" style="font-size: 11px !important; color: #a1a1aa !important; margin-top: 4px !important;"><span style="color: #46d369 !important; font-weight: 700 !important;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span> &bull; ${item.year || '2026'}</div>
         </div>
       </div>
     `;
@@ -1238,30 +1253,70 @@ window.generateRowHTML = function(title, items, rowIndex) {
 // ============================================================================
 // 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER
 // ============================================================================
-window.applyQuickFilter = async function(filterKey, element) {
-  // Delegate completely to streaming-ui.js to eliminate race conditions
-  if (window.streamingUI && typeof window.streamingUI.applyQuickFilter === 'function') {
-    return window.streamingUI.applyQuickFilter(filterKey, element);
+window.applyQuickFilter = async function (filterKey, element) {
+  if (typeof window.navigateGenre === 'function') {
+    const key = (filterKey || 'ALL').toUpperCase();
+    if (STATE.isNetflixMode) {
+      if (key === 'ALL') return window.navigateGenre(null, 'Home');
+      if (key === 'MOVIES') return window.navigateGenre('Movies', 'Movies');
+      if (key === 'TOP_AIRING' || key === 'TV') return window.navigateGenre('TV', 'TV Shows');
+      if (key === 'HINDI') return window.navigateGenre('Hindi', 'Hindi Dubs');
+      if (key === 'ACTION') return window.navigateGenre('Action', 'Action');
+      if (key === 'THRILLER') return window.navigateGenre('Thriller', 'Thriller');
+      if (key === 'SCI_FI') return window.navigateGenre('Sci-Fi', 'Sci-Fi');
+      if (key === 'ROMANCE') return window.navigateGenre('Romance', 'Romance');
+    }
   }
 };
 
-window.navigateGenre = async function(genre, label) {
-  if (window.streamingUI && typeof window.streamingUI.navigateGenre === 'function') {
-    return window.streamingUI.navigateGenre(genre, label);
+window.navigateGenre = async function (genre, label) {
+  document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+    const match = link.innerText.toLowerCase().includes((label || '').toLowerCase());
+    link.classList.toggle('active', Boolean(match));
+  });
+
+  const contentRows = document.getElementById('contentRows');
+  if (contentRows) contentRows.innerHTML = '';
+
+  if (!genre) {
+    if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
   }
+
+  if (typeof window.renderRow === 'function') {
+    await window.renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
+    await window.renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
+  }
+  window.scrollTo({ top: 350, behavior: 'smooth' });
 };
 
-window.loadHindiDubbed = async function() {
-  if (window.streamingUI && typeof window.streamingUI.loadHindiDubbed === 'function') {
-    return window.streamingUI.loadHindiDubbed();
+window.loadHindiDubbed = async function () {
+  if (STATE.isNetflixMode) {
+    await window.navigateGenre('Hindi', 'Hindi Dubs');
+    return;
+  }
+  if (typeof window.renderHindiDubRow === 'function') {
+    const contentRows = document.getElementById('contentRows');
+    if (contentRows) contentRows.innerHTML = '';
+    await window.renderHindiDubRow();
+    if (typeof window.renderRow === 'function') {
+      await window.renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
+      await window.renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['POPULARITY_DESC'] }, false);
+    }
+    window.scrollTo({ top: 350, behavior: 'smooth' });
   }
 };
 
 // ============================================================================
 // 13. DUAL-UNIVERSE TRANSFORMER (NETFLIX VS ANIME UNIVERSE)
 // ============================================================================
-window.toggleNetflixMode = async function(skipUrlSync = false) {
-  STATE.isNetflixMode = !STATE.isNetflixMode;
+window.toggleNetflixMode = async function (forcedState = null, skipUrlSync = false) {
+  if (typeof forcedState === 'boolean') {
+    STATE.isNetflixMode = forcedState;
+  } else {
+    STATE.isNetflixMode = !STATE.isNetflixMode;
+  }
 
   if (!skipUrlSync && window.Router) {
     Router.set({ mode: STATE.isNetflixMode ? 'netflix' : null });
@@ -1326,6 +1381,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
     }
 
     if (typeof window.showToast === 'function') window.showToast('Switched to Netflix Live-Action Mode');
+    if (typeof window.renderHeroSpotlight === 'function') await window.renderHeroSpotlight();
     if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
   } else {
     document.body.classList.remove('netflix-theme-active');
@@ -1377,7 +1433,6 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
     }
 
     if (typeof window.showToast === 'function') window.showToast('Switched to Anime Universe');
-
     if (typeof window.renderHeroSpotlight === 'function') await window.renderHeroSpotlight();
     if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
   }
@@ -1388,7 +1443,7 @@ window.toggleNetflixMode = async function(skipUrlSync = false) {
 // ============================================================================
 // 14. MODAL, DRAWER & WATCHLIST MANAGERS
 // ============================================================================
-window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
+window.toggleMobileNav = function (isOpen, skipUrlSync = false) {
   const drawer = document.getElementById('mobileNavDrawer');
   const overlay = document.getElementById('mobileDrawerOverlay');
   if (!drawer || !overlay) return;
@@ -1416,7 +1471,7 @@ window.toggleMobileNav = function(isOpen, skipUrlSync = false) {
   }
 };
 
-window.openWatchlistModal = function(skipUrlSync = false) {
+window.openWatchlistModal = function (skipUrlSync = false) {
   window.toggleMobileNav(false, true);
   const drawer = document.getElementById('watchlistDrawer');
   const overlay = document.getElementById('drawerOverlay');
@@ -1460,7 +1515,7 @@ window.openWatchlistModal = function(skipUrlSync = false) {
   });
 };
 
-window.closeWatchlistModal = function(skipUrlSync = false) {
+window.closeWatchlistModal = function (skipUrlSync = false) {
   const drawer = document.getElementById('watchlistDrawer');
   const overlay = document.getElementById('drawerOverlay');
   if (drawer && overlay) {
@@ -1476,7 +1531,7 @@ window.closeWatchlistModal = function(skipUrlSync = false) {
   }
 };
 
-window.toggleWatchlist = function(anime = STATE.currentAnime) {
+window.toggleWatchlist = function (anime = STATE.currentAnime) {
   if (!anime) return;
   const idx = STATE.watchlist.findIndex(item => item.id === anime.id);
 
@@ -1508,11 +1563,11 @@ window.toggleWatchlist = function(anime = STATE.currentAnime) {
   window.updateModalWatchlistButtonState();
 };
 
-window.toggleModalWatchlist = function() {
+window.toggleModalWatchlist = function () {
   window.toggleWatchlist(STATE.currentAnime);
 };
 
-window.updateModalWatchlistButtonState = function() {
+window.updateModalWatchlistButtonState = function () {
   const btn = document.getElementById('modalWatchlistBtn');
   if (!btn || !STATE.currentAnime) return;
   const exists = STATE.watchlist.some(item => item.id === STATE.currentAnime.id);
@@ -1521,7 +1576,7 @@ window.updateModalWatchlistButtonState = function() {
     : `<i class="fas fa-plus"></i> <span>My List</span>`;
 };
 
-window.updateWatchlistBadge = function() {
+window.updateWatchlistBadge = function () {
   const counter = document.getElementById('watchlistCount');
   const mobileCounter = document.getElementById('mobileWatchlistCount');
   if (counter) counter.innerText = STATE.watchlist.length;
@@ -1533,7 +1588,7 @@ window.updateWatchlistBadge = function() {
 // ============================================================================
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-window.openScheduleModal = function(skipUrlSync = false) {
+window.openScheduleModal = function (skipUrlSync = false) {
   const modal = document.getElementById('scheduleModal');
   const overlay = document.getElementById('scheduleModalOverlay');
   if (!modal || !overlay) return;
@@ -1552,7 +1607,7 @@ window.openScheduleModal = function(skipUrlSync = false) {
   window.fetchAiringScheduleForDay(todayIndex);
 };
 
-window.closeScheduleModal = function(skipUrlSync = false) {
+window.closeScheduleModal = function (skipUrlSync = false) {
   const modal = document.getElementById('scheduleModal');
   const overlay = document.getElementById('scheduleModalOverlay');
   if (!modal || !overlay) return;
@@ -1567,7 +1622,7 @@ window.closeScheduleModal = function(skipUrlSync = false) {
   }
 };
 
-window.renderScheduleDayTabs = function(activeDayIndex) {
+window.renderScheduleDayTabs = function (activeDayIndex) {
   const tabsContainer = document.getElementById('scheduleDayTabs');
   if (!tabsContainer) return;
 
@@ -1580,12 +1635,12 @@ window.renderScheduleDayTabs = function(activeDayIndex) {
   `).join('');
 };
 
-window.onScheduleDayTabClick = function(dayIndex) {
+window.onScheduleDayTabClick = function (dayIndex) {
   window.renderScheduleDayTabs(dayIndex);
   window.fetchAiringScheduleForDay(dayIndex);
 };
 
-window.fetchAiringScheduleForDay = async function(dayIndex) {
+window.fetchAiringScheduleForDay = async function (dayIndex) {
   const container = document.getElementById('scheduleItemsContainer');
   if (!container) return;
 
@@ -1672,7 +1727,7 @@ window.fetchAiringScheduleForDay = async function(dayIndex) {
   }
 };
 
-window.renderScheduleList = function(items) {
+window.renderScheduleList = function (items) {
   const container = document.getElementById('scheduleItemsContainer');
   if (!container) return;
 
@@ -1753,7 +1808,7 @@ function initKeyboardShortcuts() {
   });
 }
 
-window.toggleFullscreenMode = function() {
+window.toggleFullscreenMode = function () {
   const wrap = document.getElementById('modalPlayerWrap');
   if (!wrap) return;
 
@@ -1764,7 +1819,7 @@ window.toggleFullscreenMode = function() {
   }
 };
 
-window.toggleTheaterMode = function() {
+window.toggleTheaterMode = function () {
   const dialog = document.getElementById('modalDialog');
   STATE.isTheaterMode = !STATE.isTheaterMode;
   if (STATE.isTheaterMode) {
@@ -1778,7 +1833,7 @@ window.toggleTheaterMode = function() {
 // ============================================================================
 // 17. RUNTIME UTILITIES & TELEMETRY LISTENERS
 // ============================================================================
-window.showToast = function(msg) {
+window.showToast = function (msg) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
   const toast = document.createElement('div');
@@ -1792,12 +1847,12 @@ window.showToast = function(msg) {
   }, 3000);
 };
 
-window.cleanHTML = function(str) {
+window.cleanHTML = function (str) {
   if (!str) return 'No synopsis available for this media title.';
   return str.replace(/<[^>]*>?/gm, '').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
 };
 
-window.extractSeasonInfo = function(anime) {
+window.extractSeasonInfo = function (anime) {
   const title = anime?.title?.english || anime?.title?.romaji || '';
   let season = 1;
   let cleanTitle = title;
@@ -1837,7 +1892,7 @@ window.addEventListener('message', (e) => {
 });
 
 // ============================================================================
-// 18. BOOTSTRAP ORCHESTRATOR
+// 18. BOOTSTRAP ORCHESTRATOR (STRICT ORDER & ZERO-BLEED LIFECYCLE)
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
@@ -1861,16 +1916,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pill) pill.style.display = isPwaInstalled ? 'inline-flex' : 'none';
   } catch (e) {}
 
-  if (typeof window.renderHeroSpotlight === 'function') {
-    await window.renderHeroSpotlight();
-  }
-  if (typeof window.renderHomeRows === 'function') {
-    await window.renderHomeRows();
+  // 1. Sync URL state FIRST so that ?mode=netflix is applied before rendering rows
+  if (window.Router) {
+    await window.Router.syncUIFromURL();
   }
 
-  setTimeout(() => {
-    if (window.Router) Router.syncUIFromURL();
-  }, 250);
+  // 2. Render initial hero spotlight and home rows based on the synchronized state
+  const contentRows = document.getElementById('contentRows');
+  if (contentRows && contentRows.children.length === 0) {
+    if (typeof window.renderHeroSpotlight === 'function') {
+      await window.renderHeroSpotlight();
+    }
+    if (typeof window.renderHomeRows === 'function') {
+      await window.renderHomeRows();
+    }
+  }
 });
 
 window.addEventListener('resize', () => {
