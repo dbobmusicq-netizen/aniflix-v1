@@ -51,11 +51,11 @@
   <meta http-equiv="Expires" content="0" />
 
   <!-- Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="favicon.ico?v=56.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=56.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=56.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=56.0.0" />
-  <link rel="manifest" href="manifest.json?v=56.0.0" />
+  <link rel="shortcut icon" href="favicon.ico?v=58.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=58.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=58.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=58.0.0" />
+  <link rel="manifest" href="manifest.json?v=58.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -81,12 +81,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v56.0.0) -->
-  <link rel="stylesheet" href="theme-base.css?v=56.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=56.0.0">
-  <link rel="stylesheet" href="p2p.css?v=56.0.0">
-  <link rel="stylesheet" href="webapp.css?v=56.0.0">
-  <link rel="stylesheet" href="mobile.css?v=56.0.0">
+  <!-- Modular Stylesheets (Synchronized to v58.0.0) -->
+  <link rel="stylesheet" href="theme-base.css?v=58.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=58.0.0">
+  <link rel="stylesheet" href="p2p.css?v=58.0.0">
+  <link rel="stylesheet" href="webapp.css?v=58.0.0">
+  <link rel="stylesheet" href="mobile.css?v=58.0.0">
 
   <style>
     /* ==========================================================================
@@ -328,7 +328,7 @@
     }
 
     /* ==========================================================================
-       COMMUNITY COMMENTS IFRAME DRAWER (BLOGGER PORTAL INTEGRATION)
+       COMMUNITY COMMENTS IFRAME DRAWER (BLOGGER INTEGRATION)
        ========================================================================== */
     #iframeChatDrawer {
       position: fixed;
@@ -1000,7 +1000,7 @@
   <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '56.0.0';
+      const CURRENT_APP_VERSION = '58.0.0';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1021,13 +1021,13 @@
     })();
   </script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v56.0.0) -->
-  <script src="core-engine.js?v=57.0.0"></script>
-  <script src="dash-player.js?v=56.0.0"></script>
-  <script src="streaming-ui.js?v=57.0.0"></script>
-  <script src="p2p.js?v=56.0.0"></script>
-  <script src="webapp.js?v=56.0.0"></script>
-  <script src="adblock-engine.js?v=56.0.0"></script>
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v58.0.0) -->
+  <script src="core-engine.js?v=58.0.0"></script>
+  <script src="dash-player.js?v=58.0.0"></script>
+  <script src="streaming-ui.js?v=58.0.0"></script>
+  <script src="p2p.js?v=58.0.0"></script>
+  <script src="webapp.js?v=58.0.0"></script>
+  <script src="adblock-engine.js?v=58.0.0"></script>
 
   <!-- APP CONTROLLER & INTERACTION MANAGERS -->
   <script>
@@ -1067,7 +1067,6 @@
       const shouldOpen = open !== undefined ? Boolean(open) : !drawer.classList.contains('open');
       
       if (shouldOpen) {
-        // Hydrate iframe src on first open
         if (iframe && (iframe.src === 'about:blank' || !iframe.src)) {
           const targetUrl = iframe.dataset.src || 'https://nexalogz.blogspot.com/2026/09/animedrift.html';
           iframe.src = targetUrl;
@@ -1195,7 +1194,7 @@
     });
 
     // 5. PWA Install & Update Lifecycle
-    const CURRENT_CLIENT_VERSION = '56.0.0';
+    const CURRENT_CLIENT_VERSION = '58.0.0';
     let deferredPrompt = null;
     let newWorkerWaiting = null;
 
