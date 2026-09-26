@@ -1,14 +1,14 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 58.1.0 Fixed Master)
+ * Production-Grade JavaScript Controller (Version 58.2.0 Master Release)
  *
- * Core Fixes:
- *  - Fixed Netflix mode rendering anime rows (eliminated double bootstrap race).
- *  - Full delegation of row rendering to streaming-ui.js without function overwrites.
- *  - Replaced shutdown Jikan API with native AniList Airing Schedules GraphQL.
- *  - Fixed regional TMDB vote threshold bug for Indian/Hindi cinema.
- *  - Token-Bucket Leaky API Guard with Circuit Breaker.
+ * Core Fixes Applied:
+ *  - Fixed Anime shows bleeding into Netflix Mode on page load / mode switches.
+ *  - Resolved empty modal synopsis, "N/A" original title, and blank genres.
+ *  - Solved duplicate shows in category rails by using orthogonal sort matrices.
+ *  - Completely replaced defunct Jikan API with native AniList Airing Schedules.
+ *  - Unified toggleNetflixMode & category synchronization across all scripts.
  * ============================================================================
  */
 
@@ -58,6 +58,14 @@ const CONFIG = {
     THRILLER_CRIME: { movie: 53, tv: 80 },
     ANIMATION_EXCLUDE_ID: 16
   },
+  TMDB_GENRE_MAP: {
+    28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
+    99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
+    27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
+    10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western',
+    10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News', 10764: 'Reality',
+    10765: 'Sci-Fi & Fantasy', 10766: 'Soap', 10767: 'Talk', 10768: 'War & Politics'
+  },
   STORAGE_KEYS: {
     WATCHLIST: 'animedrift_watchlist_v6',
     HISTORY: 'animedrift_history_v6',
@@ -68,6 +76,15 @@ const CONFIG = {
   DEFAULT_TMDB_FALLBACK: 533535
 };
 window.CONFIG = CONFIG;
+
+// Helper: Maps TMDB genre numeric IDs to human-readable strings
+function mapTmdbGenreIds(genreIds = []) {
+  if (!Array.isArray(genreIds)) return [];
+  return genreIds
+    .map(id => CONFIG.TMDB_GENRE_MAP[id])
+    .filter(Boolean);
+}
+window.mapTmdbGenreIds = mapTmdbGenreIds;
 
 // ============================================================================
 // 1.1 SECURE TMDB URL BUILDER (QUERY PARAMETER SEPARATION ENGINE)
@@ -104,6 +121,8 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     if (!url.searchParams.has('include_adult')) url.searchParams.set('include_adult', 'false');
     if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
     if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
+
+    // Never enforce high vote count thresholds on regional cinema feeds
     if (
       !url.searchParams.has('vote_count.gte') &&
       !url.searchParams.has('with_original_language') &&
@@ -133,7 +152,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
   const nativeFetch = window.fetch.bind(window);
 
   const GUARD = {
-    minDelay: 420,
+    minDelay: 400,
     maxConcurrent: 4,
     maxRetries: 2,
     cacheTTL: 5 * 60 * 1000,
@@ -581,10 +600,7 @@ const Router = {
     const shouldBeNetflix = p.mode === 'netflix';
 
     if (STATE.isNetflixMode !== shouldBeNetflix) {
-      STATE.isNetflixMode = shouldBeNetflix;
-      if (typeof window.toggleNetflixMode === 'function') {
-        await window.toggleNetflixMode(shouldBeNetflix, true);
-      }
+      await window.toggleNetflixMode(shouldBeNetflix, true);
     }
 
     if (p.drawer === 'menu' && typeof window.toggleMobileNav === 'function') {
@@ -964,7 +980,7 @@ window.fetchSeasonEpisodesData = async function (tmdbId, seasonNum) {
 };
 
 // ============================================================================
-// 11. DUAL-UNIVERSE TMDB CATALOG ENGINE (NETFLIX & LIVE ACTION VIA EDGE PROXY)
+// 11. DUAL-UNIVERSE TMDB CATALOG ENGINE (WITH DETAILED METADATA HYDRATION)
 // ============================================================================
 window.formatTmdbMediaItem = function (item, forceFormat = null) {
   const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
@@ -973,6 +989,9 @@ window.formatTmdbMediaItem = function (item, forceFormat = null) {
   const backdrop = item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : poster;
   const rating = item.vote_average ? Math.round(item.vote_average * 10) : 82;
   const year = (item.release_date || item.first_air_date || '2026').slice(0, 4);
+
+  // Map genre IDs directly so modal never displays blank genres
+  const genreNames = mapTmdbGenreIds(item.genre_ids || []);
 
   return {
     id: item.id,
@@ -992,6 +1011,7 @@ window.formatTmdbMediaItem = function (item, forceFormat = null) {
       medium: poster
     },
     bannerImage: backdrop,
+    genres: genreNames,
     averageScore: rating,
     status: 'FINISHED',
     year: parseInt(year, 10) || 2026,
@@ -1181,7 +1201,7 @@ window.navigateGenre = async function (genre, label) {
     return;
   }
 
-  // Anime Universe Rendering
+  // Anime Universe: Use varied sort parameters to prevent repeating identical shows across rows
   if (typeof window.renderRow === 'function') {
     if (genre === 'Movie' || genre === 'Movies') {
       await window.renderRow('Anime Feature Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['POPULARITY_DESC'] }, false);
@@ -1189,6 +1209,15 @@ window.navigateGenre = async function (genre, label) {
     } else if (genre === 'Top') {
       await window.renderRow('Top Airing Simulcasts', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false);
       await window.renderRow('All-Time Popular', { page: 1, perPage: 24, sort: ['POPULARITY_DESC'] }, false);
+    } else if (genre === 'Action') {
+      await window.renderRow('Action & Shonen Hits', { page: 1, perPage: 24, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
+      await window.renderRow('Critically Acclaimed Action', { page: 1, perPage: 24, genre: 'Action', sort: ['SCORE_DESC'] }, false);
+    } else if (genre === 'Fantasy') {
+      await window.renderRow('Isekai & Fantasy Realms', { page: 1, perPage: 24, genre: 'Fantasy', sort: ['SCORE_DESC'] }, false);
+      await window.renderRow('Top Trending Fantasy', { page: 1, perPage: 24, genre: 'Fantasy', sort: ['FAVOURITES_DESC'] }, false);
+    } else if (genre === 'Romance') {
+      await window.renderRow('Romance & Heartfelt Stories', { page: 1, perPage: 24, genre: 'Romance', sort: ['FAVOURITES_DESC'] }, false);
+      await window.renderRow('Top Rated Romance', { page: 1, perPage: 24, genre: 'Romance', sort: ['SCORE_DESC'] }, false);
     } else {
       await window.renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
       await window.renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
@@ -1229,12 +1258,12 @@ window.loadHindiDubbed = async function () {
     return;
   }
 
-  // Anime Universe Hindi Content
+  // Anime Universe Hindi Audio Content
   if (typeof window.renderHindiDubRow === 'function') {
     await window.renderHindiDubRow();
     if (typeof window.renderRow === 'function') {
       await window.renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
-      await window.renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['POPULARITY_DESC'] }, false);
+      await window.renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['SCORE_DESC'] }, false);
     }
   }
   window.scrollTo({ top: 350, behavior: 'smooth' });
@@ -1857,17 +1886,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 2. Dispatch Hero Spotlight and Content Rows safely
+  // 2. Dispatch Hero Spotlight
   if (typeof window.renderHeroSpotlight === 'function') {
     window.renderHeroSpotlight().catch((err) => {
       console.warn('[Hero Spotlight Error]:', err);
     });
   }
 
-  if (typeof window.renderHomeRows === 'function') {
-    window.renderHomeRows().catch((err) => {
-      console.warn('[Home Rows Error]:', err);
-    });
+  // 3. Dispatch Content Rows ONLY if not already dispatched during URL sync
+  const contentRows = document.getElementById('contentRows');
+  if (contentRows && contentRows.children.length === 0) {
+    if (typeof window.renderHomeRows === 'function') {
+      window.renderHomeRows().catch((err) => {
+        console.warn('[Home Rows Error]:', err);
+      });
+    }
   }
 });
 
