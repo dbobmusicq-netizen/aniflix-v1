@@ -2,7 +2,7 @@
  * ============================================================================
  * AnimeDrift — ADVANCED STREAMING UI (ENTERPRISE MASTER SYSTEM)
  * File: streaming-ui.js
- * Version: 46.6.0 Fully Verified TMDB v3 Queries & UI Controller
+ * Version: 46.7.0 Fully Verified TMDB v3 & AniList Quick Filter Engine
  * ============================================================================
  */
 
@@ -110,12 +110,6 @@
     );
   }
 
-  function formatRating(score) {
-    const val = Number(score);
-    if (!Number.isFinite(val) || val <= 0) return 'N/A';
-    return val <= 10 ? `${Math.round(val * 10)}%` : `${Math.round(val)}%`;
-  }
-
   // ==========================================================================
   // 04. VERCEL SERVERLESS PROXY URL BUILDER (STRICT TMDB v3 COMPLIANCE)
   // ==========================================================================
@@ -189,12 +183,21 @@
   win.fetchWithRetry = fetchWithRetry;
 
   const GQL_BASIC = `
-    query ($page: Int, $perPage: Int, $sort: [MediaSort], $genre: String, $search: String) {
+    query ($page: Int, $perPage: Int, $sort: [MediaSort], $genre: String, $search: String, $format: MediaFormat) {
       Page(page: $page, perPage: $perPage) {
-        media(type: ANIME, sort: $sort, genre: $genre, search: $search, isAdult: false) {
-          id idMal title { romaji english native }
+        media(type: ANIME, sort: $sort, genre: $genre, search: $search, format: $format, isAdult: false) {
+          id
+          idMal
+          title { romaji english native }
           coverImage { extraLarge large medium color }
-          bannerImage episodes duration format status genres averageScore seasonYear
+          bannerImage
+          episodes
+          duration
+          format
+          status
+          genres
+          averageScore
+          seasonYear
           description(asHtml: false)
         }
       }
@@ -204,7 +207,9 @@
   const GQL_DEEP = `
     query ($id: Int) {
       Media(id: $id, type: ANIME) {
-        id idMal trailer { id site }
+        id
+        idMal
+        trailer { id site }
         characters(sort: [ROLE, RELEVANCE_DESC], perPage: 14) {
           edges {
             node { id name { full } image { large } }
@@ -214,9 +219,14 @@
         recommendations(sort: [RATING_DESC], perPage: 8) {
           nodes {
             mediaRecommendation {
-              id idMal title { romaji english }
+              id
+              idMal
+              title { romaji english }
               coverImage { extraLarge large }
-              format episodes averageScore bannerImage
+              format
+              episodes
+              averageScore
+              bannerImage
             }
           }
         }
@@ -276,7 +286,7 @@
   win.fetchGQL = fetchGQL;
 
   // ==========================================================================
-  // 05. DISCOVERY RAILS — DOCUMENTATION-COMPLIANT TMDB CALLS
+  // 05. DISCOVERY RAILS — VERIFIED MULTI-UNIVERSE TMDB / ANILIST
   // ==========================================================================
   win.renderHomeRows = async function () {
     const content = doc.getElementById('contentRows');
@@ -285,7 +295,6 @@
     if (win.STATE.isNetflixMode) {
       if (typeof win.showToast === 'function') win.showToast('Loading Live-Action Universe...');
 
-      // 1. Trending Worldwide Movies
       await renderTMDBRow(
         'Trending Movies Worldwide',
         'discover/movie?sort_by=popularity.desc&vote_count.gte=100&_rail=global_movies',
@@ -293,7 +302,6 @@
         'MOVIE'
       );
 
-      // 2. Verified Bollywood Cinema (Strict country=IN & language=hi)
       await renderTMDBRow(
         'Hindi Blockbuster Movies',
         'discover/movie?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_movies',
@@ -301,7 +309,6 @@
         'MOVIE'
       );
 
-      // 3. Verified Hindi Web Series (Strict country=IN & language=hi for TV)
       await renderTMDBRow(
         'Hindi Web Series & Dramas',
         'discover/tv?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_series',
@@ -309,7 +316,6 @@
         'TV'
       );
 
-      // 4. South Indian Cinema (Telugu Hits)
       await renderTMDBRow(
         'South Indian Cinema (Telugu Hits)',
         'discover/movie?with_origin_country=IN&with_original_language=te&without_genres=16&sort_by=popularity.desc&_rail=telugu_movies',
@@ -317,15 +323,13 @@
         'MOVIE'
       );
 
-      // 5. Trending Worldwide TV Shows
       await renderTMDBRow(
-        'Trending TV Shows Worldwide',
+        'Trending Worldwide TV Shows',
         'discover/tv?sort_by=popularity.desc&vote_count.gte=100&_rail=global_tv',
         '<i class="fas fa-tv"></i>',
         'TV'
       );
 
-      // 6. Action Movies (Genre 28)
       await renderTMDBRow(
         'Explosive Action & Thrillers',
         'discover/movie?with_genres=28&sort_by=popularity.desc&vote_count.gte=100&_rail=action_movies',
@@ -333,7 +337,6 @@
         'MOVIE'
       );
 
-      // 7. Action & Adventure Series (TV Genre 10759)
       await renderTMDBRow(
         'Action & Adventure Series',
         'discover/tv?with_genres=10759&sort_by=popularity.desc&vote_count.gte=50&_rail=action_tv',
@@ -341,7 +344,6 @@
         'TV'
       );
 
-      // 8. Sci-Fi Feature Cinema (Movie Genre 878)
       await renderTMDBRow(
         'Sci-Fi & High Concept Cinema',
         'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=scifi_movies',
@@ -349,7 +351,6 @@
         'MOVIE'
       );
 
-      // 9. Crime & Mystery Thrillers (Movie Genre 53)
       await renderTMDBRow(
         'Gripping Crime & Mystery Thrillers',
         'discover/movie?with_genres=53&sort_by=popularity.desc&vote_count.gte=50&_rail=thriller_movies',
@@ -357,7 +358,6 @@
         'MOVIE'
       );
 
-      // 10. Romance & Heartwarming Dramas (Movie Genre 10749)
       await renderTMDBRow(
         'Romance & Heartwarming Dramas',
         'discover/movie?with_genres=10749&sort_by=popularity.desc&vote_count.gte=50&_rail=romance_movies',
@@ -535,8 +535,109 @@
   };
 
   // ==========================================================================
-  // 06. GENRE DISPATCHERS & REGIONAL LOADERS
+  // 06. GENRE & QUICK FILTER CONTROLLERS (FIXED & FULLY RESTORED)
   // ==========================================================================
+  win.applyQuickFilter = async function (filterType, element) {
+    const norm = String(filterType || 'ALL').toUpperCase();
+
+    // Visual synchronization of chips
+    const chips = doc.querySelectorAll('.chips-container .chip');
+    chips.forEach(c => c.classList.remove('active'));
+
+    if (element && element.nodeType === 1) {
+      element.classList.add('active');
+    } else {
+      const match = doc.querySelector(`.chip[data-filter="${norm}"]`) ||
+                    Array.from(chips).find(c => c.innerText.toUpperCase().includes(norm));
+      if (match) match.classList.add('active');
+    }
+
+    win.syncCategoryState(norm);
+
+    if (win.STATE.isNetflixMode) {
+      switch (norm) {
+        case 'ALL':
+          await win.renderHomeRows();
+          break;
+        case 'MOVIES':
+        case 'MOVIE':
+          await win.navigateGenre('Movies', 'Feature Films');
+          break;
+        case 'TOP_AIRING':
+        case 'TV':
+        case 'SHOWS':
+          await win.navigateGenre('TV', 'TV Series');
+          break;
+        case 'HINDI':
+          await win.loadHindiDubbed();
+          break;
+        case 'ACTION':
+          await win.navigateGenre('Action', 'Action');
+          break;
+        case 'THRILLER':
+        case 'CRIME':
+          await win.navigateGenre('Thriller', 'Thriller');
+          break;
+        case 'SCI_FI':
+        case 'SCIFI': {
+          const c = doc.getElementById('contentRows');
+          if (c) c.innerHTML = '';
+          await renderTMDBRow('Sci-Fi Explorations', 'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_m', '<i class="fas fa-microchip"></i>', 'MOVIE');
+          await renderTMDBRow('Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_tv', '<i class="fas fa-tv"></i>', 'TV');
+          win.scrollTo({ top: 350, behavior: 'smooth' });
+          break;
+        }
+        case 'ROMANCE':
+          await win.navigateGenre('Romance', 'Romance');
+          break;
+        default:
+          await win.renderHomeRows();
+          break;
+      }
+      return;
+    }
+
+    // Anime Universe Quick Filters
+    switch (norm) {
+      case 'ALL':
+        await win.renderHomeRows();
+        win.scrollTo({ top: 0, behavior: 'smooth' });
+        break;
+      case 'HINDI':
+        await win.loadHindiDubbed();
+        break;
+      case 'TOP_AIRING':
+      case 'AIRING': {
+        const c = doc.getElementById('contentRows');
+        if (c) c.innerHTML = '';
+        await renderRow('Top Airing Worldwide', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false);
+        win.scrollTo({ top: 350, behavior: 'smooth' });
+        break;
+      }
+      case 'MOVIES':
+      case 'MOVIE':
+        await win.navigateGenre('Movie', 'Top Anime Movies');
+        break;
+      case 'ACTION':
+        await win.navigateGenre('Action', 'Action');
+        break;
+      case 'SECONDARY':
+      case 'FANTASY':
+        await win.navigateGenre('Fantasy', 'Fantasy');
+        break;
+      case 'SCI_FI':
+      case 'SCIFI':
+        await win.navigateGenre('Sci-Fi', 'Sci-Fi');
+        break;
+      case 'ROMANCE':
+        await win.navigateGenre('Romance', 'Romance');
+        break;
+      default:
+        await win.renderHomeRows();
+        break;
+    }
+  };
+
   win.navigateGenre = async function (genre, label) {
     if (typeof win.toggleMobileNav === 'function') win.toggleMobileNav(false);
 
@@ -574,8 +675,13 @@
         await win.loadHindiDubbed();
       }
     } else {
-      await renderRow(label || genre, { page: 1, perPage: 24, genre, sort: ['TRENDING_DESC'] }, false);
-      await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre, sort: ['SCORE_DESC'] }, false);
+      if (genre === 'Movie' || genre === 'Movies') {
+        await renderRow('Anime Movies & Feature Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['POPULARITY_DESC'] }, false);
+        await renderRow('Critically Acclaimed Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['SCORE_DESC'] }, false);
+      } else {
+        await renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
+        await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
+      }
     }
 
     win.scrollTo({ top: 350, behavior: 'smooth' });
@@ -617,45 +723,6 @@
     win.scrollTo({ top: 350, behavior: 'smooth' });
   };
 
-  win.applyQuickFilter = async function (type, chipBtn) {
-    const normType = (type || 'ALL').toUpperCase();
-    if (win.STATE.isNetflixMode) {
-      if (normType === 'ALL') { win.syncCategoryState('ALL'); await win.renderHomeRows(); }
-      else if (normType === 'MOVIES') await win.navigateGenre('Movies', 'Feature Films');
-      else if (normType === 'TOP_AIRING' || normType === 'TV') await win.navigateGenre('TV', 'TV Series');
-      else if (normType === 'HINDI') await win.loadHindiDubbed();
-      else if (normType === 'ACTION') await win.navigateGenre('Action', 'Action');
-      else if (normType === 'THRILLER') await win.navigateGenre('Thriller', 'Thriller');
-      else if (normType === 'SCI_FI') {
-        win.syncCategoryState('SCI_FI');
-        const c = doc.getElementById('contentRows');
-        if (c) c.innerHTML = '';
-        await renderTMDBRow('Sci-Fi Explorations', 'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_m', '<i class="fas fa-microchip"></i>', 'MOVIE');
-        await renderTMDBRow('Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_tv', '<i class="fas fa-tv"></i>', 'TV');
-        win.scrollTo({ top: 350, behavior: 'smooth' });
-      }
-      else if (normType === 'ROMANCE') await win.navigateGenre('Romance', 'Romance');
-      return;
-    }
-    switch (normType) {
-      case 'ALL': await win.navigateGenre(null, 'Home'); break;
-      case 'HINDI': await win.loadHindiDubbed(); break;
-      case 'TOP_AIRING': {
-        win.syncCategoryState('TOP_AIRING');
-        const c = doc.getElementById('contentRows');
-        if (c) c.innerHTML = '';
-        await renderRow('Top Airing Worldwide', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false);
-        win.scrollTo({ top: 350, behavior: 'smooth' });
-        break;
-      }
-      case 'MOVIES': await win.navigateGenre('Movie', 'Top Anime Movies'); break;
-      case 'ACTION': await win.navigateGenre('Action', 'Action'); break;
-      case 'SECONDARY': await win.navigateGenre('Fantasy', 'Fantasy'); break;
-      case 'SCI_FI': await win.navigateGenre('Sci-Fi', 'Sci-Fi'); break;
-      case 'ROMANCE': await win.navigateGenre('Romance', 'Romance'); break;
-    }
-  };
-
   win.toggleNetflixMode = async function (skipUrlSync = false) {
     win.STATE.isNetflixMode = !win.STATE.isNetflixMode;
     if (!skipUrlSync && win.Router) win.Router.set({ mode: win.STATE.isNetflixMode ? 'netflix' : null });
@@ -672,8 +739,8 @@
       if (brandText) brandText.innerHTML = 'NETFLIX<small class="brand-badge" style="background:#ff0844; color:#fff;">LIVE</small>';
       if (searchInput) searchInput.placeholder = "Search movies, TV series, actors, dramas...";
 
-      if (desktopNav) desktopNav.innerHTML = `<li><a class="nav-link active" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('MOVIES')"><i class="fas fa-film"></i> <span>Movies</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('TOP_AIRING')"><i class="fas fa-tv"></i> <span>TV Shows</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('ACTION')"><span>Action</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('THRILLER')"><span>Thriller & Crime</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('HINDI')"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>`;
-      if (filterChips) filterChips.innerHTML = `<button class="chip active" data-filter="ALL" onclick="window.applyQuickFilter('ALL')"><i class="fas fa-border-all"></i> All</button><button class="chip" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES')"><i class="fas fa-film"></i> Movies</button><button class="chip" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING')"><i class="fas fa-tv"></i> TV Series</button><button class="chip" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI')"><i class="fas fa-language"></i> Hindi Dubs</button><button class="chip" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION')"><i class="fas fa-bolt"></i> Action</button><button class="chip" data-filter="THRILLER" onclick="window.applyQuickFilter('THRILLER')"><i class="fas fa-mask"></i> Thriller</button><button class="chip" data-filter="SCI_FI" onclick="window.applyQuickFilter('SCI_FI')"><i class="fas fa-microchip"></i> Sci-Fi</button>`;
+      if (desktopNav) desktopNav.innerHTML = `<li><a class="nav-link active" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> <span>Movies</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tv"></i> <span>TV Shows</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('ACTION', this)"><span>Action</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('THRILLER', this)"><span>Thriller & Crime</span></a></li><li><a class="nav-link" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li>`;
+      if (filterChips) filterChips.innerHTML = `<button class="chip active" data-filter="ALL" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button><button class="chip" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button><button class="chip" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tv"></i> TV Series</button><button class="chip" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button><button class="chip" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button><button class="chip" data-filter="THRILLER" onclick="window.applyQuickFilter('THRILLER', this)"><i class="fas fa-mask"></i> Thriller</button><button class="chip" data-filter="SCI_FI" onclick="window.applyQuickFilter('SCI_FI', this)"><i class="fas fa-microchip"></i> Sci-Fi</button>`;
 
       if (win.showToast) win.showToast('Switched to Netflix Live-Action Mode');
       await win.renderHomeRows();
@@ -684,7 +751,7 @@
       if (searchInput) searchInput.placeholder = "Search anime, movies, series...";
 
       if (desktopNav) desktopNav.innerHTML = `<li><a class="nav-link active" onclick="window.navigateGenre(null, 'Home')"><i class="fas fa-house"></i> <span>Home</span></a></li><li><a class="nav-link" onclick="window.loadHindiDubbed()"><i class="fas fa-language"></i> <span>Hindi Dubs</span></a></li><li><a class="nav-link" onclick="window.navigateGenre('Action', 'Action Blockbusters')"><span>Action</span></a></li><li><a class="nav-link" onclick="window.navigateGenre('Romance', 'Romance & Drama')"><span>Romance</span></a></li><li><a class="nav-link" onclick="window.navigateGenre('Fantasy', 'Isekai & Fantasy')"><span>Fantasy</span></a></li>`;
-      if (filterChips) filterChips.innerHTML = `<button class="chip active" data-filter="ALL" onclick="window.applyQuickFilter('ALL')"><i class="fas fa-border-all"></i> All</button><button class="chip" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI')"><i class="fas fa-language"></i> Hindi Dubs</button><button class="chip" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING')"><i class="fas fa-tower-broadcast"></i> Airing</button><button class="chip" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES')"><i class="fas fa-film"></i> Movies</button><button class="chip" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION')"><i class="fas fa-bolt"></i> Action</button><button class="chip" data-filter="SECONDARY" onclick="window.applyQuickFilter('SECONDARY')"><i class="fas fa-dungeon"></i> Fantasy</button>`;
+      if (filterChips) filterChips.innerHTML = `<button class="chip active" data-filter="ALL" onclick="window.applyQuickFilter('ALL', this)"><i class="fas fa-border-all"></i> All</button><button class="chip" data-filter="HINDI" onclick="window.applyQuickFilter('HINDI', this)"><i class="fas fa-language"></i> Hindi Dubs</button><button class="chip" data-filter="TOP_AIRING" onclick="window.applyQuickFilter('TOP_AIRING', this)"><i class="fas fa-tower-broadcast"></i> Airing</button><button class="chip" data-filter="MOVIES" onclick="window.applyQuickFilter('MOVIES', this)"><i class="fas fa-film"></i> Movies</button><button class="chip" data-filter="ACTION" onclick="window.applyQuickFilter('ACTION', this)"><i class="fas fa-bolt"></i> Action</button><button class="chip" data-filter="SECONDARY" onclick="window.applyQuickFilter('SECONDARY', this)"><i class="fas fa-dungeon"></i> Fantasy</button>`;
 
       if (win.showToast) win.showToast('Switched to Anime Universe');
       if (win.renderHeroSpotlight) await win.renderHeroSpotlight();
