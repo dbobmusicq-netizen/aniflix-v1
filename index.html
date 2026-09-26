@@ -51,11 +51,11 @@
   <meta http-equiv="Expires" content="0" />
 
   <!-- Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="favicon.ico?v=58.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=58.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=58.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=58.0.0" />
-  <link rel="manifest" href="manifest.json?v=58.0.0" />
+  <link rel="shortcut icon" href="favicon.ico?v=65.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=65.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=65.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=65.0.0" />
+  <link rel="manifest" href="manifest.json?v=65.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -81,12 +81,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v58.0.0) -->
-  <link rel="stylesheet" href="theme-base.css?v=58.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=58.0.0">
-  <link rel="stylesheet" href="p2p.css?v=58.0.0">
-  <link rel="stylesheet" href="webapp.css?v=58.0.0">
-  <link rel="stylesheet" href="mobile.css?v=64.0.0">
+  <!-- Modular Stylesheets -->
+  <link rel="stylesheet" href="theme-base.css?v=65.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=65.0.0">
+  <link rel="stylesheet" href="p2p.css?v=65.0.0">
+  <link rel="stylesheet" href="webapp.css?v=65.0.0">
+  <link rel="stylesheet" href="mobile.css?v=65.0.0">
 
   <style>
     /* ==========================================================================
@@ -101,7 +101,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s ease;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s ease;
       contain: strict;
     }
     #siteSplashPreloader.preloader-hidden {
@@ -113,24 +113,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 18px;
+      gap: 16px;
     }
     .aesthetic-brand-title {
       font-family: 'Outfit', sans-serif;
-      font-size: 30px;
+      font-size: 28px;
       font-weight: 900;
-      letter-spacing: 6px;
+      letter-spacing: 5px;
       text-transform: uppercase;
       color: #fff;
-      position: relative;
-      text-shadow: 0 0 25px rgba(255, 8, 68, 0.35);
+      text-shadow: 0 0 25px rgba(255, 8, 68, 0.4);
     }
     .aesthetic-brand-title span {
       color: #ff0844;
-      text-shadow: 0 0 30px rgba(255, 8, 68, 0.7);
+      text-shadow: 0 0 30px rgba(255, 8, 68, 0.8);
     }
     .aesthetic-line-track {
-      width: 180px;
+      width: 160px;
       height: 3px;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 99px;
@@ -142,10 +141,16 @@
       left: 0;
       top: 0;
       height: 100%;
-      width: 0%;
+      width: 100%;
       background: linear-gradient(90deg, #ff0844, #00f0ff);
       box-shadow: 0 0 12px rgba(255, 8, 68, 0.8);
-      transition: width 0.1s linear;
+      transform: translateX(-100%);
+      animation: splashProgress 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes splashProgress {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(0); }
+      100% { transform: translateX(100%); }
     }
     .aesthetic-status-text {
       font-family: 'Space Grotesk', sans-serif;
@@ -154,74 +159,9 @@
       letter-spacing: 2px;
       color: rgba(255, 255, 255, 0.6);
       text-transform: uppercase;
-      min-height: 16px;
-      transition: opacity 0.25s ease;
     }
 
-    /* Interactive Update Available Notification Pill */
-    #updateNotificationBar {
-      position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translate3d(-50%, -120px, 0);
-      z-index: 1000000;
-      background: rgba(14, 15, 24, 0.96);
-      border: 1px solid rgba(255, 8, 68, 0.5);
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 8, 68, 0.35);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 10px 20px;
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-family: 'Outfit', sans-serif;
-      color: #fff;
-      font-size: 13.5px;
-      font-weight: 700;
-      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-      opacity: 0;
-      pointer-events: none;
-    }
-    #updateNotificationBar.visible {
-      transform: translate3d(-50%, 0, 0);
-      opacity: 1;
-      pointer-events: auto;
-    }
-    #updateNotificationBar .update-action-btn {
-      background: #ff0844;
-      color: #fff;
-      border: none;
-      padding: 6px 16px;
-      border-radius: 9999px;
-      font-size: 11.5px;
-      font-weight: 800;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: transform 0.15s ease, background 0.15s ease;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    #updateNotificationBar .update-action-btn:hover {
-      background: #ff2a5f;
-      transform: scale(1.04);
-    }
-    #updateNotificationBar .update-dismiss-btn {
-      color: #747994;
-      cursor: pointer;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      transition: color 0.15s ease;
-    }
-    #updateNotificationBar .update-dismiss-btn:hover {
-      color: #fff;
-    }
-
-    /* Mode Transition Subtle Banner */
+    /* Mode Transition Banner */
     #globalTransitionLoader {
       position: fixed;
       top: 68px;
@@ -261,75 +201,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* ==========================================================================
-       NETFLIX MODE SMART REFRESH ADVISOR BANNER
-       ========================================================================== */
-    #netflixRefreshAdvisor {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translate3d(-50%, 150px, 0);
-      z-index: 99980;
-      background: rgba(14, 15, 24, 0.96);
-      border: 1px solid rgba(255, 8, 68, 0.55);
-      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 8, 68, 0.35);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      padding: 10px 20px;
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-family: 'Outfit', sans-serif;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-      opacity: 0;
-      pointer-events: none;
-      max-width: 92vw;
-    }
-    #netflixRefreshAdvisor.visible {
-      transform: translate3d(-50%, 0, 0);
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .advisor-refresh-btn {
-      background: linear-gradient(135deg, #ff0844, #ff3366);
-      color: #fff;
-      border: none;
-      border-radius: 9999px;
-      padding: 6px 16px;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      flex-shrink: 0;
-    }
-    .advisor-refresh-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 16px rgba(255, 8, 68, 0.6);
-    }
-    .advisor-dismiss-btn {
-      color: #747994;
-      cursor: pointer;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      transition: color 0.15s ease;
-    }
-    .advisor-dismiss-btn:hover {
-      color: #fff;
-    }
-
-    /* ==========================================================================
-       COMMUNITY COMMENTS IFRAME DRAWER (BLOGGER INTEGRATION)
-       ========================================================================== */
+    /* Community Comments Iframe Drawer */
     #iframeChatDrawer {
       position: fixed;
       top: 0;
@@ -351,18 +223,18 @@
       transform: translate3d(0, 0, 0);
     }
     .chat-drawer-header {
-      height: 60px;
+      height: 56px;
       background: rgba(14, 15, 24, 0.98);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 18px;
+      padding: 0 16px;
       flex-shrink: 0;
     }
     .chat-drawer-header h3 {
       font-family: 'Outfit', sans-serif;
-      font-size: 15.5px;
+      font-size: 15px;
       font-weight: 800;
       color: #fff;
       margin: 0;
@@ -373,7 +245,7 @@
     .chat-drawer-actions {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
     .chat-drawer-action-btn {
       background: none;
@@ -381,23 +253,22 @@
       color: #747994;
       font-size: 16px;
       cursor: pointer;
-      transition: color 0.2s ease, transform 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
     }
     .chat-drawer-action-btn:hover {
       color: #fff;
-      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.05);
     }
     .chat-body-container {
       flex: 1;
       width: 100%;
       height: 100%;
       background: #06070a;
-      position: relative;
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
     }
     .blogger-comments-iframe {
@@ -409,25 +280,9 @@
     }
 
     /* Scroller Styling Overrides */
-    .row-scroll-container,
-    .content-row-scroll,
-    .ep-grid,
-    .anime-cards-row,
-    .movie-row,
-    .category-row,
-    [class*="row-container"],
-    [class*="carousel"] {
-      scrollbar-width: none !important;
-      -ms-overflow-style: none !important;
-    }
-    .row-scroll-container::-webkit-scrollbar,
-    .content-row-scroll::-webkit-scrollbar,
-    .ep-grid::-webkit-scrollbar,
-    .anime-cards-row::-webkit-scrollbar,
-    .movie-row::-webkit-scrollbar,
-    .category-row::-webkit-scrollbar,
-    [class*="row-container"]::-webkit-scrollbar,
-    [class*="carousel"]::-webkit-scrollbar {
+    .carousel-track::-webkit-scrollbar,
+    .carousel-rail::-webkit-scrollbar,
+    .chips-container::-webkit-scrollbar {
       display: none !important;
       width: 0 !important;
       height: 0 !important;
@@ -436,57 +291,34 @@
 </head>
 <body class="theme-dark">
 
-  <!-- AESTHETIC SPLASH PRELOADER -->
+  <!-- SPLASH PRELOADER -->
   <div id="siteSplashPreloader" aria-hidden="false">
     <div class="aesthetic-loader">
       <div class="aesthetic-brand-title">Anime<span>Drift</span></div>
       <div class="aesthetic-line-track">
-        <div class="aesthetic-line-fill" id="splashFillBar"></div>
+        <div class="aesthetic-line-fill"></div>
       </div>
-      <span class="aesthetic-status-text" id="splashStatusLabel">Initializing Core Network...</span>
+      <span class="aesthetic-status-text">Connecting Edge Network...</span>
     </div>
   </div>
-
-  <!-- INTERACTIVE UPDATE HUD -->
-  <aside id="updateNotificationBar" role="alert" aria-live="assertive">
-    <span><i class="fas fa-sparkles" style="color: #00f0ff; margin-right: 6px;"></i> An update is available!</span>
-    <button class="update-action-btn" type="button" id="applyUpdateBtn">
-      <i class="fas fa-rotate"></i> Update Now
-    </button>
-    <div class="update-dismiss-btn" id="dismissUpdateBtn" title="Dismiss"><i class="fas fa-xmark"></i></div>
-  </aside>
 
   <!-- MODE TRANSITION HUD LOADER -->
   <div id="globalTransitionLoader" role="status" aria-live="polite">
     <div class="mini-spinner-quantum"></div>
-    <span id="globalTransitionText">Switching Category...</span>
+    <span id="globalTransitionText">Switching Universe...</span>
   </div>
 
-  <!-- NETFLIX MODE REFRESH ADVISOR -->
-  <aside id="netflixRefreshAdvisor" role="status" aria-live="polite">
-    <span><i class="fas fa-circle-info" style="color:#ff0844; margin-right:4px;"></i> Seeing duplicate shows in categories?</span>
-    <button class="advisor-refresh-btn" type="button" onclick="window.forceCatalogRefresh()">
-      <i class="fas fa-arrows-rotate"></i> Refresh Feed
-    </button>
-    <div class="advisor-dismiss-btn" onclick="window.dismissNetflixAdvisor()" title="Dismiss">
-      <i class="fas fa-xmark"></i>
-    </div>
-  </aside>
-
-  <!-- MULTIPLAYER VIRTUAL CURSOR LAYER -->
-  <div id="p2pCursorLayer"></div>
-
-  <!-- AMBIENT LIGHTING GLOW & OFFSCREEN CHROMA CANVAS -->
+  <!-- AMBIENT GLOW -->
   <div class="ambient-glow" id="ambientGlow"></div>
   <canvas id="chromaCanvas" width="32" height="32" style="display:none;" aria-hidden="true"></canvas>
 
-  <!-- FLOATING TOAST NOTIFICATIONS CONTAINER -->
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-  <!-- PWA OFFLINE BACKGROUND SYNC STATUS CHIP -->
+  <!-- OFFLINE SYNC STATUS PILL -->
   <div class="sync-status-pill" id="pwaSyncStatusPill">
     <i class="fas fa-rotate"></i>
-    <span>Syncing offline playback progress...</span>
+    <span>Syncing playback progress...</span>
   </div>
 
   <!-- NAVIGATION HEADER -->
@@ -496,12 +328,11 @@
         <i class="fas fa-bars-staggered"></i>
       </button>
 
-      <a href="#" class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <a href="/" class="brand" onclick="event.preventDefault(); window.scrollTo({top: 0, behavior: 'smooth'});">
         <div class="brand-icon-wrapper">
           <i class="fas fa-play"></i>
         </div>
         <span class="brand-name" id="brandTitleText">ANIME<small class="brand-badge">DRIFT</small></span>
-        <span class="pwa-badge" id="appStatusPill" style="display:none;"><i class="fas fa-bolt"></i> APP</span>
       </a>
 
       <!-- Desktop Navigation Links -->
@@ -518,19 +349,15 @@
 
     <!-- Header Controls -->
     <div class="header-right">
-      <button class="icon-btn" id="headerInstallBtn" style="display:none;" title="Install AnimeDrift App" aria-label="Install App" onclick="triggerPwaInstall()">
-        <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
-      </button>
-
-      <!-- Search Bar -->
+      <!-- Search Input Container -->
       <div class="search-wrapper" id="searchWrapper">
-        <i class="fas fa-search" onclick="window.toggleSearch()" aria-label="Search"></i>
+        <i class="fas fa-search" onclick="window.toggleSearch()" aria-label="Open Search"></i>
         <input type="text" id="searchInput" class="search-input" placeholder="Search anime, movies, series..." autocomplete="off" />
-        <i class="fas fa-xmark search-clear-icon" id="searchClearBtn" onclick="window.clearSearch()" style="display:none;" aria-label="Clear Search"></i>
+        <i class="fas fa-xmark search-clear-icon" id="searchClearBtn" onclick="window.clearSearch()" aria-label="Close Search"></i>
       </div>
       <div class="search-dropdown" id="searchDropdown"></div>
 
-      <!-- Mode Toggle Button (Anime / Netflix Live-Action Universe) -->
+      <!-- Universe Switch Button -->
       <button class="icon-btn netflix-toggle-btn" id="netflixModeBtn" title="Switch Universe" aria-label="Toggle Catalog Universe" onclick="triggerNavWithLoader('Shifting Universe...', () => window.toggleNetflixMode())">
         <svg class="netflix-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5.398 0v24c1.173-.24 2.346-.51 3.518-.78V0H5.398z" fill="#E50914"/>
@@ -539,13 +366,13 @@
         </svg>
       </button>
 
-      <!-- Community Comments Drawer Launcher -->
-      <button class="icon-btn" title="Community Comments & Discussions" aria-label="Open Comments" onclick="window.toggleIframeChat(true)">
+      <!-- Comments Drawer Launcher -->
+      <button class="icon-btn" title="Community Discussions" aria-label="Open Comments" onclick="window.toggleIframeChat(true)">
         <i class="fas fa-comments" style="color: #00d2ff;"></i>
       </button>
 
       <!-- Watchlist Button -->
-      <button class="icon-btn" title="Open My Watchlist" aria-label="Watchlist" onclick="window.openWatchlistModal()">
+      <button class="icon-btn watchlist-btn" title="My Watchlist" aria-label="Watchlist" onclick="window.openWatchlistModal()">
         <i class="fas fa-bookmark"></i>
         <span class="header-badge-count" id="watchlistCount">0</span>
       </button>
@@ -554,13 +381,10 @@
 
   <!-- QUICK FEATURE HUD DOCK -->
   <aside class="floating-quick-dock" id="floatingQuickDock" aria-label="Quick Feature Tools">
-    <button class="dock-btn" id="pwaInstallBtn" style="display:none;" title="Install AnimeDrift Native App" aria-label="Install App" onclick="triggerPwaInstall()">
-      <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
-    </button>
     <button class="dock-btn" title="Community Comments" aria-label="Live Comments" onclick="window.toggleIframeChat(true)">
       <i class="fas fa-comment-dots" style="color:#00d2ff;"></i>
     </button>
-    <button class="dock-btn" title="Reverse Anime Search by Screenshot" aria-label="Screenshot Frame Search" onclick="window.openTraceMoeModal()">
+    <button class="dock-btn" title="Reverse Anime Search by Frame" aria-label="Screenshot Search" onclick="window.openTraceMoeModal()">
       <i class="fas fa-camera" style="color:var(--accent-cyan);"></i>
     </button>
     <button class="dock-btn" title="P2P Watch Party" aria-label="Watch Party" onclick="window.openWatchPartyModal()">
@@ -569,12 +393,12 @@
     <button class="dock-btn" title="Weekly Simulcast Schedule" aria-label="Simulcast Schedule" onclick="window.openScheduleModal()">
       <i class="fas fa-calendar-days" style="color:var(--accent-gold);"></i>
     </button>
-    <button class="dock-btn" title="Roll a Random Anime" aria-label="Random Title" onclick="triggerNavWithLoader('Rolling Random...', () => window.playRandomAnime())">
+    <button class="dock-btn" title="Roll a Random Anime" aria-label="Random Title" onclick="triggerNavWithLoader('Rolling...', () => window.playRandomAnime())">
       <i class="fas fa-shuffle" style="color:var(--accent-purple);"></i>
     </button>
   </aside>
 
-  <!-- SIDE MENU DRAWER -->
+  <!-- MOBILE SIDE DRAWER -->
   <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="window.toggleMobileNav(false)"></div>
   <aside class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="Navigation Menu">
     <div class="mobile-drawer-header">
@@ -582,14 +406,14 @@
         <div class="brand-icon-wrapper">
           <i class="fas fa-play"></i>
         </div>
-        <span>ANIME<small class="brand-badge">DRIFT</small></span>
+        <span class="brand-name">ANIME<small class="brand-badge">DRIFT</small></span>
       </div>
       <button class="drawer-close-btn" type="button" onclick="window.toggleMobileNav(false)" aria-label="Close Navigation">
         <i class="fas fa-xmark"></i>
       </button>
     </div>
     
-    <div class="drawer-section-label">COMMUNITY & COMMENTS</div>
+    <div class="drawer-section-label">COMMUNITY & SOCIAL</div>
     <div class="drawer-tools-grid" style="margin-bottom:10px;">
       <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.toggleIframeChat(true)">
         <i class="fas fa-comments" style="color:#00d2ff;"></i>
@@ -601,7 +425,7 @@
       </button>
     </div>
 
-    <div class="drawer-section-label">APPLICATION CONTROLS</div>
+    <div class="drawer-section-label">APPLICATION</div>
     <div class="drawer-tools-grid" style="margin-bottom:10px;">
       <button class="drawer-tool-btn" id="drawerInstallBtn" type="button" onclick="window.toggleMobileNav(false); triggerPwaInstall()">
         <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
@@ -609,7 +433,7 @@
       </button>
       <button class="drawer-tool-btn" id="drawerNotifyBtn" type="button" onclick="window.toggleMobileNav(false); requestNotificationPermission()">
         <i class="fas fa-bell" style="color:var(--accent-gold);"></i>
-        <span>Episode Alerts</span>
+        <span>Notifications</span>
       </button>
     </div>
 
@@ -644,7 +468,7 @@
   <!-- HERO BILLBOARD -->
   <section class="hero" id="heroSection">
     <div class="hero-bg-wrapper">
-      <img id="heroBg" class="hero-bg" src="" alt="Featured Anime Series Spotlight" />
+      <img id="heroBg" class="hero-bg" src="" alt="Featured Spotlight" />
     </div>
     <div class="hero-overlay"></div>
     
@@ -682,7 +506,7 @@
     </div>
   </section>
 
-  <!-- QUICK CATEGORY CHIPS RAIL -->
+  <!-- CATEGORY FILTER CHIPS -->
   <section class="quick-chips-rail" aria-label="Quick Category Filter">
     <div class="chips-container" id="filterChips">
       <button class="chip active" type="button" data-filter="ALL" onclick="triggerNavWithLoader('All', () => window.applyQuickFilter('ALL', this))"><i class="fas fa-border-all"></i> All</button>
@@ -697,22 +521,7 @@
   </section>
 
   <!-- CONTENT ROWS -->
-  <main class="content-rows" id="contentRows">
-    <noscript>
-      <section style="padding: 24px 16px; color: #fff; max-width: 900px; margin: 0 auto;">
-        <h2>Watch HD Anime & Simulcast Series Online - AnimeDrift</h2>
-        <p>AnimeDrift offers high-definition streaming for the latest anime series, movies, and simulcasts in subbed, English dubbed, and Hindi dubbed formats.</p>
-        <h3>Top Streaming Categories</h3>
-        <ul>
-          <li><a href="/?filter=hindi-dubbed" style="color: #ff0844;">Hindi Dubbed Anime</a></li>
-          <li><a href="/?genre=action" style="color: #ff0844;">Action & Blockbuster Anime</a></li>
-          <li><a href="/?genre=fantasy" style="color: #ff0844;">Isekai & Fantasy Adventures</a></li>
-          <li><a href="/?genre=romance" style="color: #ff0844;">Romance & Drama</a></li>
-          <li><a href="/?filter=top-airing" style="color: #ff0844;">Top Airing Simulcasts</a></li>
-        </ul>
-      </section>
-    </noscript>
-  </main>
+  <main class="content-rows" id="contentRows"></main>
 
   <!-- STREAMING MODAL -->
   <div class="modal-overlay" id="modalOverlay" onclick="window.closeModal()"></div>
@@ -755,7 +564,7 @@
             <i class="fas fa-arrow-up-right-from-square"></i> <span>Mini Player</span>
           </button>
           <button class="modal-pill-btn" type="button" onclick="window.toggleIframeChat(true)" id="p2pChatToggleBtn">
-            <i class="fas fa-comments" style="color:#00d2ff;"></i> <span>Comments & Chat</span>
+            <i class="fas fa-comments" style="color:#00d2ff;"></i> <span>Comments</span>
           </button>
           <button class="modal-pill-btn booster-btn" type="button" onclick="toggleAudioVolumeBooster()" id="audioBoosterBtn">
             <i class="fas fa-volume-high"></i> <span id="audioBoosterLabel">100% Volume</span>
@@ -844,7 +653,7 @@
     </div>
   </div>
 
-  <!-- FLOATING BLOGGER COMMUNITY COMMENTS DRAWER -->
+  <!-- COMMENTS IFRAME DRAWER -->
   <div class="drawer-overlay" id="chatDrawerOverlay" onclick="window.toggleIframeChat(false)"></div>
   <aside id="iframeChatDrawer" aria-label="Live Comments Portal">
     <div class="chat-drawer-header">
@@ -871,7 +680,7 @@
     </div>
   </aside>
 
-  <!-- SIMULCAST CALENDAR MODAL -->
+  <!-- AIRING SCHEDULE MODAL -->
   <div class="drawer-overlay" id="scheduleModalOverlay" onclick="closeScheduleModal()"></div>
   <div class="shortcuts-modal" id="scheduleModal" role="dialog" aria-modal="true" aria-labelledby="scheduleTitle">
     <div class="shortcuts-card schedule-card" style="max-width: 820px; width: 95%;">
@@ -930,7 +739,7 @@
     </div>
   </div>
 
-  <!-- P2P CHAT DRAWER -->
+  <!-- P2P CHAT SIDEBAR -->
   <aside class="p2p-chat-sidebar" id="p2pChatSidebar">
     <div class="p2p-chat-header">
       <h3>Watch Party Live</h3>
@@ -997,43 +806,19 @@
     </div>
   </div>
 
-  <!-- RUNTIME LINK INTERCEPTOR -->
-  <script>
-    (function() {
-      const CURRENT_APP_VERSION = '58.0.0';
-      const origSetAttribute = Element.prototype.setAttribute;
-      Element.prototype.setAttribute = function(name, val) {
-        if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
-          val = val.replace(/\?v=[^&]+/, `?v=${CURRENT_APP_VERSION}`);
-        }
-        return origSetAttribute.apply(this, [name, val]);
-      };
-      const desc = Object.getOwnPropertyDescriptor(HTMLLinkElement.prototype, 'href');
-      if (desc && desc.set) {
-        Object.defineProperty(HTMLLinkElement.prototype, 'href', {
-          set: function(v) {
-            if (typeof v === 'string') v = v.replace(/\?v=[^&]+/, `?v=${CURRENT_APP_VERSION}`);
-            return desc.set.call(this, v);
-          },
-          get: desc.get
-        });
-      }
-    })();
-  </script>
+  <!-- SCRIPT PIPELINE ENGINES -->
+  <script src="core-engine.js?v=65.0.0"></script>
+  <script src="dash-player.js?v=65.0.0"></script>
+  <script src="streaming-ui.js?v=65.0.0"></script>
+  <script src="p2p.js?v=65.0.0"></script>
+  <script src="webapp.js?v=65.0.0"></script>
+  <script src="adblock-engine.js?v=65.0.0"></script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v58.0.0) -->
-  <script src="core-engine.js?v=63.0.0"></script>
-  <script src="dash-player.js?v=58.0.0"></script>
-  <script src="streaming-ui.js?v=589.0.0"></script>
-  <script src="p2p.js?v=58.0.0"></script>
-  <script src="webapp.js?v=58.0.0"></script>
-  <script src="adblock-engine.js?v=58.0.0"></script>
-
-  <!-- APP CONTROLLER & INTERACTION MANAGERS -->
+  <!-- CONTROLLERS & INTERACTIONS -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
-    // 1. Transition Loader
+    // Nav Transition Loader Controller
     let globalLoaderTimeout = null;
     window.triggerNavWithLoader = function(label, callback) {
       if (isSearchBot) {
@@ -1057,7 +842,7 @@
       }, 3500);
     };
 
-    // 2. Blogger Community Comments Drawer Controllers
+    // Blogger Community Comments Controller
     window.toggleIframeChat = function(open) {
       const drawer = document.getElementById('iframeChatDrawer');
       const overlay = document.getElementById('chatDrawerOverlay');
@@ -1068,8 +853,7 @@
       
       if (shouldOpen) {
         if (iframe && (iframe.src === 'about:blank' || !iframe.src)) {
-          const targetUrl = iframe.dataset.src || 'https://nexalogz.blogspot.com/2026/09/animedrift.html';
-          iframe.src = targetUrl;
+          iframe.src = iframe.dataset.src || 'https://nexalogz.blogspot.com/2026/09/animedrift.html';
         }
         drawer.classList.add('open');
         overlay.classList.add('active');
@@ -1083,129 +867,22 @@
       window.open('https://nexalogz.blogspot.com/2026/09/animedrift.html', '_blank', 'noopener,noreferrer');
     };
 
-    // 3. Netflix Advisory & Complete Cache-Bypass Hard Refresh
-    window.checkAndShowNetflixAdvisor = function() {
-      const advisor = document.getElementById('netflixRefreshAdvisor');
-      if (!advisor) return;
-      if (window.STATE?.isNetflixMode) {
-        advisor.classList.add('visible');
-        clearTimeout(window.__netflixAdvisorTimer);
-        window.__netflixAdvisorTimer = setTimeout(() => {
-          advisor.classList.remove('visible');
-        }, 10000);
-      } else {
-        advisor.classList.remove('visible');
-      }
-    };
-
-    window.dismissNetflixAdvisor = function() {
-      const advisor = document.getElementById('netflixRefreshAdvisor');
-      if (advisor) advisor.classList.remove('visible');
-    };
-
-    // Thorough Hard Reload: Deletes Dexie, purges caches, unregisters service workers, forces new network fetch
-    window.forceCatalogRefresh = async function() {
-      if (window.showToast) window.showToast('Purging cache & performing clean reload...');
-
-      // 1. Purge CacheStorage API
-      if ('caches' in window) {
-        try {
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k => caches.delete(k)));
-        } catch (e) {}
-      }
-
-      // 2. Delete Dexie IndexedDB databases to remove stale query responses
-      if (window.Dexie) {
-        try {
-          await new Dexie('AnimeDriftUltraDB').delete();
-          await new Dexie('AnimeDriftDatabase').delete();
-        } catch (e) {}
-      }
-
-      // 3. Unregister all active Service Workers so network bypass occurs
-      if ('serviceWorker' in navigator) {
-        try {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (const reg of registrations) {
-            await reg.unregister();
-          }
-        } catch (e) {}
-      }
-
-      // 4. Preserve universe parameter while appending unique cache-buster timestamp
-      const url = new URL(window.location.origin + window.location.pathname);
-      if (window.STATE?.isNetflixMode) {
-        url.searchParams.set('mode', 'netflix');
-      }
-      url.searchParams.set('_purge', Date.now());
-
-      // 5. Navigate to clean URL
-      window.location.href = url.toString();
-    };
-
-    // Intercept Universe Toggles to Alert for Netflix Feed Condition
-    const origToggleNetflixMode = window.toggleNetflixMode;
-    window.toggleNetflixMode = async function(...args) {
-      if (typeof origToggleNetflixMode === 'function') {
-        await origToggleNetflixMode.apply(this, args);
-      }
-      window.checkAndShowNetflixAdvisor();
-    };
-
-    // 4. Preloader Lifecycle
-    window.addEventListener('DOMContentLoaded', () => {
+    // Clean Splash Screen Removal on Load
+    window.addEventListener('load', () => {
       const splash = document.getElementById('siteSplashPreloader');
-      if (isSearchBot) {
-        if (splash) splash.remove();
-        return;
+      if (splash) {
+        splash.classList.add('preloader-hidden');
+        setTimeout(() => splash.remove(), 600);
       }
-
-      const fillBar = document.getElementById('splashFillBar');
-      const statusLabel = document.getElementById('splashStatusLabel');
-      const startTime = Date.now();
-      const TOTAL_DURATION = 1400;
-
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(100, Math.floor((elapsed / TOTAL_DURATION) * 100));
-
-        if (fillBar) fillBar.style.width = `${progress}%`;
-
-        if (statusLabel) {
-          if (progress < 30) statusLabel.innerText = 'Connecting Edge Mesh...';
-          else if (progress < 70) statusLabel.innerText = 'Syncing Catalogs & Nodes...';
-          else statusLabel.innerText = 'Launching Universe...';
-        }
-
-        if (progress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            if (splash) {
-              splash.classList.add('preloader-hidden');
-              setTimeout(() => splash.remove(), 600);
-            }
-            if (new URLSearchParams(window.location.search).get('mode') === 'netflix') {
-              window.checkAndShowNetflixAdvisor();
-            }
-          }, 150);
-        }
-      }, 35);
     });
 
-    // 5. PWA Install & Update Lifecycle
-    const CURRENT_CLIENT_VERSION = '58.0.0';
+    // PWA Install Lifecycle Handler
     let deferredPrompt = null;
-    let newWorkerWaiting = null;
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      [
-        document.getElementById('headerInstallBtn'),
-        document.getElementById('pwaInstallBtn'),
-        document.getElementById('drawerInstallBtn')
-      ].forEach(btn => { if (btn) btn.style.display = 'inline-flex'; });
+      const drawerBtn = document.getElementById('drawerInstallBtn');
+      if (drawerBtn) drawerBtn.style.display = 'inline-flex';
     });
 
     window.triggerPwaInstall = async function() {
@@ -1213,61 +890,11 @@
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        [
-          document.getElementById('headerInstallBtn'),
-          document.getElementById('pwaInstallBtn'),
-          document.getElementById('drawerInstallBtn')
-        ].forEach(btn => { if (btn) btn.style.display = 'none'; });
+        const drawerBtn = document.getElementById('drawerInstallBtn');
+        if (drawerBtn) drawerBtn.style.display = 'none';
       }
       deferredPrompt = null;
     };
-
-    function showUpdateAvailableUI(worker = null) {
-      if (worker) newWorkerWaiting = worker;
-      const banner = document.getElementById('updateNotificationBar');
-      if (banner) {
-        banner.classList.add('visible');
-      }
-    }
-
-    document.getElementById('applyUpdateBtn')?.addEventListener('click', async () => {
-      document.getElementById('updateNotificationBar')?.classList.remove('visible');
-      if ('caches' in window) {
-        try {
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k => caches.delete(k)));
-        } catch (e) {}
-      }
-      localStorage.setItem('animedrift_app_installed_version', CURRENT_CLIENT_VERSION);
-      if (newWorkerWaiting) {
-        newWorkerWaiting.postMessage({ type: 'SKIP_WAITING' });
-      } else {
-        window.location.reload(true);
-      }
-    });
-
-    document.getElementById('dismissUpdateBtn')?.addEventListener('click', () => {
-      document.getElementById('updateNotificationBar')?.classList.remove('visible');
-      localStorage.setItem('animedrift_app_installed_version', CURRENT_CLIENT_VERSION);
-    });
-
-    if ('serviceWorker' in navigator && !isSearchBot) {
-      window.addEventListener('load', async () => {
-        try {
-          const reg = await navigator.serviceWorker.register(`sw.js?v=${CURRENT_CLIENT_VERSION}`, { updateViaCache: 'none' });
-          if (reg.waiting) showUpdateAvailableUI(reg.waiting);
-          reg.addEventListener('updatefound', () => {
-            const installing = reg.installing;
-            if (!installing) return;
-            installing.addEventListener('statechange', () => {
-              if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-                showUpdateAvailableUI(installing);
-              }
-            });
-          });
-        } catch (err) {}
-      });
-    }
   </script>
 </body>
 </html>
