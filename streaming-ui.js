@@ -2,7 +2,7 @@
  * ============================================================================
  * AnimeDrift — ADVANCED STREAMING UI (ENTERPRISE MASTER SYSTEM)
  * File: streaming-ui.js
- * Version: 46.7.0 Fully Verified TMDB v3 & AniList Quick Filter Engine
+ * Version: 46.8.0 Fully Verified TMDB v3 Queries & UI Controller
  * ============================================================================
  */
 
@@ -110,6 +110,12 @@
     );
   }
 
+  function formatRating(score) {
+    const val = Number(score);
+    if (!Number.isFinite(val) || val <= 0) return 'N/A';
+    return val <= 10 ? `${Math.round(val * 10)}%` : `${Math.round(val)}%`;
+  }
+
   // ==========================================================================
   // 04. VERCEL SERVERLESS PROXY URL BUILDER (STRICT TMDB v3 COMPLIANCE)
   // ==========================================================================
@@ -141,6 +147,16 @@
       if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
       if (!url.searchParams.has('include_adult')) url.searchParams.set('include_adult', 'false');
       if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
+      if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
+
+      // Safeguard: Never force vote_count.gte on regional cinema queries
+      if (
+        !url.searchParams.has('vote_count.gte') &&
+        !url.searchParams.has('with_original_language') &&
+        !url.searchParams.has('with_origin_country')
+      ) {
+        url.searchParams.set('vote_count.gte', '15');
+      }
     }
 
     for (const [key, value] of Object.entries(customParams)) {
@@ -286,7 +302,7 @@
   win.fetchGQL = fetchGQL;
 
   // ==========================================================================
-  // 05. DISCOVERY RAILS — VERIFIED MULTI-UNIVERSE TMDB / ANILIST
+  // 05. DISCOVERY RAILS — DOCUMENTATION-COMPLIANT TMDB CALLS
   // ==========================================================================
   win.renderHomeRows = async function () {
     const content = doc.getElementById('contentRows');
@@ -295,6 +311,7 @@
     if (win.STATE.isNetflixMode) {
       if (typeof win.showToast === 'function') win.showToast('Loading Live-Action Universe...');
 
+      // 1. Trending Worldwide Movies
       await renderTMDBRow(
         'Trending Movies Worldwide',
         'discover/movie?sort_by=popularity.desc&vote_count.gte=100&_rail=global_movies',
@@ -302,6 +319,7 @@
         'MOVIE'
       );
 
+      // 2. Verified Bollywood Cinema (Strict country=IN & language=hi)
       await renderTMDBRow(
         'Hindi Blockbuster Movies',
         'discover/movie?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_movies',
@@ -309,6 +327,7 @@
         'MOVIE'
       );
 
+      // 3. Verified Hindi Web Series (Strict country=IN & language=hi for TV)
       await renderTMDBRow(
         'Hindi Web Series & Dramas',
         'discover/tv?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_series',
@@ -316,6 +335,7 @@
         'TV'
       );
 
+      // 4. South Indian Cinema (Telugu Hits)
       await renderTMDBRow(
         'South Indian Cinema (Telugu Hits)',
         'discover/movie?with_origin_country=IN&with_original_language=te&without_genres=16&sort_by=popularity.desc&_rail=telugu_movies',
@@ -323,6 +343,7 @@
         'MOVIE'
       );
 
+      // 5. Trending Worldwide TV Shows
       await renderTMDBRow(
         'Trending Worldwide TV Shows',
         'discover/tv?sort_by=popularity.desc&vote_count.gte=100&_rail=global_tv',
@@ -330,6 +351,7 @@
         'TV'
       );
 
+      // 6. Action Movies (Genre 28)
       await renderTMDBRow(
         'Explosive Action & Thrillers',
         'discover/movie?with_genres=28&sort_by=popularity.desc&vote_count.gte=100&_rail=action_movies',
@@ -337,6 +359,7 @@
         'MOVIE'
       );
 
+      // 7. Action & Adventure Series (TV Genre 10759)
       await renderTMDBRow(
         'Action & Adventure Series',
         'discover/tv?with_genres=10759&sort_by=popularity.desc&vote_count.gte=50&_rail=action_tv',
@@ -344,6 +367,7 @@
         'TV'
       );
 
+      // 8. Sci-Fi Feature Cinema (Movie Genre 878)
       await renderTMDBRow(
         'Sci-Fi & High Concept Cinema',
         'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=scifi_movies',
@@ -351,6 +375,7 @@
         'MOVIE'
       );
 
+      // 9. Crime & Mystery Thrillers (Movie Genre 53)
       await renderTMDBRow(
         'Gripping Crime & Mystery Thrillers',
         'discover/movie?with_genres=53&sort_by=popularity.desc&vote_count.gte=50&_rail=thriller_movies',
@@ -358,6 +383,7 @@
         'MOVIE'
       );
 
+      // 10. Romance & Heartwarming Dramas (Movie Genre 10749)
       await renderTMDBRow(
         'Romance & Heartwarming Dramas',
         'discover/movie?with_genres=10749&sort_by=popularity.desc&vote_count.gte=50&_rail=romance_movies',
@@ -436,7 +462,7 @@
       const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
       const dispTitle = item.title || item.name || 'Title';
       const posterPath = item.poster_path || item.backdrop_path;
-      const poster = item.coverImage?.extraLarge || item.coverImage?.large || (posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : FALLBACK_POSTER);
+      const poster = posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : FALLBACK_POSTER;
       const score = item.vote_average ? `${Math.round(item.vote_average * 10)}%` : '85%';
       const year = (item.release_date || item.first_air_date || '2026').split('-')[0];
       const format = forceFormat || (isMovie ? 'MOVIE' : 'TV');
@@ -535,12 +561,12 @@
   };
 
   // ==========================================================================
-  // 06. GENRE & QUICK FILTER CONTROLLERS (FIXED & FULLY RESTORED)
+  // 06. GENRE & QUICK FILTER CONTROLLERS (DOCUMENTATION COMPLIANT)
   // ==========================================================================
   win.applyQuickFilter = async function (filterType, element) {
     const norm = String(filterType || 'ALL').toUpperCase();
 
-    // Visual synchronization of chips
+    // Visual synchronization of filter chips
     const chips = doc.querySelectorAll('.chips-container .chip');
     chips.forEach(c => c.classList.remove('active'));
 
@@ -582,7 +608,7 @@
         case 'SCIFI': {
           const c = doc.getElementById('contentRows');
           if (c) c.innerHTML = '';
-          await renderTMDBRow('Sci-Fi Explorations', 'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_m', '<i class="fas fa-microchip"></i>', 'MOVIE');
+          await renderTMDBRow('Sci-Fi Feature Cinema', 'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_m', '<i class="fas fa-microchip"></i>', 'MOVIE');
           await renderTMDBRow('Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_tv', '<i class="fas fa-tv"></i>', 'TV');
           win.scrollTo({ top: 350, behavior: 'smooth' });
           break;
@@ -619,18 +645,18 @@
         await win.navigateGenre('Movie', 'Top Anime Movies');
         break;
       case 'ACTION':
-        await win.navigateGenre('Action', 'Action');
+        await win.navigateGenre('Action', 'Action Hits');
         break;
       case 'SECONDARY':
       case 'FANTASY':
-        await win.navigateGenre('Fantasy', 'Fantasy');
+        await win.navigateGenre('Fantasy', 'Isekai & Fantasy');
         break;
       case 'SCI_FI':
       case 'SCIFI':
-        await win.navigateGenre('Sci-Fi', 'Sci-Fi');
+        await win.navigateGenre('Sci-Fi', 'Sci-Fi & Cyberpunk');
         break;
       case 'ROMANCE':
-        await win.navigateGenre('Romance', 'Romance');
+        await win.navigateGenre('Romance', 'Romance & Drama');
         break;
       default:
         await win.renderHomeRows();
@@ -647,7 +673,7 @@
     const contentRows = doc.getElementById('contentRows');
     if (contentRows) contentRows.innerHTML = '';
 
-    if (!genre) {
+    if (!genre || genre === 'Home') {
       await win.renderHomeRows();
       win.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -668,6 +694,9 @@
       } else if (genre === 'Thriller' || genre === 'Crime') {
         await renderTMDBRow('Gripping Crime & Mystery Films', 'discover/movie?with_genres=53&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_crime_m', '<i class="fas fa-mask"></i>', 'MOVIE');
         await renderTMDBRow('Psychological Thriller Series', 'discover/tv?with_genres=80&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_crime_tv', '<i class="fas fa-user-secret"></i>', 'TV');
+      } else if (genre === 'Sci-Fi') {
+        await renderTMDBRow('Sci-Fi Feature Cinema', 'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_m', '<i class="fas fa-microchip"></i>', 'MOVIE');
+        await renderTMDBRow('Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_tv', '<i class="fas fa-tv"></i>', 'TV');
       } else if (genre === 'Romance') {
         await renderTMDBRow('Romantic Comedies & Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_romance_m', '<i class="fas fa-heart"></i>', 'MOVIE');
         await renderTMDBRow('Romantic TV Series', 'discover/tv?with_genres=10766&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_romance_tv', '<i class="fas fa-tv"></i>', 'TV');
@@ -676,8 +705,11 @@
       }
     } else {
       if (genre === 'Movie' || genre === 'Movies') {
-        await renderRow('Anime Movies & Feature Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['POPULARITY_DESC'] }, false);
-        await renderRow('Critically Acclaimed Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['SCORE_DESC'] }, false);
+        await renderRow('Anime Feature Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['POPULARITY_DESC'] }, false);
+        await renderRow('Top Rated Movies', { page: 1, perPage: 24, format: 'MOVIE', sort: ['SCORE_DESC'] }, false);
+      } else if (genre === 'Top') {
+        await renderRow('Top Airing Simulcasts', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false);
+        await renderRow('All-Time Popular', { page: 1, perPage: 24, sort: ['POPULARITY_DESC'] }, false);
       } else {
         await renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
         await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
@@ -1820,9 +1852,7 @@
       win.Router.set({ watch: win.STATE.currentAnime.id, s: win.STATE.season, ep: win.STATE.episode }, false);
     }
     navigator.clipboard.writeText(win.location.href);
-    if (typeof win.showToast === 'function') {
-      win.showToast('Direct title link copied!');
-    }
+    if (typeof win.showToast === 'function') win.showToast('Direct title link copied!');
   };
 
   win.shareDeepLinkEpisode = function () {
@@ -1830,9 +1860,7 @@
       win.Router.set({ watch: win.STATE.currentAnime.id, s: win.STATE.season, ep: win.STATE.episode }, false);
     }
     navigator.clipboard.writeText(win.location.href);
-    if (typeof win.showToast === 'function') {
-      win.showToast(`Episode ${win.STATE.episode} link copied!`);
-    }
+    if (typeof win.showToast === 'function') win.showToast(`Episode ${win.STATE.episode} link copied!`);
   };
 
   win.addEventListener('message', ({ data }) => {
