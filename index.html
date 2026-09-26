@@ -51,11 +51,11 @@
   <meta http-equiv="Expires" content="0" />
 
   <!-- Favicon Suite & Multi-Platform PWA Branding -->
-  <link rel="shortcut icon" href="favicon.ico?v=53.0.6" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=53.0.6" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=53.0.6" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=53.0.6" />
-  <link rel="manifest" href="manifest.json?v=53.0.6" />
+  <link rel="shortcut icon" href="favicon.ico?v=56.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=56.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=56.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=56.0.0" />
+  <link rel="manifest" href="manifest.json?v=56.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -81,12 +81,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v53.0.6) -->
-  <link rel="stylesheet" href="theme-base.css?v=53.0.6">
-  <link rel="stylesheet" href="components-modal.css?v=53.0.6">
-  <link rel="stylesheet" href="p2p.css?v=53.0.6">
-  <link rel="stylesheet" href="webapp.css?v=53.0.6">
-  <link rel="stylesheet" href="mobile.css?v=53.0.6">
+  <!-- Modular Stylesheets (Synchronized to v56.0.0) -->
+  <link rel="stylesheet" href="theme-base.css?v=56.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=56.0.0">
+  <link rel="stylesheet" href="p2p.css?v=56.0.0">
+  <link rel="stylesheet" href="webapp.css?v=56.0.0">
+  <link rel="stylesheet" href="mobile.css?v=56.0.0">
 
   <style>
     /* ==========================================================================
@@ -328,14 +328,14 @@
     }
 
     /* ==========================================================================
-       DYNAMIC COMMUNITY CHAT & COMMENT DRAWER
+       COMMUNITY COMMENTS IFRAME DRAWER (BLOGGER PORTAL INTEGRATION)
        ========================================================================== */
     #iframeChatDrawer {
       position: fixed;
       top: 0;
       right: 0;
       width: 100%;
-      max-width: 440px;
+      max-width: 480px;
       height: 100vh;
       height: 100dvh;
       background: #090a10;
@@ -358,6 +358,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 18px;
+      flex-shrink: 0;
     }
     .chat-drawer-header h3 {
       font-family: 'Outfit', sans-serif;
@@ -399,81 +400,37 @@
       flex-direction: column;
       overflow: hidden;
     }
-    .chat-msg-stream {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .chat-msg-row {
-      display: flex;
-      flex-direction: column;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 10px;
-      padding: 10px 12px;
-      animation: msgPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes msgPop {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .chat-msg-user {
-      font-size: 11px;
-      font-weight: 800;
-      color: #00d2ff;
-      margin-bottom: 3px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .chat-msg-time {
-      color: #747994;
-      font-weight: 500;
-    }
-    .chat-msg-text {
-      font-size: 13px;
-      color: #e4e4e7;
-      word-break: break-word;
-      line-height: 1.4;
-    }
-    .chat-input-bar {
-      padding: 12px 14px;
-      background: #0e0f17;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      gap: 10px;
-    }
-    .chat-text-input {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      color: #fff;
-      font-family: 'Outfit', sans-serif;
-      font-size: 13px;
-      padding: 10px 14px;
-      outline: none;
-    }
-    .chat-text-input:focus {
-      border-color: #ff0844;
-    }
-    .chat-send-btn {
-      background: #ff0844;
+    .blogger-comments-iframe {
+      width: 100%;
+      height: 100%;
       border: none;
-      color: #fff;
-      border-radius: 8px;
-      width: 44px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      transition: background 0.15s ease;
+      display: block;
+      background: #090a10;
     }
-    .chat-send-btn:hover {
-      background: #ff2a5f;
+
+    /* Scroller Styling Overrides */
+    .row-scroll-container,
+    .content-row-scroll,
+    .ep-grid,
+    .anime-cards-row,
+    .movie-row,
+    .category-row,
+    [class*="row-container"],
+    [class*="carousel"] {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    .row-scroll-container::-webkit-scrollbar,
+    .content-row-scroll::-webkit-scrollbar,
+    .ep-grid::-webkit-scrollbar,
+    .anime-cards-row::-webkit-scrollbar,
+    .movie-row::-webkit-scrollbar,
+    .category-row::-webkit-scrollbar,
+    [class*="row-container"]::-webkit-scrollbar,
+    [class*="carousel"]::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
     }
   </style>
 </head>
@@ -582,8 +539,8 @@
         </svg>
       </button>
 
-      <!-- Global Chat & Comment Launcher -->
-      <button class="icon-btn" title="Community Chat & Comments" aria-label="Open Chat" onclick="window.toggleIframeChat(true)">
+      <!-- Community Comments Drawer Launcher -->
+      <button class="icon-btn" title="Community Comments & Discussions" aria-label="Open Comments" onclick="window.toggleIframeChat(true)">
         <i class="fas fa-comments" style="color: #00d2ff;"></i>
       </button>
 
@@ -600,7 +557,7 @@
     <button class="dock-btn" id="pwaInstallBtn" style="display:none;" title="Install AnimeDrift Native App" aria-label="Install App" onclick="triggerPwaInstall()">
       <i class="fas fa-download" style="color:var(--accent-cyan);"></i>
     </button>
-    <button class="dock-btn" title="Live Global Chat" aria-label="Live Chat" onclick="window.toggleIframeChat(true)">
+    <button class="dock-btn" title="Community Comments" aria-label="Live Comments" onclick="window.toggleIframeChat(true)">
       <i class="fas fa-comment-dots" style="color:#00d2ff;"></i>
     </button>
     <button class="dock-btn" title="Reverse Anime Search by Screenshot" aria-label="Screenshot Frame Search" onclick="window.openTraceMoeModal()">
@@ -636,7 +593,7 @@
     <div class="drawer-tools-grid" style="margin-bottom:10px;">
       <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.toggleIframeChat(true)">
         <i class="fas fa-comments" style="color:#00d2ff;"></i>
-        <span>Live Comments</span>
+        <span>Comments</span>
       </button>
       <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.openWatchPartyModal()">
         <i class="fas fa-users-viewfinder" style="color:var(--accent-emerald);"></i>
@@ -728,14 +685,14 @@
   <!-- QUICK CATEGORY CHIPS RAIL -->
   <section class="quick-chips-rail" aria-label="Quick Category Filter">
     <div class="chips-container" id="filterChips">
-      <button class="chip active" type="button" onclick="triggerNavWithLoader('All', () => window.applyQuickFilter('ALL', this))"><i class="fas fa-border-all"></i> All</button>
-      <button class="chip" type="button" onclick="triggerNavWithLoader('Hindi Dubs', () => window.applyQuickFilter('HINDI', this))"><i class="fas fa-language"></i> Hindi Dubs</button>
-      <button class="chip" type="button" onclick="triggerNavWithLoader('Airing', () => window.applyQuickFilter('TOP_AIRING', this))"><i class="fas fa-tower-broadcast"></i> Airing</button>
-      <button class="chip" type="button" onclick="triggerNavWithLoader('Movies', () => window.applyQuickFilter('MOVIES', this))"><i class="fas fa-film"></i> Movies</button>
-      <button class="chip" id="chipCategory1" type="button" onclick="triggerNavWithLoader('Action', () => window.applyQuickFilter('ACTION', this))"><i class="fas fa-bolt"></i> Action</button>
-      <button class="chip" id="chipCategory2" type="button" onclick="triggerNavWithLoader('Fantasy', () => window.applyQuickFilter('SECONDARY', this))"><i class="fas fa-dungeon"></i> Fantasy</button>
-      <button class="chip" id="chipCategory3" type="button" onclick="triggerNavWithLoader('Sci-Fi', () => window.applyQuickFilter('SCI_FI', this))"><i class="fas fa-microchip"></i> Sci-Fi</button>
-      <button class="chip" type="button" onclick="triggerNavWithLoader('Romance', () => window.applyQuickFilter('ROMANCE', this))"><i class="fas fa-heart"></i> Romance</button>
+      <button class="chip active" type="button" data-filter="ALL" onclick="triggerNavWithLoader('All', () => window.applyQuickFilter('ALL', this))"><i class="fas fa-border-all"></i> All</button>
+      <button class="chip" type="button" data-filter="HINDI" onclick="triggerNavWithLoader('Hindi Dubs', () => window.applyQuickFilter('HINDI', this))"><i class="fas fa-language"></i> Hindi Dubs</button>
+      <button class="chip" type="button" data-filter="TOP_AIRING" onclick="triggerNavWithLoader('Airing', () => window.applyQuickFilter('TOP_AIRING', this))"><i class="fas fa-tower-broadcast"></i> Airing</button>
+      <button class="chip" type="button" data-filter="MOVIES" onclick="triggerNavWithLoader('Movies', () => window.applyQuickFilter('MOVIES', this))"><i class="fas fa-film"></i> Movies</button>
+      <button class="chip" id="chipCategory1" type="button" data-filter="ACTION" onclick="triggerNavWithLoader('Action', () => window.applyQuickFilter('ACTION', this))"><i class="fas fa-bolt"></i> Action</button>
+      <button class="chip" id="chipCategory2" type="button" data-filter="SECONDARY" onclick="triggerNavWithLoader('Fantasy', () => window.applyQuickFilter('SECONDARY', this))"><i class="fas fa-dungeon"></i> Fantasy</button>
+      <button class="chip" id="chipCategory3" type="button" data-filter="SCI_FI" onclick="triggerNavWithLoader('Sci-Fi', () => window.applyQuickFilter('SCI_FI', this))"><i class="fas fa-microchip"></i> Sci-Fi</button>
+      <button class="chip" type="button" data-filter="ROMANCE" onclick="triggerNavWithLoader('Romance', () => window.applyQuickFilter('ROMANCE', this))"><i class="fas fa-heart"></i> Romance</button>
     </div>
   </section>
 
@@ -887,31 +844,30 @@
     </div>
   </div>
 
-  <!-- FLOATING COMMUNITY CHAT & COMMENT DRAWER -->
+  <!-- FLOATING BLOGGER COMMUNITY COMMENTS DRAWER -->
   <div class="drawer-overlay" id="chatDrawerOverlay" onclick="window.toggleIframeChat(false)"></div>
-  <aside id="iframeChatDrawer" aria-label="Live Chat Hub">
+  <aside id="iframeChatDrawer" aria-label="Live Comments Portal">
     <div class="chat-drawer-header">
-      <h3><i class="fas fa-comments" style="color: #00d2ff;"></i> Live Comments & Chat</h3>
+      <h3><i class="fas fa-comments" style="color: #00d2ff;"></i> Community Comments</h3>
       <div class="chat-drawer-actions">
+        <button class="chat-drawer-action-btn" type="button" title="Open in New Tab" onclick="window.openChatSubpage()">
+          <i class="fas fa-up-right-from-square"></i>
+        </button>
         <button class="chat-drawer-action-btn" type="button" title="Close" onclick="window.toggleIframeChat(false)">
           <i class="fas fa-xmark"></i>
         </button>
       </div>
     </div>
     <div class="chat-body-container">
-      <div class="chat-msg-stream" id="chatMsgStream">
-        <div class="chat-msg-row">
-          <div class="chat-msg-user">
-            <span>AnimeDrift Bot</span>
-            <span class="chat-msg-time">Just now</span>
-          </div>
-          <div class="chat-msg-text">Welcome to the live chat room! Leave your episode reactions, discuss theories, and report broken mirrors here.</div>
-        </div>
-      </div>
-      <form class="chat-input-bar" id="liveChatForm" onsubmit="window.handleChatSubmit(event)">
-        <input type="text" id="liveChatInput" class="chat-text-input" placeholder="Join the discussion..." autocomplete="off" />
-        <button class="chat-send-btn" type="submit" aria-label="Send Message"><i class="fas fa-paper-plane"></i></button>
-      </form>
+      <iframe 
+        id="bloggerCommentsIframe" 
+        class="blogger-comments-iframe" 
+        src="about:blank" 
+        data-src="https://nexalogz.blogspot.com/2026/09/animedrift.html"
+        title="AnimeDrift Community Discussions"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+        loading="lazy">
+      </iframe>
     </div>
   </aside>
 
@@ -1044,7 +1000,7 @@
   <!-- RUNTIME LINK INTERCEPTOR -->
   <script>
     (function() {
-      const CURRENT_APP_VERSION = '53.0.6';
+      const CURRENT_APP_VERSION = '56.0.0';
       const origSetAttribute = Element.prototype.setAttribute;
       Element.prototype.setAttribute = function(name, val) {
         if (this.tagName === 'LINK' && name === 'href' && typeof val === 'string') {
@@ -1065,13 +1021,13 @@
     })();
   </script>
 
-  <!-- CORE SCRIPT ENGINES (Version Synchronized to v53.0.6) -->
-  <script src="core-engine.js?v=53.0.6"></script>
-  <script src="dash-player.js?v=53.0.6"></script>
-  <script src="streaming-ui.js?v=56.0.6"></script>
-  <script src="p2p.js?v=53.0.6"></script>
-  <script src="webapp.js?v=53.0.6"></script>
-  <script src="adblock-engine.js?v=53.0.6"></script>
+  <!-- CORE SCRIPT ENGINES (Version Synchronized to v56.0.0) -->
+  <script src="core-engine.js?v=57.0.0"></script>
+  <script src="dash-player.js?v=56.0.0"></script>
+  <script src="streaming-ui.js?v=57.0.0"></script>
+  <script src="p2p.js?v=56.0.0"></script>
+  <script src="webapp.js?v=56.0.0"></script>
+  <script src="adblock-engine.js?v=56.0.0"></script>
 
   <!-- APP CONTROLLER & INTERACTION MANAGERS -->
   <script>
@@ -1101,56 +1057,34 @@
       }, 3500);
     };
 
-    // 2. Chat & Comment Drawer Controllers
+    // 2. Blogger Community Comments Drawer Controllers
     window.toggleIframeChat = function(open) {
       const drawer = document.getElementById('iframeChatDrawer');
       const overlay = document.getElementById('chatDrawerOverlay');
+      const iframe = document.getElementById('bloggerCommentsIframe');
       if (!drawer || !overlay) return;
       
       const shouldOpen = open !== undefined ? Boolean(open) : !drawer.classList.contains('open');
       
       if (shouldOpen) {
+        // Hydrate iframe src on first open
+        if (iframe && (iframe.src === 'about:blank' || !iframe.src)) {
+          const targetUrl = iframe.dataset.src || 'https://nexalogz.blogspot.com/2026/09/animedrift.html';
+          iframe.src = targetUrl;
+        }
         drawer.classList.add('open');
         overlay.classList.add('active');
-        const input = document.getElementById('liveChatInput');
-        if (input) setTimeout(() => input.focus(), 300);
       } else {
         drawer.classList.remove('open');
         overlay.classList.remove('active');
       }
     };
 
-    window.handleChatSubmit = function(e) {
-      e.preventDefault();
-      const input = document.getElementById('liveChatInput');
-      const stream = document.getElementById('chatMsgStream');
-      if (!input || !stream) return;
-      
-      const val = input.value.trim();
-      if (!val) return;
-
-      const row = document.createElement('div');
-      row.className = 'chat-msg-row';
-      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
-      row.innerHTML = `
-        <div class="chat-msg-user">
-          <span style="color:#ff0844;">You</span>
-          <span class="chat-msg-time">${time}</span>
-        </div>
-        <div class="chat-msg-text">${String(val).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-      `;
-      
-      stream.appendChild(row);
-      input.value = '';
-      stream.scrollTop = stream.scrollHeight;
-
-      if (window.p2pParty && typeof window.p2pParty.sendChatMessage === 'function') {
-        window.p2pParty.sendChatMessage(val);
-      }
+    window.openChatSubpage = function() {
+      window.open('https://nexalogz.blogspot.com/2026/09/animedrift.html', '_blank', 'noopener,noreferrer');
     };
 
-    // 3. Netflix Advisory & Hard Cache-Busting Refresh
+    // 3. Netflix Advisory & Complete Cache-Bypass Hard Refresh
     window.checkAndShowNetflixAdvisor = function() {
       const advisor = document.getElementById('netflixRefreshAdvisor');
       if (!advisor) return;
@@ -1170,11 +1104,11 @@
       if (advisor) advisor.classList.remove('visible');
     };
 
-    // Dedicated Hard Refresh: Clears Dexie, Browser Caches, and SW Registrations before reloading
+    // Thorough Hard Reload: Deletes Dexie, purges caches, unregisters service workers, forces new network fetch
     window.forceCatalogRefresh = async function() {
-      if (window.showToast) window.showToast('Purging cache & performing fresh reload...');
-      
-      // 1. Clear caches storage
+      if (window.showToast) window.showToast('Purging cache & performing clean reload...');
+
+      // 1. Purge CacheStorage API
       if ('caches' in window) {
         try {
           const keys = await caches.keys();
@@ -1182,15 +1116,15 @@
         } catch (e) {}
       }
 
-      // 2. Clear Dexie IndexedDB cache tables if present
+      // 2. Delete Dexie IndexedDB databases to remove stale query responses
       if (window.Dexie) {
         try {
-          const ultraDB = new Dexie('AnimeDriftUltraDB');
-          await ultraDB.delete();
+          await new Dexie('AnimeDriftUltraDB').delete();
+          await new Dexie('AnimeDriftDatabase').delete();
         } catch (e) {}
       }
 
-      // 3. Unregister active service workers to prevent cached request intercept
+      // 3. Unregister all active Service Workers so network bypass occurs
       if ('serviceWorker' in navigator) {
         try {
           const registrations = await navigator.serviceWorker.getRegistrations();
@@ -1200,10 +1134,15 @@
         } catch (e) {}
       }
 
-      // 4. Force hard reload bypassing cache with cache-buster param
-      const url = new URL(window.location.href);
+      // 4. Preserve universe parameter while appending unique cache-buster timestamp
+      const url = new URL(window.location.origin + window.location.pathname);
+      if (window.STATE?.isNetflixMode) {
+        url.searchParams.set('mode', 'netflix');
+      }
       url.searchParams.set('_purge', Date.now());
-      window.location.replace(url.toString());
+
+      // 5. Navigate to clean URL
+      window.location.href = url.toString();
     };
 
     // Intercept Universe Toggles to Alert for Netflix Feed Condition
@@ -1256,7 +1195,7 @@
     });
 
     // 5. PWA Install & Update Lifecycle
-    const CURRENT_CLIENT_VERSION = '53.0.6';
+    const CURRENT_CLIENT_VERSION = '56.0.0';
     let deferredPrompt = null;
     let newWorkerWaiting = null;
 
