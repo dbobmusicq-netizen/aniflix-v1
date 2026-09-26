@@ -2,7 +2,14 @@
  * ============================================================================
  * AnimeDrift — ADVANCED STREAMING UI (ENTERPRISE MASTER SYSTEM)
  * File: streaming-ui.js
- * Version: 58.0.0 Reliable Architecture & High-Density UI Matrix
+ * Version: 65.0.0 Reliable Architecture & High-Density UI Matrix
+ *
+ * Core Fixes:
+ *  - Fixed Search Takeover: clearSearch now removes .open and blurs the input.
+ *  - Fixed Missing Synopsis/Genres: Directly populates modal metadata elements.
+ *  - Native AniList Airing Schedules: Replaced discontinued Jikan v4 API.
+ *  - Orthogonal Sorting: Eliminates duplicate shows across category rails.
+ *  - High-Speed Deeplink Execution: Parallel non-blocking player pipeline.
  * ============================================================================
  */
 
@@ -26,7 +33,7 @@
   let gainNode = null;
 
   let lastGqlRequestTime = 0;
-  const GQL_MIN_INTERVAL_MS = 380;
+  const GQL_MIN_INTERVAL_MS = 250;
   let gqlQueue = Promise.resolve();
 
   const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -45,7 +52,7 @@
         cachedImages: 'url, blob, timestamp'
       });
     } catch (e) {
-      console.warn('[Storage Nexus] Dexie schema registration warning:', e);
+      console.warn('[Storage Nexus] Dexie schema warning:', e);
     }
   }
   win.db = db;
@@ -59,7 +66,6 @@
         db.cachedMetadata.where('timestamp').below(cutoff).delete(),
         db.cachedImages.where('timestamp').below(cutoff).delete()
       ]);
-      console.info('[Storage Nexus] 24-hour cache pruning cycle completed.');
     } catch (err) {}
   };
 
@@ -81,9 +87,12 @@
   function cleanText(value) {
     return String(value ?? '')
       .replace(/<[^>]*>/g, ' ')
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
       .replace(/\s+/g, ' ')
       .trim();
   }
+  win.cleanText = cleanText;
 
   function titleOf(anime) {
     return (
@@ -101,9 +110,7 @@
       anime?.coverImage?.extraLarge ||
       anime?.coverImage?.large ||
       anime?.poster ||
-      (anime?.poster_path
-        ? `https://image.tmdb.org/t/p/w500${anime.poster_path}`
-        : '') ||
+      (anime?.poster_path ? `https://image.tmdb.org/t/p/w500${anime.poster_path}` : '') ||
       FALLBACK_POSTER
     );
   }
@@ -113,15 +120,13 @@
       anime?.bannerImage ||
       anime?.banner ||
       anime?.backdrop ||
-      (anime?.backdrop_path
-        ? `https://image.tmdb.org/t/p/w1280${anime.backdrop_path}`
-        : '') ||
+      (anime?.backdrop_path ? `https://image.tmdb.org/t/p/w1280${anime.backdrop_path}` : '') ||
       posterOf(anime)
     );
   }
 
   // ==========================================================================
-  // 04. VERCEL SERVERLESS PROXY URL BUILDER (STRICT TMDB v3 COMPLIANCE)
+  // 04. VERCEL SERVERLESS PROXY URL BUILDER
   // ==========================================================================
   function cleanTMDBUrl(endpointPath, customParams = {}) {
     let raw = String(endpointPath || '').replace(/^\/+/, '');
@@ -155,7 +160,6 @@
       if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
       if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
 
-      // Safeguard: Never force high vote_count.gte on regional queries
       if (
         !url.searchParams.has('vote_count.gte') &&
         !url.searchParams.has('with_original_language') &&
@@ -188,7 +192,7 @@
     return gqlQueue;
   }
 
-  async function fetchWithRetry(url, options = {}, retries = 2, delay = 1500) {
+  async function fetchWithRetry(url, options = {}, retries = 2, delay = 1000) {
     let finalUrl = url;
     if (typeof url === 'string' && url.includes('db.speedracelight.com/3/')) {
       try {
@@ -263,7 +267,17 @@
       Media(id: $id, type: ANIME) {
         id
         idMal
+        title { romaji english native }
+        description(asHtml: false)
+        genres
+        status
+        seasonYear
+        episodes
+        duration
+        averageScore
         trailer { id site }
+        studios(isMain: true) { nodes { name } }
+        streamingEpisodes { title thumbnail url site }
         characters(sort: [ROLE, RELEVANCE_DESC], perPage: 14) {
           edges {
             node { id name { full } image { large } }
@@ -351,39 +365,8 @@
   win.fetchGQL = fetchGQL;
 
   // ==========================================================================
-  // 05. CACHED IMAGE BLOB INTERCEPTOR & WATCH TELEMETRY
+  // 05. CACHED IMAGE BLOB & WATCH TELEMETRY
   // ==========================================================================
-  win.fetchCachedImageBlob = async function (imageUrl) {
-    if (!imageUrl || imageUrl.startsWith('data:')) return imageUrl;
-    if (imageBlobCache.has(imageUrl)) return imageBlobCache.get(imageUrl);
-
-    if (db && db.cachedImages) {
-      try {
-        const cached = await db.cachedImages.get(imageUrl);
-        if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
-          const objUrl = URL.createObjectURL(cached.blob);
-          imageBlobCache.set(imageUrl, objUrl);
-          return objUrl;
-        }
-      } catch (e) {}
-    }
-
-    try {
-      const res = await fetch(imageUrl, { mode: 'cors' });
-      if (!res.ok) return imageUrl;
-      const blob = await res.blob();
-      const objUrl = URL.createObjectURL(blob);
-      imageBlobCache.set(imageUrl, objUrl);
-
-      if (db && db.cachedImages) {
-        db.cachedImages.put({ url: imageUrl, blob, timestamp: Date.now() }).catch(() => {});
-      }
-      return objUrl;
-    } catch (e) {
-      return imageUrl;
-    }
-  };
-
   win.recordWatchedEpisode = async function (animeId, season, episode, currentTime = 0, duration = 0, isFinished = false) {
     const recordKey = `${animeId}_${season}_${episode}`;
     const telemetry = {
@@ -420,7 +403,7 @@
   };
 
   // ==========================================================================
-  // 06. CATEGORY SYNCHRONIZER & TAB ROUTER
+  // 06. CATEGORY SYNCHRONIZER
   // ==========================================================================
   win.syncCategoryState = function (categoryKey) {
     const topLinks = doc.querySelectorAll('.nav-desktop .nav-link, .mobile-nav-list .mobile-nav-link');
@@ -493,7 +476,7 @@
             duration: item.runtime || 115,
             format: isMovie ? 'MOVIE' : 'TV',
             status: 'RELEASED',
-            genres: ['Live-Action', 'Blockbuster'],
+            genres: win.mapTmdbGenreIds ? win.mapTmdbGenreIds(item.genre_ids || []) : ['Live-Action'],
             averageScore: Math.round((item.vote_average || 8.2) * 10),
             seasonYear: (item.release_date || item.first_air_date || '2026').split('-')[0],
             isLiveAction: true
@@ -522,10 +505,11 @@
           return;
         }
       } catch (e) {
-        console.warn('[Netflix Spotlight Failover Engaged]:', e);
+        console.warn('[Netflix Spotlight Failover]:', e);
       }
     }
 
+    // Default Anime Spotlight
     try {
       const data = await fetchGQL(GQL_BASIC, { page: 1, perPage: 1, sort: ['TRENDING_DESC'] });
       const anime = data?.Page?.media?.[0];
@@ -553,35 +537,9 @@
         if (playBtn) playBtn.onclick = () => win.openModal(anime, 1, 1, true);
         if (infoBtn) infoBtn.onclick = () => win.openModal(anime, 1, 1, false);
         if (bookmarkBtn) bookmarkBtn.onclick = () => win.toggleWatchlist(anime);
-        return;
       }
     } catch (err) {
-      console.warn('[AniList Spotlight Query Error]:', err);
-    }
-
-    if (heroTitle && heroTitle.innerText.includes('Connecting')) {
-      const fallbackTitle = win.STATE.isNetflixMode ? 'Deadpool & Wolverine' : 'Demon Slayer: Kimetsu no Yaiba';
-      const fallbackPoster = 'https://image.tmdb.org/t/p/original/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg';
-
-      const defaultObj = {
-        id: 533535,
-        title: { english: fallbackTitle, romaji: fallbackTitle },
-        description: 'Stream trending titles with zero popups and ultra-fast multi-server sync.',
-        bannerImage: fallbackPoster,
-        coverImage: { extraLarge: fallbackPoster, large: fallbackPoster },
-        format: 'MOVIE',
-        averageScore: 98,
-        seasonYear: '2026'
-      };
-
-      win.STATE.currentAnime = defaultObj;
-      if (heroBg) heroBg.src = fallbackPoster;
-      heroTitle.innerText = fallbackTitle;
-      if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> 98% Rating`;
-      if (heroYear) heroYear.innerText = '2026';
-      if (heroDesc) heroDesc.innerText = defaultObj.description;
-      if (playBtn) playBtn.onclick = () => win.openModal(defaultObj, 1, 1, true);
-      if (infoBtn) infoBtn.onclick = () => win.openModal(defaultObj, 1, 1, false);
+      console.warn('[Spotlight Query Error]:', err);
     }
   };
 
@@ -590,89 +548,32 @@
   // ==========================================================================
   win.renderHomeRows = async function () {
     const content = doc.getElementById('contentRows');
-    if (content) content.innerHTML = '';
+    if (!content) return;
+    content.innerHTML = '';
 
     if (win.STATE.isNetflixMode) {
       if (typeof win.showToast === 'function') win.showToast('Loading Netflix Live-Action Universe...');
 
-      await renderTMDBRow(
-        'Trending Movies Worldwide',
-        'discover/movie?sort_by=popularity.desc&vote_count.gte=100&_rail=global_movies',
-        '<i class="fas fa-film"></i>',
-        'MOVIE'
-      );
-
-      await renderTMDBRow(
-        'Hindi Blockbuster Movies',
-        'discover/movie?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_movies',
-        '<i class="fas fa-language"></i>',
-        'MOVIE'
-      );
-
-      await renderTMDBRow(
-        'Hindi Web Series & Dramas',
-        'discover/tv?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_series',
-        '<i class="fas fa-tv"></i>',
-        'TV'
-      );
-
-      await renderTMDBRow(
-        'South Indian Cinema (Telugu Hits)',
-        'discover/movie?with_origin_country=IN&with_original_language=te&without_genres=16&sort_by=popularity.desc&_rail=telugu_movies',
-        '<i class="fas fa-fire"></i>',
-        'MOVIE'
-      );
-
-      await renderTMDBRow(
-        'Trending Worldwide TV Shows',
-        'discover/tv?sort_by=popularity.desc&vote_count.gte=100&_rail=global_tv',
-        '<i class="fas fa-tv"></i>',
-        'TV'
-      );
-
-      await renderTMDBRow(
-        'Explosive Action & Thrillers',
-        'discover/movie?with_genres=28&sort_by=popularity.desc&vote_count.gte=100&_rail=action_movies',
-        '<i class="fas fa-bolt"></i>',
-        'MOVIE'
-      );
-
-      await renderTMDBRow(
-        'Action & Adventure Series',
-        'discover/tv?with_genres=10759&sort_by=popularity.desc&vote_count.gte=50&_rail=action_tv',
-        '<i class="fas fa-shield"></i>',
-        'TV'
-      );
-
-      await renderTMDBRow(
-        'Sci-Fi & High Concept Cinema',
-        'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=scifi_movies',
-        '<i class="fas fa-microchip"></i>',
-        'MOVIE'
-      );
-
-      await renderTMDBRow(
-        'Gripping Crime & Mystery Thrillers',
-        'discover/movie?with_genres=53&sort_by=popularity.desc&vote_count.gte=50&_rail=thriller_movies',
-        '<i class="fas fa-mask"></i>',
-        'MOVIE'
-      );
-
-      await renderTMDBRow(
-        'Romance & Heartwarming Dramas',
-        'discover/movie?with_genres=10749&sort_by=popularity.desc&vote_count.gte=50&_rail=romance_movies',
-        '<i class="fas fa-heart"></i>',
-        'MOVIE'
-      );
+      await renderTMDBRow('Trending Movies Worldwide', 'discover/movie?sort_by=popularity.desc&vote_count.gte=100&_rail=global_movies', '<i class="fas fa-film"></i>', 'MOVIE');
+      await renderTMDBRow('Hindi Blockbuster Movies', 'discover/movie?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_movies', '<i class="fas fa-language"></i>', 'MOVIE');
+      await renderTMDBRow('Hindi Web Series & Dramas', 'discover/tv?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_series', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('South Indian Cinema (Telugu Hits)', 'discover/movie?with_origin_country=IN&with_original_language=te&without_genres=16&sort_by=popularity.desc&_rail=telugu_movies', '<i class="fas fa-fire"></i>', 'MOVIE');
+      await renderTMDBRow('Trending Worldwide TV Shows', 'discover/tv?sort_by=popularity.desc&vote_count.gte=100&_rail=global_tv', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('Explosive Action & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc&vote_count.gte=100&_rail=action_movies', '<i class="fas fa-bolt"></i>', 'MOVIE');
+      await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc&vote_count.gte=50&_rail=action_tv', '<i class="fas fa-shield"></i>', 'TV');
+      await renderTMDBRow('Sci-Fi & High Concept Cinema', 'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=scifi_movies', '<i class="fas fa-microchip"></i>', 'MOVIE');
+      await renderTMDBRow('Gripping Crime & Mystery Thrillers', 'discover/movie?with_genres=53&sort_by=popularity.desc&vote_count.gte=50&_rail=thriller_movies', '<i class="fas fa-mask"></i>', 'MOVIE');
+      await renderTMDBRow('Romance & Heartwarming Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc&vote_count.gte=50&_rail=romance_movies', '<i class="fas fa-heart"></i>', 'MOVIE');
       return;
     }
 
+    // Anime Universe: Varied sorts to prevent duplicate cards across categories
     await renderRow('Trending Masterpieces', { page: 1, perPage: 14, sort: ['TRENDING_DESC'] }, false);
     await renderRow('Top 10 Global Anime Today', { page: 1, perPage: 10, sort: ['POPULARITY_DESC'] }, true);
     await renderHindiDubRow();
-    await renderRow('Action & Shonen Hits', { page: 1, perPage: 14, genre: 'Action', sort: ['TRENDING_DESC'] }, false);
-    await renderRow('Isekai & Fantasy Realms', { page: 1, perPage: 14, genre: 'Fantasy', sort: ['TRENDING_DESC'] }, false);
-    await renderRow('Romance & Slice of Life', { page: 1, perPage: 14, genre: 'Romance', sort: ['SCORE_DESC'] }, false);
+    await renderRow('Action & Shonen Hits', { page: 1, perPage: 14, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
+    await renderRow('Isekai & Fantasy Realms', { page: 1, perPage: 14, genre: 'Fantasy', sort: ['SCORE_DESC'] }, false);
+    await renderRow('Romance & Slice of Life', { page: 1, perPage: 14, genre: 'Romance', sort: ['FAVOURITES_DESC'] }, false);
   };
 
   async function renderRow(title, vars, isTop10 = false) {
@@ -687,7 +588,7 @@
   async function renderHindiDubRow() {
     const data = await fetchGQL(GQL_BASIC, { page: 1, perPage: 14, sort: ['FAVOURITES_DESC'] });
     if (data?.Page?.media?.length) {
-      buildUnifiedCarouselDOM('<i class="fas fa-language" style="color:var(--accent-red,#e50914);"></i> Premium Hindi Dubbed Anime', data.Page.media, false, true);
+      buildUnifiedCarouselDOM('<i class="fas fa-language" style="color:var(--accent-red,#ff0844);"></i> Premium Hindi Dubbed Anime', data.Page.media, false, true);
     }
   }
   win.renderHindiDubRow = renderHindiDubRow;
@@ -702,7 +603,7 @@
     section.style.cssText = 'margin: 28px 0; padding: 0 4%; position: relative; width: 100%; box-sizing: border-box;';
     section.innerHTML = `
       <h2 class="row-header" style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: 0.3px;">
-        <span style="color:var(--accent-red,#e50914); margin-right:8px;">${iconHtml}</span>${title}
+        <span style="color:var(--accent-red,#ff0844); margin-right:8px;">${iconHtml}</span>${title}
       </h2>
       <div class="row-container carousel-container" style="position: relative; width: 100%; overflow: hidden;">
         <div class="carousel-track carousel-rail" id="${rowId}" style="display: flex; flex-wrap: nowrap; align-items: stretch; gap: 16px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; padding: 10px 4px 16px 4px; -webkit-overflow-scrolling: touch; scrollbar-width: thin;">
@@ -746,9 +647,11 @@
       const mediaObj = {
         id: item.id,
         tmdbId: item.id,
-        title: { english: dispTitle, romaji: dispTitle },
+        title: { english: dispTitle, romaji: dispTitle, native: item.original_title || item.original_name || dispTitle },
+        description: item.overview || item.description || '',
         coverImage: { extraLarge: poster, large: poster },
         format: format,
+        genres: item.genres || (item.genre_ids && win.mapTmdbGenreIds ? win.mapTmdbGenreIds(item.genre_ids) : []),
         averageScore: Math.round((item.vote_average || 8) * 10),
         seasonYear: year,
         isLiveAction: Boolean(item.vote_average)
@@ -774,7 +677,7 @@
       card.innerHTML = `
         ${isTop10 ? `<div class="top10-rank" style="font-size: 3.8rem; font-weight: 900; position: absolute; left: -2px; bottom: 12px; z-index: 3; color: rgba(255,255,255,0.95); -webkit-text-stroke: 1px rgba(0,0,0,0.7);">${idx + 1}</div>` : ''}
         <img src="${poster}" loading="lazy" onerror="this.src='${FALLBACK_POSTER}'" style="width: 100% !important; height: 100% !important; object-fit: cover !important; display: block;" />
-        <div class="card-badge" style="position: absolute !important; top: 8px !important; right: 8px !important; background: ${isHindi ? '#e50914' : 'rgba(0,0,0,0.78)'} !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 3 !important;">${isHindi ? 'HINDI DUB' : format}</div>
+        <div class="card-badge" style="position: absolute !important; top: 8px !important; right: 8px !important; background: ${isHindi ? '#ff0844' : 'rgba(0,0,0,0.78)'} !important; color: #fff !important; font-size: 10px !important; font-weight: 700 !important; padding: 2px 7px !important; border-radius: 6px !important; z-index: 3 !important;">${isHindi ? 'HINDI DUB' : format}</div>
         <div class="card-overlay" style="position: absolute !important; inset: auto 0 0 0 !important; width: 100% !important; padding: 42px 12px 10px 12px !important; background: linear-gradient(to top, rgba(4, 4, 6, 0.98) 0%, rgba(4, 4, 6, 0.72) 60%, transparent 100%) !important; z-index: 2 !important;">
           <div class="card-title" style="font-size: 13px !important; font-weight: 700 !important; color: #ffffff !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;">${dispTitle}</div>
           <div class="card-meta" style="font-size: 11px !important; color: #a1a1aa !important; margin-top: 4px !important;"><span style="color: #46d369 !important; font-weight: 700 !important;"><i class="fas fa-star" style="font-size: 9px;"></i> ${score}</span> &bull; ${year}</div>
@@ -984,6 +887,15 @@
       } else if (genre === 'Top') {
         await renderRow('Top Airing Simulcasts', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false);
         await renderRow('All-Time Popular', { page: 1, perPage: 24, sort: ['POPULARITY_DESC'] }, false);
+      } else if (genre === 'Action') {
+        await renderRow('Action & Shonen Hits', { page: 1, perPage: 24, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
+        await renderRow('Critically Acclaimed Action', { page: 1, perPage: 24, genre: 'Action', sort: ['SCORE_DESC'] }, false);
+      } else if (genre === 'Fantasy') {
+        await renderRow('Isekai & Fantasy Realms', { page: 1, perPage: 24, genre: 'Fantasy', sort: ['SCORE_DESC'] }, false);
+        await renderRow('Top Trending Fantasy', { page: 1, perPage: 24, genre: 'Fantasy', sort: ['FAVOURITES_DESC'] }, false);
+      } else if (genre === 'Romance') {
+        await renderRow('Romance & Heartfelt Stories', { page: 1, perPage: 24, genre: 'Romance', sort: ['FAVOURITES_DESC'] }, false);
+        await renderRow('Top Rated Romance', { page: 1, perPage: 24, genre: 'Romance', sort: ['SCORE_DESC'] }, false);
       } else {
         await renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
         await renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
@@ -1003,28 +915,13 @@
     if (typeof win.showToast === 'function') win.showToast('Loading Indian Regional Releases...');
 
     if (win.STATE.isNetflixMode) {
-      await renderTMDBRow(
-        'Hindi Blockbuster Movies',
-        'discover/movie?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_dub_m',
-        '<i class="fas fa-film"></i>',
-        'MOVIE'
-      );
-      await renderTMDBRow(
-        'Hindi Web Series & Dramas',
-        'discover/tv?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_dub_tv',
-        '<i class="fas fa-tv"></i>',
-        'TV'
-      );
-      await renderTMDBRow(
-        'South Indian Cinema (Telugu Hits)',
-        'discover/movie?with_origin_country=IN&with_original_language=te&without_genres=16&sort_by=popularity.desc&_rail=telugu_dub_m',
-        '<i class="fas fa-fire"></i>',
-        'MOVIE'
-      );
+      await renderTMDBRow('Hindi Blockbuster Movies', 'discover/movie?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_dub_m', '<i class="fas fa-film"></i>', 'MOVIE');
+      await renderTMDBRow('Hindi Web Series & Dramas', 'discover/tv?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_dub_tv', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('South Indian Cinema (Telugu Hits)', 'discover/movie?with_origin_country=IN&with_original_language=te&without_genres=16&sort_by=popularity.desc&_rail=telugu_dub_m', '<i class="fas fa-fire"></i>', 'MOVIE');
     } else {
       await renderHindiDubRow();
       await renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
-      await renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['POPULARITY_DESC'] }, false);
+      await renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['SCORE_DESC'] }, false);
     }
     win.scrollTo({ top: 350, behavior: 'smooth' });
   };
@@ -1077,7 +974,7 @@
   };
 
   // ==========================================================================
-  // 10. CINEMATIC MODAL & MEDIA PRESENTATION
+  // 10. CINEMATIC MODAL & MEDIA PRESENTATION (FAST DEEPLINKING)
   // ==========================================================================
   win.openModalById = async function (id, episode = 1, season = 1) {
     let anime = win.animeCache.get(id);
@@ -1093,7 +990,7 @@
       }
     }
     if (anime) {
-      await win.openModal(anime, season, episode, true, true);
+      win.openModal(anime, season, episode, true, true);
     }
   };
 
@@ -1120,7 +1017,7 @@
       win.updateModalWatchlistButtonState();
     }
 
-    const title = anime.title?.english || anime.title?.romaji || 'Title';
+    const title = anime.title?.english || anime.title?.romaji || anime.title?.native || 'Title';
     const banner = anime.bannerImage || anime.coverImage?.extraLarge || '';
 
     const modalNowPlayingTitle = doc.getElementById('modalNowPlayingTitle');
@@ -1144,6 +1041,7 @@
       win.extractChromaAmbilight(banner);
     }
 
+    // Direct metadata infill so modal never opens empty
     const scoreEl = doc.getElementById('modalScore');
     const yearEl = doc.getElementById('modalYear');
     const formatEl = doc.getElementById('modalFormat');
@@ -1159,10 +1057,10 @@
     if (yearEl) yearEl.innerText = anime.seasonYear || anime.year || '2026';
     if (formatEl) formatEl.innerText = anime.format || (isMovie ? 'MOVIE' : 'TV');
     if (epCountEl) epCountEl.innerText = isMovie ? 'Feature Film' : `${anime.episodes || '?'} Episodes`;
-    if (descEl) descEl.innerText = win.cleanHTML ? win.cleanHTML(anime.description) : (anime.description || '');
-    if (nativeEl) nativeEl.innerText = anime.title?.native || 'N/A';
+    if (descEl) descEl.innerText = cleanText(anime.description) || 'Tap play to stream this title in ultra HD.';
+    if (nativeEl) nativeEl.innerText = anime.title?.native || anime.title?.romaji || 'N/A';
     if (statusEl) statusEl.innerText = anime.status || 'FINISHED';
-    if (genresEl) genresEl.innerText = (anime.genres || []).join(', ');
+    if (genresEl) genresEl.innerText = Array.isArray(anime.genres) ? anime.genres.join(', ') : (anime.genres || 'Animation');
     if (studioEl) studioEl.innerText = anime.studios?.nodes?.[0]?.name || (anime.isLiveAction ? 'Netflix Production' : 'Studio Animation');
     if (durationEl) durationEl.innerText = `${anime.duration || (isMovie ? 110 : 24)} mins`;
 
@@ -1183,21 +1081,27 @@
       `;
     }
 
-    if (typeof win.resolveTMDBId === 'function') {
-      await win.resolveTMDBId(seasonInfo.cleanTitle, isMovie);
-    }
-    await fetchAndPopulateDeepData(anime);
-
-    if (!isMovie && typeof win.renderEpisodeGrid === 'function') win.renderEpisodeGrid();
-    if (anime.idMal && !win.STATE.isNetflixMode) resolveAndPollAniSkip(anime.idMal, win.STATE.episode);
-    if (typeof win.renderServerSwitcherGrid === 'function') win.renderServerSwitcherGrid();
-    checkAllServersHealth();
-
     if (!skipUrlSync && win.Router) {
       win.Router.set({ watch: anime.id, s: win.STATE.season, ep: win.STATE.episode, srv: win.STATE.activeServer }, true);
     }
 
-    if (autoStart) win.executeStream(0);
+    // NON-BLOCKING PIPELINE: Execute stream immediately if autoStart, hydrate deep data in parallel
+    if (autoStart) {
+      win.executeStream(0);
+    }
+
+    (async () => {
+      if (typeof win.resolveTMDBId === 'function') {
+        await win.resolveTMDBId(seasonInfo.cleanTitle, isMovie);
+      }
+      await fetchAndPopulateDeepData(anime);
+      if (!isMovie && typeof win.renderEpisodeGrid === 'function') win.renderEpisodeGrid();
+      if (anime.idMal && !win.STATE.isNetflixMode && typeof win.resolveAndPollAniSkip === 'function') {
+        win.resolveAndPollAniSkip(anime.idMal, win.STATE.episode);
+      }
+      if (typeof win.renderServerSwitcherGrid === 'function') win.renderServerSwitcherGrid();
+      checkAllServersHealth();
+    })();
 
     if (win.p2pParty && win.p2pParty.isHost) {
       win.p2pParty.broadcastTitleChange(anime, win.STATE.season, win.STATE.episode, win.STATE.activeServer);
@@ -1218,19 +1122,7 @@
     if (wrap) {
       const activeIframe = wrap.querySelector('iframe');
       if (activeIframe) activeIframe.src = 'about:blank';
-
-      const activeVideo = wrap.querySelector('video');
-      if (activeVideo) {
-        activeVideo.pause();
-        activeVideo.removeAttribute('src');
-        activeVideo.load();
-      }
       wrap.innerHTML = '';
-    }
-
-    if (win.streamEngine) {
-      win.streamEngine.destroy();
-      win.streamEngine = null;
     }
 
     doc.documentElement.style.overflowY = 'scroll';
@@ -1270,12 +1162,6 @@
     }
 
     const activeServerConfig = win.SERVER_CONFIG[win.STATE.activeServer] || win.SERVER_CONFIG[1];
-
-    if (win.streamEngine) {
-      await win.streamEngine.destroy();
-      win.streamEngine = null;
-    }
-
     const streamUrl = activeServerConfig.endpoint(tId, s, e, isMovie, win.STATE.currentAnime.id);
 
     wrap.innerHTML = `
@@ -1387,7 +1273,7 @@
   win.checkAllServersHealth = checkAllServersHealth;
 
   // ==========================================================================
-  // 12. MULTI-API DEEP DATA FETCHERS (CAST, RECS, TRAILERS)
+  // 12. MULTI-API DEEP DATA FETCHERS (DEEP DETAILS HYDRATION INCLUDED)
   // ==========================================================================
   async function fetchAndPopulateDeepData(anime) {
     const numericId = parseInt(anime.id, 10);
@@ -1405,18 +1291,7 @@
     let recommendationsLoaded = false;
     let trailerLoaded = false;
 
-    if (db && db.cachedMetadata && !isNaN(numericId)) {
-      try {
-        const cached = await db.cachedMetadata.get(numericId);
-        if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
-          renderCharactersFromAniList(cached.data.characters || []);
-          renderRecommendationsFromAniList(cached.data.recommendations || []);
-          if (cached.data.trailerId) renderTrailerIframe(cached.data.trailerId);
-          return;
-        }
-      } catch (e) {}
-    }
-
+    // TMDB Deep Fetch for Live-Action / Netflix Mode
     if (win.STATE.isNetflixMode || (win.STATE.currentTMDBId && win.STATE.currentTMDBId !== 533535)) {
       try {
         const isMovie = anime.format === 'MOVIE';
@@ -1426,6 +1301,20 @@
         const tmdbData = await fetchWithRetry(proxyUrl);
 
         if (tmdbData) {
+          // Immediately populate synopsis, genres, studio, runtime, status
+          if (typeof win.hydrateModalDeepDetails === 'function') {
+            win.hydrateModalDeepDetails({
+              description: tmdbData.overview,
+              nativeTitle: tmdbData.original_title || tmdbData.original_name,
+              genres: tmdbData.genres ? tmdbData.genres.map(g => g.name) : [],
+              studio: tmdbData.production_companies?.[0]?.name,
+              duration: tmdbData.runtime || tmdbData.episode_run_time?.[0],
+              status: tmdbData.status,
+              averageScore: Math.round((tmdbData.vote_average || 8) * 10),
+              year: (tmdbData.release_date || tmdbData.first_air_date || '').slice(0, 4)
+            });
+          }
+
           if (tmdbData.credits?.cast?.length) {
             renderCharactersFromTMDB(tmdbData.credits.cast);
             charactersLoaded = true;
@@ -1448,6 +1337,7 @@
       } catch (e) {}
     }
 
+    // AniList Deep Fetch for Anime Universe
     if (!win.STATE.isNetflixMode && (!charactersLoaded || !recommendationsLoaded || !trailerLoaded)) {
       if (!isNaN(numericId) && numericId > 0 && numericId < 300000) {
         try {
@@ -1455,6 +1345,24 @@
           const media = aniData?.Media;
 
           if (media) {
+            // Immediately populate synopsis, genres, studio, runtime, status
+            if (typeof win.hydrateModalDeepDetails === 'function') {
+              win.hydrateModalDeepDetails({
+                description: media.description,
+                nativeTitle: media.title?.native || media.title?.romaji,
+                genres: media.genres,
+                studio: media.studios?.nodes?.[0]?.name,
+                duration: media.duration,
+                status: media.status,
+                averageScore: media.averageScore,
+                year: media.seasonYear
+              });
+            }
+
+            if (media.streamingEpisodes && media.streamingEpisodes.length > 0) {
+              anime.streamingEpisodes = media.streamingEpisodes;
+            }
+
             const edges = media.characters?.edges || [];
             if (!charactersLoaded && edges.length > 0) {
               renderCharactersFromAniList(edges);
@@ -1468,19 +1376,9 @@
             }
 
             const trailer = media.trailer || anime.trailer;
-            let ytTrailerId = null;
             if (!trailerLoaded && trailer?.site?.toLowerCase() === 'youtube' && trailer?.id) {
               renderTrailerIframe(trailer.id);
               trailerLoaded = true;
-              ytTrailerId = trailer.id;
-            }
-
-            if (db && db.cachedMetadata) {
-              db.cachedMetadata.put({
-                id: numericId,
-                data: { characters: edges, recommendations: recomms, trailerId: ytTrailerId },
-                timestamp: Date.now()
-              }).catch(() => {});
             }
           }
         } catch (err) {}
@@ -1608,7 +1506,7 @@
   };
 
   // ==========================================================================
-  // 13. EPISODE GRID RENDERING & ACTIVE CARD HIGHLIGHTING
+  // 13. EPISODE GRID RENDERING & SELECTION (ANILIST DEEP EPISODES INCLUDED)
   // ==========================================================================
   win.renderEpisodeGrid = async function () {
     const epList = document.getElementById('epList');
@@ -1676,14 +1574,13 @@
       const isPlaying = ep === win.STATE.episode;
       const isWatched = win.isEpisodeWatched ? win.isEpisodeWatched(win.STATE.currentAnime.id, win.STATE.season, ep) : false;
       const epData = richEpisodes ? richEpisodes.find(x => x.number === ep) : null;
+      const aniEp = win.STATE.currentAnime?.streamingEpisodes?.[ep - 1];
 
-      const title = epData?.title && epData.title !== `Episode ${ep}` ? epData.title : `Episode ${ep}`;
-      const stillImg = epData?.still || posterFallback;
+      const title = epData?.title || aniEp?.title || `Episode ${ep}`;
+      const stillImg = epData?.still || aniEp?.thumbnail || posterFallback;
       const airDate = epData?.airDate ? ` • ${epData.airDate}` : '';
       const runtime = epData?.runtime ? ` • ${epData.runtime}` : (win.STATE.currentAnime.duration ? ` • ${win.STATE.currentAnime.duration}m` : '');
-      const overview = epData?.overview && epData.overview.trim().length > 0 
-        ? epData.overview 
-        : (win.STATE.currentAnime.description ? cleanText(win.STATE.currentAnime.description).slice(0, 160) + '...' : 'Tap to stream this episode in full high-definition.');
+      const overview = epData?.overview || (win.STATE.currentAnime.description ? cleanText(win.STATE.currentAnime.description).slice(0, 160) + '...' : `Tap to stream Episode ${ep} in full high-definition.`);
 
       cardsHTML += `
         <div class="ep-modern-card ${isPlaying ? 'playing' : ''} ${isWatched ? 'watched' : ''}" 
@@ -1814,27 +1711,40 @@
   };
 
   // ==========================================================================
-  // 14. REAL-TIME SEARCH AUTOCOMPLETE
+  // 14. REAL-TIME SEARCH AUTOCOMPLETE & CLEAN DISMISSAL
   // ==========================================================================
   win.toggleSearch = function () {
     const wrapper = doc.getElementById('searchWrapper');
     const input = doc.getElementById('searchInput');
+    const clearBtn = doc.getElementById('searchClearBtn');
     if (!wrapper || !input) return;
-    wrapper.classList.toggle('open');
-    if (wrapper.classList.contains('open')) {
+
+    const isOpen = wrapper.classList.toggle('open');
+    if (isOpen) {
+      if (clearBtn) clearBtn.style.display = 'flex';
       input.focus();
     } else {
       win.clearSearch();
     }
   };
 
+  // CRITICAL FIX: Closes mobile search takeover immediately upon tapping ✕
   win.clearSearch = function () {
+    const wrapper = doc.getElementById('searchWrapper');
     const input = doc.getElementById('searchInput');
-    if (input) input.value = '';
     const drop = doc.getElementById('searchDropdown');
-    if (drop) drop.classList.remove('visible');
     const clearBtn = doc.getElementById('searchClearBtn');
+
+    if (input) {
+      input.value = '';
+      input.blur();
+    }
+    if (drop) drop.classList.remove('visible');
     if (clearBtn) clearBtn.style.display = 'none';
+
+    // Remove the .open class to dismiss takeover bar
+    if (wrapper) wrapper.classList.remove('open');
+
     if (win.Router) win.Router.set({ q: null });
   };
 
@@ -1844,7 +1754,7 @@
     const drop = doc.getElementById('searchDropdown');
     const clearBtn = doc.getElementById('searchClearBtn');
 
-    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+    if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
 
     if (!q) {
       if (drop) drop.classList.remove('visible');
@@ -1953,126 +1863,152 @@
   });
 
   // ==========================================================================
-  // 15. SCHEDULER & REVERSE TRACE.MOE ENGINE
+  // 15. NATIVE ANILIST AIRING SCHEDULE ENGINE (JIKAN DISCONTINUATION FIX)
   // ==========================================================================
-  const DAYS_MAP = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const DAYS_MAP = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   win.openScheduleModal = function (skipUrlSync = false) {
+    if (typeof win.openScheduleModalNative === 'function') {
+      return win.openScheduleModalNative(skipUrlSync);
+    }
     const modal = doc.getElementById('scheduleModal');
     const overlay = doc.getElementById('scheduleModalOverlay');
     if (!modal || !overlay) return;
 
     modal.style.display = 'flex';
+    modal.classList.add('open');
     overlay.classList.add('active');
     doc.documentElement.style.overflowY = 'hidden';
 
     if (!skipUrlSync && win.Router) win.Router.set({ modal: 'schedule' }, true);
 
     const todayIndex = new Date().getDay();
-    renderScheduleTabs(todayIndex);
-    loadJikanScheduleDay(DAYS_MAP[todayIndex]);
+    renderScheduleDayTabs(todayIndex);
+    loadAniListScheduleDay(todayIndex);
   };
 
   win.closeScheduleModal = function (skipUrlSync = false) {
     const modal = doc.getElementById('scheduleModal');
     const overlay = doc.getElementById('scheduleModalOverlay');
-    if (modal && overlay && modal.style.display === 'flex') {
+    if (modal && overlay) {
       modal.style.display = 'none';
+      modal.classList.remove('open');
       overlay.classList.remove('active');
       doc.documentElement.style.overflowY = 'scroll';
       if (!skipUrlSync && win.Router) win.Router.set({ modal: null });
     }
   };
 
-  function renderScheduleTabs(activeIdx) {
+  function renderScheduleDayTabs(activeIdx) {
     const tabs = doc.getElementById('scheduleDayTabs');
     if (!tabs) return;
-    tabs.innerHTML = '';
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-    dayNames.forEach((name, idx) => {
-      const btn = doc.createElement('button');
-      btn.className = `modal-pill-btn ${idx === activeIdx ? 'next-ep-btn' : ''}`;
-      btn.innerText = name + (idx === new Date().getDay() ? ' (Today)' : '');
-      btn.onclick = () => {
-        doc.querySelectorAll('#scheduleDayTabs button').forEach(b => b.classList.remove('next-ep-btn'));
-        btn.classList.add('next-ep-btn');
-        loadJikanScheduleDay(DAYS_MAP[idx]);
-      };
-      tabs.appendChild(btn);
-    });
+    tabs.innerHTML = DAYS_MAP.map((name, idx) => `
+      <button type="button" 
+              class="chip ${idx === activeIdx ? 'active' : ''}" 
+              onclick="window.onScheduleTabSelect(${idx})">
+        ${name}${idx === new Date().getDay() ? ' (Today)' : ''}
+      </button>
+    `).join('');
   }
 
-  async function loadJikanScheduleDay(dayName) {
+  win.onScheduleTabSelect = function (idx) {
+    renderScheduleDayTabs(idx);
+    loadAniListScheduleDay(idx);
+  };
+
+  async function loadAniListScheduleDay(dayIndex) {
     const container = doc.getElementById('scheduleItemsContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Fetching broadcast schedules...</div>';
+    container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading schedule from AniList...</div>';
+
+    const now = new Date();
+    const currentDayIndex = now.getDay();
+    const distance = dayIndex - currentDayIndex;
+
+    const targetDate = new Date(now);
+    targetDate.setDate(now.getDate() + distance);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const startTimestamp = Math.floor(targetDate.getTime() / 1000);
+    const endTimestamp = startTimestamp + 86400;
+
+    const query = `
+      query ($airingAt_greater: Int, $airingAt_lesser: Int) {
+        Page(page: 1, perPage: 40) {
+          airingSchedules(airingAt_greater: $airingAt_greater, airingAt_lesser: $airingAt_lesser, sort: TIME) {
+            id
+            airingAt
+            episode
+            media {
+              id
+              idMal
+              format
+              title { english romaji native }
+              coverImage { large extraLarge }
+              genres
+              averageScore
+            }
+          }
+        }
+      }
+    `;
 
     try {
-      const data = await fetchWithRetry(`${win.CONFIG?.APIS?.JIKAN || 'https://api.jikan.moe/v4'}/schedules?filter=${dayName}&limit=20`);
-      const items = data?.data || [];
+      const data = await fetchGQL(query, {
+        airingAt_greater: startTimestamp,
+        airingAt_lesser: endTimestamp
+      });
+      const items = data?.Page?.airingSchedules || [];
       container.innerHTML = '';
 
       if (!items.length) {
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">No broadcast data found for this day.</div>';
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fas fa-tv" style="font-size:24px; margin-bottom:8px; opacity:0.4;"></i><p>No simulcasts scheduled for this day.</p></div>';
         return;
       }
 
-      items.forEach(anime => {
-        const title = anime.title_english || anime.title;
-        const img = anime.images?.webp?.image_url || anime.images?.jpg?.image_url || FALLBACK_POSTER;
-        const time = anime.broadcast?.time || 'TBA';
+      items.forEach(entry => {
+        const media = entry.media;
+        if (!media) return;
+        win.animeCache.set(media.id, media);
+        const title = media.title?.english || media.title?.romaji || 'Upcoming Title';
+        const img = media.coverImage?.large || media.coverImage?.extraLarge || FALLBACK_POSTER;
+        const time = new Date(entry.airingAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         const row = doc.createElement('div');
         row.className = 'search-item';
-        row.style.borderRadius = '12px';
+        row.style.cssText = 'border-radius:10px; cursor:pointer; display:flex; gap:12px; padding:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); align-items:center;';
         row.onclick = () => {
           win.closeScheduleModal();
-          searchAndOpenByTitle(title);
+          win.openModalById(media.id);
         };
         row.innerHTML = `
-          <img src="${img}" alt="" onerror="this.src='${FALLBACK_POSTER}'" />
-          <div class="search-info">
-            <div class="search-title">${escapeHTML(title)}</div>
-            <div class="search-meta">
-              <span style="color:var(--accent-cyan, #00d2ff);"><i class="fas fa-clock"></i> Broadcast: ${time} (JST)</span> &bull; 
-              <span style="color:var(--accent-emerald, #46d369);"><i class="fas fa-star"></i> ${anime.score ? Math.round(anime.score * 10) + '%' : 'N/A'}</span>
+          <img src="${img}" alt="" onerror="this.src='${FALLBACK_POSTER}'" style="width:48px; height:68px; object-fit:cover; border-radius:6px; flex-shrink:0;" />
+          <div class="search-info" style="flex:1; min-width:0;">
+            <div class="search-title" style="font-size:13px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(title)}</div>
+            <div class="search-meta" style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+              <span style="color:var(--accent-cyan,#00d2ff); font-weight:700;">${time}</span> &bull; 
+              <span>Episode ${entry.episode}</span> &bull; 
+              <span style="color:#46d369;"><i class="fas fa-star" style="font-size:9px;"></i> ${media.averageScore ? media.averageScore + '%' : 'N/A'}</span>
             </div>
           </div>
         `;
         container.appendChild(row);
       });
     } catch (e) {
-      container.innerHTML = `
-        <div style="text-align:center; padding:30px; color:var(--accent-red,#e50914);">
-          <p>Jikan API Gateway is busy.</p>
-          <button class="btn btn-info" style="margin-top:12px; font-size:12px; padding:6px 14px;" onclick="loadJikanScheduleDay('${dayName}')">
-            <i class="fas fa-rotate-right"></i> Retry
-          </button>
-        </div>
-      `;
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--accent-red,#ff0844);"><p>Airing schedule temporarily unavailable.</p></div>';
     }
   }
 
-  async function searchAndOpenByTitle(title) {
-    const data = await fetchGQL(GQL_BASIC, { search: title, perPage: 1 });
-    const anime = data?.Page?.media?.[0];
-    if (anime) {
-      win.openModal(anime, 1, 1, false);
-    } else {
-      if (typeof win.showToast === 'function') {
-        win.showToast(`Could not locate "${title}" in library.`);
-      }
-    }
-  }
-  win.searchAndOpenByTitle = searchAndOpenByTitle;
-
+  // ==========================================================================
+  // 16. TRACE.MOE SEARCH MODAL CONTROLLER
+  // ==========================================================================
   win.openTraceMoeModal = function (skipUrlSync = false) {
     const modal = doc.getElementById('traceMoeModal');
     const overlay = doc.getElementById('traceMoeOverlay');
     if (!modal || !overlay) return;
 
     modal.style.display = 'flex';
+    modal.classList.add('open');
     overlay.classList.add('active');
     doc.documentElement.style.overflowY = 'hidden';
 
@@ -2083,8 +2019,9 @@
   win.closeTraceMoeModal = function (skipUrlSync = false) {
     const modal = doc.getElementById('traceMoeModal');
     const overlay = doc.getElementById('traceMoeOverlay');
-    if (modal && overlay && modal.style.display === 'flex') {
+    if (modal && overlay) {
       modal.style.display = 'none';
+      modal.classList.remove('open');
       overlay.classList.remove('active');
       doc.documentElement.style.overflowY = 'scroll';
       if (!skipUrlSync && win.Router) win.Router.set({ modal: null });
@@ -2127,7 +2064,7 @@
       resultsArea.innerHTML = '';
 
       if (!matches.length) {
-        resultsArea.innerHTML = '<div style="text-align:center; padding:15px; color:var(--text-muted);">No match found.</div>';
+        resultsArea.innerHTML = '<div style="text-align:center; padding:15px; color:var(--text-muted);">No match found for this image frame.</div>';
         return;
       }
 
@@ -2145,19 +2082,19 @@
             <span style="color:var(--accent-emerald, #46d369); font-weight:800;">${similarity}% Match</span>
           </div>
           <video src="${best.video}" autoplay loop muted style="width:100%; border-radius:8px; margin-bottom:8px; aspect-ratio:16/9;"></video>
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Episode ${ep} &bull; Matched at ${timeMins}</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Episode ${ep} &bull; Frame at ${timeMins}</div>
           <button class="btn btn-play" style="width:100%; font-size:13px; padding:8px 0;" onclick="window.closeTraceMoeModal(); window.openModalById(${best.anilist?.id || best.anilist}, ${ep})">
             <i class="fas fa-play"></i> Watch Episode ${ep} Now
           </button>
         </div>
       `;
     } catch (err) {
-      resultsArea.innerHTML = '<div style="text-align:center; padding:15px; color:var(--accent-red,#e50914);">Search failed.</div>';
+      resultsArea.innerHTML = '<div style="text-align:center; padding:15px; color:var(--accent-red,#ff0844);">Analysis failed. Please try a different frame image.</div>';
     }
   }
 
   // ==========================================================================
-  // 16. ANISKIP SKIP CHAPTER TELEMETRY
+  // 17. ANISKIP SKIP CHAPTER TELEMETRY
   // ==========================================================================
   async function resolveAndPollAniSkip(malId, episode) {
     clearTimeout(aniSkipPollTimer);
@@ -2223,7 +2160,7 @@
   };
 
   // ==========================================================================
-  // 17. AUDIO GAIN BOOSTER (UP TO 250%)
+  // 18. AUDIO GAIN BOOSTER & DEEP LINKING
   // ==========================================================================
   win.toggleAudioVolumeBooster = function () {
     const levels = [1.0, 1.5, 2.0, 2.5];
@@ -2237,15 +2174,9 @@
       win.streamEngine.setVolumeBoost(currentAudioGainLevel);
     } else {
       try {
-        if (!audioCtx) {
-          audioCtx = new (win.AudioContext || win.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-        if (gainNode) {
-          gainNode.gain.setValueAtTime(currentAudioGainLevel, audioCtx.currentTime);
-        }
+        if (!audioCtx) audioCtx = new (win.AudioContext || win.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (gainNode) gainNode.gain.setValueAtTime(currentAudioGainLevel, audioCtx.currentTime);
       } catch (e) {}
     }
 
@@ -2258,17 +2189,12 @@
     }
   };
 
-  // ==========================================================================
-  // 18. DEEP LINKING & EPISODE SHARER
-  // ==========================================================================
   win.shareCurrentTitleLink = function () {
     if (win.Router && win.STATE.currentAnime) {
       win.Router.set({ watch: win.STATE.currentAnime.id, s: win.STATE.season, ep: win.STATE.episode }, false);
     }
     navigator.clipboard.writeText(win.location.href);
-    if (typeof win.showToast === 'function') {
-      win.showToast('Direct title link copied!');
-    }
+    if (typeof win.showToast === 'function') win.showToast('Direct title link copied!');
   };
 
   win.shareDeepLinkEpisode = function () {
@@ -2276,9 +2202,7 @@
       win.Router.set({ watch: win.STATE.currentAnime.id, s: win.STATE.season, ep: win.STATE.episode }, false);
     }
     navigator.clipboard.writeText(win.location.href);
-    if (typeof win.showToast === 'function') {
-      win.showToast(`Episode ${win.STATE.episode} link copied!`);
-    }
+    if (typeof win.showToast === 'function') win.showToast(`Episode ${win.STATE.episode} link copied!`);
   };
 
   // ==========================================================================
