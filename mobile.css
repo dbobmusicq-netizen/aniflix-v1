@@ -1,8 +1,8 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
-   File: mobile.css | Version: 42.0.0 Enterprise Ultra-Sync
-   Architecture: Comfortable 60px Header, Reliable Search Takeover & Close,
-                 Unclipped Modal Nav Strip, Notch & Dynamic Viewport (100dvh)
+   File: mobile.css | Version: 43.0.0 Enterprise Ultra-Sync
+   Architecture: 60px Fixed Header, Fully Tappable Search Takeover & Close,
+                 Visible Modal Nav Strip, Native Smooth Horizontal Rails
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -55,7 +55,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     2. MOBILE HEADER (60px COMFORTABLE HEIGHT & RELIABLE SEARCH TAKEOVER)
+     2. MOBILE HEADER (60px COMFORTABLE HEIGHT & NEVER-WRAPPING ICONS)
      -------------------------------------------------------------------------- */
   .header {
     position: sticky !important;
@@ -125,8 +125,8 @@
 
   .mobile-nav-toggle {
     display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    align-items: center;
+    justify-content: center;
     background: transparent !important;
     border: none !important;
     color: #fff !important;
@@ -146,6 +146,7 @@
     justify-content: flex-end !important;
     flex: 1 0 auto !important;
     position: static !important;
+    flex-shrink: 0 !important;
   }
 
   .icon-btn {
@@ -258,7 +259,7 @@
     display: none !important;
   }
 
-  /* Clearly visible, highly tappable Close (X) button */
+  /* Dedicated Tappable Close / Clear Button */
   .search-wrapper.open .search-clear-icon {
     display: flex !important;
     align-items: center !important;
@@ -267,9 +268,9 @@
     right: 22px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    width: 32px !important;
-    height: 32px !important;
-    background: rgba(255, 255, 255, 0.1) !important;
+    width: 34px !important;
+    height: 34px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     border-radius: 50% !important;
     color: #fff !important;
     font-size: 14px !important;
@@ -279,7 +280,7 @@
   }
 
   .search-wrapper.open .search-clear-icon:active {
-    background: rgba(255, 8, 68, 0.5) !important;
+    background: rgba(255, 8, 68, 0.6) !important;
   }
 
   /* Dropdown results overlay below 60px header */
@@ -294,8 +295,8 @@
     background: rgba(9, 10, 16, 0.98) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     z-index: 99998 !important;
@@ -319,14 +320,14 @@
   }
 
   /* --------------------------------------------------------------------------
-     3. STREAMING MODAL & UNCLIPPED MODAL NAV STRIP (FIXES CLOSE BUTTON)
+     3. STREAMING MODAL & VISIBLE CLOSE BUTTON
      -------------------------------------------------------------------------- */
   .modal-container {
     padding: 0 !important;
     align-items: stretch !important;
     transform: none !important;
     overflow-y: auto !important;
-    z-index: 20000 !important; /* Higher than header */
+    z-index: 20000 !important;
   }
 
   .modal-overlay {
@@ -346,18 +347,18 @@
     display: flex !important;
     flex-direction: column !important;
     background: #040406 !important;
-    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-top: max(0px, env(safe-area-inset-top, 0px)) !important;
     z-index: 20001 !important;
     overflow: visible !important;
     box-shadow: none !important;
   }
 
-  /* Visible top navigation strip containing Close Button */
+  /* Unclipped top navigation strip containing Close Button */
   .modal-nav-strip {
     position: sticky !important;
     top: 0 !important;
-    height: 50px !important;
-    min-height: 50px !important;
+    height: 52px !important;
+    min-height: 52px !important;
     padding: 0 14px !important;
     padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
     padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
@@ -399,8 +400,8 @@
     height: 36px !important;
     min-width: 36px !important;
     border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
     color: #fff !important;
     font-size: 16px !important;
     display: inline-flex !important;
@@ -409,6 +410,7 @@
     cursor: pointer !important;
     flex-shrink: 0 !important;
     z-index: 20051 !important;
+    pointer-events: auto !important;
   }
 
   .btn-close-modal:active {
@@ -474,7 +476,7 @@
     min-height: 36px !important;
     padding: 6px 12px !important;
     font-size: 11px !important;
-    font-weight: 700 !important;
+    font-weight: 700;
     border-radius: 9999px !important;
   }
 
@@ -501,7 +503,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     4. HERO BILLBOARD & TOUCH TARGETS
+     4. HERO BILLBOARD
      -------------------------------------------------------------------------- */
   .hero {
     min-height: 420px;
@@ -662,7 +664,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     6. HIGH-DENSITY CARD VIEWPORTS
+     6. HIGH-DENSITY CARD VIEWPORTS (PRESERVES TOUCH-SCROLL & PREVENTS OVERLAP)
      -------------------------------------------------------------------------- */
   .content-rows {
     padding-top: 8px;
@@ -671,91 +673,106 @@
   }
 
   .row-section {
-    margin: 6px 0 !important;
+    margin: 10px 0 !important;
     padding: 0 12px !important;
   }
 
   .row-header {
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     font-weight: 800 !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 8px !important;
     gap: 6px;
     color: #fff !important;
   }
 
-  .carousel-track {
+  .carousel-track,
+  .carousel-rail {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    gap: 9px !important;
+    gap: 12px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    padding: 2px 0 8px 0 !important;
+    padding: 4px 0 12px 0 !important;
     padding-left: max(0px, env(safe-area-inset-left, 0px)) !important;
     padding-right: max(0px, env(safe-area-inset-right, 0px)) !important;
     scrollbar-width: none !important;
     -webkit-overflow-scrolling: touch !important;
+    align-items: stretch !important;
   }
 
-  .carousel-track::-webkit-scrollbar {
+  .carousel-track::-webkit-scrollbar,
+  .carousel-rail::-webkit-scrollbar {
     display: none !important;
   }
 
+  /* Fluid, unshrinkable card aspect ratio */
   .anime-card,
   .card.ui-card-locked {
-    flex: 0 0 114px !important;
-    width: 114px !important;
-    min-width: 114px !important;
-    max-width: 114px !important;
-    height: 170px !important;
-    border-radius: 8px !important;
+    flex: 0 0 125px !important;
+    width: 125px !important;
+    min-width: 125px !important;
+    max-width: 125px !important;
+    height: 185px !important;
+    border-radius: 10px !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7) !important;
     position: relative !important;
     overflow: hidden !important;
-    contain: paint !important;
     flex-shrink: 0 !important;
+    background: #16161c !important;
   }
 
   .anime-card img {
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
+    display: block !important;
   }
 
   .card-badge,
   .card-badge-top {
-    top: 5px !important;
-    right: 5px !important;
-    font-size: 8px !important;
+    position: absolute !important;
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 8.5px !important;
     font-weight: 800 !important;
-    padding: 2px 5px !important;
+    padding: 2px 6px !important;
     border-radius: 4px !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    z-index: 3 !important;
   }
 
   .card-overlay {
-    padding: 26px 8px 7px 8px !important;
-    border-radius: 0 0 8px 8px !important;
+    position: absolute !important;
+    inset: auto 0 0 0 !important;
+    width: 100% !important;
+    padding: 30px 8px 8px 8px !important;
+    border-radius: 0 0 10px 10px !important;
+    z-index: 2 !important;
+    box-sizing: border-box !important;
   }
 
   .card-title {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
-    line-height: 1.22 !important;
+    line-height: 1.25 !important;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
     width: 100% !important;
     display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .card-meta {
-    font-size: 9px !important;
+    font-size: 9.5px !important;
     margin-top: 3px !important;
     gap: 6px !important;
   }
 
   .top10-rank {
-    font-size: 2.5rem !important;
+    font-size: 2.8rem !important;
     left: 0px !important;
     bottom: 3px !important;
     -webkit-text-stroke: 1px rgba(0, 0, 0, 0.8) !important;
