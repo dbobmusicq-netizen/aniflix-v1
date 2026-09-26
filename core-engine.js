@@ -1,15 +1,15 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 58.3.0 Master Release)
+ * Production-Grade JavaScript Controller (Version 59.1.0 Enterprise Master)
  *
  * Core Fixes:
- *  - Official NxSha Embed Protocol integration with multi-lang fallback.
- *  - Deep metadata hydration: In-fills synopsis, genres, studio, original title.
- *  - Deep AniList episode integration (streamingEpisodes, titles & thumbnails).
- *  - Jikan replacement with native AniList Airing Schedules GraphQL.
- *  - Anime / Netflix mode separation: Race conditions on load eliminated.
- *  - Orthogonal sort matrices across category rails to prevent duplicates.
+ *  - Fixed Anime Mode blank catalog caused by <noscript> element evaluation.
+ *  - High-Speed Deeplinking: Non-blocking parallel pipeline execution.
+ *  - Complete Jikan API elimination: Direct native AniList Airing Schedules.
+ *  - Mobile UI Guard: 100dvh support, touch scrolling, and zero tap delay.
+ *  - Official NxSha & Filmu multi-language streaming parameters.
+ *  - Zero DOM-wipe protection shield & Rate-Limit Circuit Breaker.
  * ============================================================================
  */
 
@@ -149,8 +149,8 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
   const nativeFetch = window.fetch.bind(window);
 
   const GUARD = {
-    minDelay: 400,
-    maxConcurrent: 4,
+    minDelay: 280,
+    maxConcurrent: 5,
     maxRetries: 2,
     cacheTTL: 5 * 60 * 1000,
     queue: [],
@@ -216,7 +216,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
 
   async function runLimited(job) {
     while (GUARD.active >= GUARD.maxConcurrent) {
-      await sleep(80);
+      await sleep(60);
     }
 
     const now = Date.now();
@@ -288,12 +288,12 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
           if (response.status === 429) {
             let retryAfterMs = Number(response.headers.get('Retry-After')) * 1000;
             if (!Number.isFinite(retryAfterMs) || retryAfterMs <= 0) {
-              retryAfterMs = Math.min(18000, 3000 * Math.pow(2, attempt));
+              retryAfterMs = Math.min(14000, 2500 * Math.pow(2, attempt));
             }
-            retryAfterMs += Math.floor(Math.random() * 800);
+            retryAfterMs += Math.floor(Math.random() * 600);
 
             GUARD.circuitOpenUntil = Date.now() + retryAfterMs;
-            console.warn(`[AnimeDrift Guard] 429 rate limit hit. Throttling for ${retryAfterMs}ms.`);
+            console.warn(`[AnimeDrift Guard] 429 hit. Pausing for ${retryAfterMs}ms.`);
 
             await sleep(retryAfterMs);
             attempt++;
@@ -301,7 +301,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
           }
 
           if (response.status >= 500 && attempt < GUARD.maxRetries) {
-            const retryDelay = Math.min(8000, 1500 * Math.pow(2, attempt));
+            const retryDelay = Math.min(6000, 1000 * Math.pow(2, attempt));
             await sleep(retryDelay);
             attempt++;
             continue;
@@ -319,7 +319,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
           if (attempt >= GUARD.maxRetries) {
             throw error;
           }
-          const retryDelay = Math.min(8000, 1200 * Math.pow(2, attempt));
+          const retryDelay = Math.min(6000, 800 * Math.pow(2, attempt));
           await sleep(retryDelay);
           attempt++;
         }
@@ -339,12 +339,8 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
   }
 
   window.fetch = guardedFetch;
-
-  GUARD.clearCache = function () {
-    GUARD.cache.clear();
-  };
-
-  GUARD.clearRequest = function (url, method = 'GET', body = null) {
+  GUARD.clearCache = () => GUARD.cache.clear();
+  GUARD.clearRequest = (url, method = 'GET', body = null) => {
     GUARD.cache.delete(requestKey(url, method, body));
   };
 })();
@@ -364,7 +360,6 @@ const SERVER_CONFIG = {
     endpoint: (tmdbId, season, ep, isMovie, anilistId) => {
       const base = 'https://nxsha.space';
       const lang = (window.STATE?.defaultDubPref === 'HINDI') ? 'hi' : 'en';
-      // Official query parameters: server target priority without one_server lock ensures fallback
       const params = `server=MbPly-[Multi-Lang]&lang=${lang}&color=netflix&disable_app_ad=true&disable_dl_button=true`;
       return isMovie
         ? `${base}/embed/movie/${tmdbId}?${params}`
@@ -535,7 +530,7 @@ const DB = new LocalStorageDatabase();
 window.DB = DB;
 
 // ============================================================================
-// 6. BIDIRECTIONAL URL ROUTER & NAVIGATION CONTROLLER
+// 6. BIDIRECTIONAL URL ROUTER & HIGH-SPEED DEEPLINKING
 // ============================================================================
 const Router = {
   getURL() {
@@ -617,6 +612,7 @@ const Router = {
     if (p.modal === 'watchparty' && typeof window.openWatchPartyModal === 'function') window.openWatchPartyModal(true);
     if (p.modal === 'shortcuts' && typeof window.toggleShortcutsModal === 'function') window.toggleShortcutsModal(true, true);
 
+    // Fast-path non-blocking deeplinking
     if (p.watch) {
       const watchId = parseInt(p.watch, 10);
       const ep = parseInt(p.ep, 10) || 1;
@@ -625,9 +621,9 @@ const Router = {
       if (srv < 1 || srv > 4) srv = 1;
       STATE.activeServer = srv;
 
-      if (!isNaN(watchId) && (!STATE.currentAnime || STATE.currentAnime.id !== watchId)) {
+      if (!isNaN(watchId)) {
         if (typeof window.openModalById === 'function') {
-          await window.openModalById(watchId, ep, s);
+          window.openModalById(watchId, ep, s);
         }
       }
 
@@ -806,7 +802,7 @@ async function resolveAndPollAniSkip(malId, episodeNumber) {
 
   if (skipBtn) skipBtn.style.display = 'none';
 
-  await new Promise(resolve => setTimeout(resolve, 400));
+  await new Promise(resolve => setTimeout(resolve, 300));
   if (requestId !== __AniSkipRequest) return;
 
   try {
@@ -872,7 +868,6 @@ window.resolveTMDBId = async function (rawTitle, isMovie = false) {
     return;
   }
 
-  // Choose the best candidate title (English -> Romaji -> Native)
   const candidate = rawTitle ||
     STATE.currentAnime?.title?.english ||
     STATE.currentAnime?.title?.romaji ||
@@ -883,7 +878,6 @@ window.resolveTMDBId = async function (rawTitle, isMovie = false) {
     return;
   }
 
-  // Aggressive cleaner: strips Arc names, Cour, Part, and Season suffixes
   let cleanQuery = candidate
     .replace(/:\s*[^:]+$/, '')
     .replace(/\b(?:part|cour|season|the final season|entertainment district arc|swordsmith village arc)\b.*$/gi, '')
@@ -909,7 +903,6 @@ window.resolveTMDBId = async function (rawTitle, isMovie = false) {
     if (data?.results?.length > 0) {
       STATE.currentTMDBId = data.results[0].id;
     } else {
-      // Fallback 1: Try romaji if english was used
       const altCandidate = (candidate === STATE.currentAnime?.title?.english)
         ? STATE.currentAnime?.title?.romaji
         : STATE.currentAnime?.title?.english;
@@ -925,7 +918,6 @@ window.resolveTMDBId = async function (rawTitle, isMovie = false) {
         }
       }
 
-      // Fallback 2: Truncate to first 2 primary keywords
       const words = cleanQuery.split(' ').slice(0, 2).join(' ');
       if (words.length > 2 && words !== cleanQuery) {
         const fallbackRes = await fetch(buildSecureTmdbUrl(`search/${searchType}`, { query: words }));
@@ -1194,7 +1186,7 @@ window.applyQuickFilter = async function (filterKey, element) {
     }
   }
 
-  // Anime Universe: Varied sorts to eliminate repeating duplicate cards
+  // Anime Universe: Distinct sort priorities to prevent duplicate cards
   switch (norm) {
     case 'ALL':
       return window.navigateGenre(null, 'Home');
@@ -1607,7 +1599,7 @@ window.updateWatchlistBadge = function () {
 };
 
 // ============================================================================
-// 15. NATIVE ANILIST AIRING SCHEDULE ENGINE (JIKAN INDEPENDENT)
+// 15. NATIVE ANILIST AIRING SCHEDULE ENGINE (JIKAN DISCONTINUATION FIX)
 // ============================================================================
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -1617,6 +1609,7 @@ window.openScheduleModal = function (skipUrlSync = false) {
   if (!modal || !overlay) return;
 
   modal.classList.add('open');
+  modal.style.display = 'flex';
   overlay.classList.add('active');
   document.body.classList.add('scroll-locked');
   document.documentElement.classList.add('scroll-locked');
@@ -1636,6 +1629,7 @@ window.closeScheduleModal = function (skipUrlSync = false) {
   if (!modal || !overlay) return;
 
   modal.classList.remove('open');
+  modal.style.display = 'none';
   overlay.classList.remove('active');
   document.body.classList.remove('scroll-locked');
   document.documentElement.classList.remove('scroll-locked');
@@ -1653,7 +1647,7 @@ window.renderScheduleDayTabs = function (activeDayIndex) {
     <button type="button" 
             class="chip ${idx === activeDayIndex ? 'active' : ''}" 
             onclick="window.onScheduleDayTabClick(${idx})">
-      ${day}
+      ${day}${idx === new Date().getDay() ? ' (Today)' : ''}
     </button>
   `).join('');
 };
@@ -1704,6 +1698,7 @@ window.fetchAiringScheduleForDay = async function (dayIndex) {
             title {
               english
               romaji
+              native
             }
             coverImage {
               large
@@ -1742,7 +1737,7 @@ window.fetchAiringScheduleForDay = async function (dayIndex) {
   } catch (err) {
     console.error('[AnimeDrift Schedule] Failed:', err);
     container.innerHTML = `
-      <div style="text-align:center; padding:30px; color:var(--text-muted);">
+      <div style="text-align:center; padding:30px; color:var(--accent-red);">
         <i class="fas fa-triangle-exclamation" style="font-size:22px; margin-bottom:8px; color:var(--accent-red);"></i>
         <p>Could not fetch airing broadcast schedule. Please try again later.</p>
       </div>
@@ -1915,7 +1910,7 @@ window.addEventListener('message', (e) => {
 });
 
 // ============================================================================
-// 18. BOOTSTRAP ORCHESTRATOR (RACE-CONDITION FREE DISPATCH)
+// 18. BOOTSTRAP ORCHESTRATOR (GUARANTEED DISPATCH ON MOBILE & DESKTOP)
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
@@ -1939,7 +1934,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pill) pill.style.display = isPwaInstalled ? 'inline-flex' : 'none';
   } catch (e) {}
 
-  // 1. Sync URL state FIRST
+  // 1. Process URL routing FIRST
   if (window.Router) {
     try {
       await window.Router.syncUIFromURL();
@@ -1955,17 +1950,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 3. Dispatch Content Rows ONLY if not already rendered
+  // 3. Clear noscript fallback and ALWAYS dispatch Home Rows on load
   const contentRows = document.getElementById('contentRows');
-  if (contentRows && contentRows.children.length === 0) {
-    if (typeof window.renderHomeRows === 'function') {
-      window.renderHomeRows().catch((err) => {
-        console.warn('[Home Rows Error]:', err);
-      });
+  if (contentRows) {
+    const noscript = contentRows.querySelector('noscript');
+    if (noscript) noscript.remove();
+
+    // Check if rows are already populated (by URL sync/mode toggle)
+    const existingRails = contentRows.querySelectorAll('.content-row, .row-section');
+    if (existingRails.length === 0) {
+      if (typeof window.renderHomeRows === 'function') {
+        window.renderHomeRows().catch((err) => {
+          console.warn('[Home Rows Error]:', err);
+        });
+      }
     }
   }
 });
 
+// Mobile viewport height and resize handling
 window.addEventListener('resize', () => {
   STATE.isMobile = window.innerWidth <= 768;
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
 });
