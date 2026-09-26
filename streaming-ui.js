@@ -7,7 +7,7 @@
  *    streaming-ui.js
  *
  * Version:
- *    46.3.0 Complete Enterprise Engine — Full Tab, Randomizer & Node Fix
+ *    46.4.0 Strict TMDB v3 Compliance & Full UI Matrix
  * ============================================================================
  */
 
@@ -132,7 +132,7 @@
   }
 
   // ==========================================================================
-  // 04. VERCEL SERVERLESS PROXY URL BUILDER (STRICT PARAMETER ISOLATION)
+  // 04. VERCEL SERVERLESS PROXY URL BUILDER (STRICT TMDB v3 QUERY PARSING)
   // ==========================================================================
   function cleanTMDBUrl(endpointPath, customParams = {}) {
     let raw = String(endpointPath || '').replace(/^\/+/, '');
@@ -153,6 +153,7 @@
     const url = new URL('/api/tmdb', win.location.origin);
     url.searchParams.set('endpoint', path);
 
+    // Forward embedded query parameters individually
     if (queryStr) {
       const embedded = new URLSearchParams(queryStr);
       embedded.forEach((val, key) => {
@@ -160,9 +161,13 @@
       });
     }
 
+    // Official TMDB discover rules:
+    // Only apply global vote_count threshold to non-regional feeds so Indian titles aren't eliminated
     if (path.startsWith('discover/')) {
       if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
-      if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
+      if (!url.searchParams.has('vote_count.gte') && !url.searchParams.has('with_original_language')) {
+        url.searchParams.set('vote_count.gte', '15');
+      }
       if (!url.searchParams.has('include_adult')) url.searchParams.set('include_adult', 'false');
       if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
       if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
@@ -635,15 +640,47 @@
     if (win.STATE.isNetflixMode) {
       if (typeof win.showToast === 'function') win.showToast('Loading Netflix Live-Action Universe...');
 
+      // 1. Trending Global Movies
       await renderTMDBRow('Trending Movies Worldwide', 'discover/movie?sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
-      await renderTMDBRow('Bollywood Blockbusters & Hindi Cinema', 'discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-language"></i>', 'MOVIE');
-      await renderTMDBRow('Top Hindi Web Series & Dramas', 'discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
-      await renderTMDBRow('South Indian Cinema (Telugu & Tamil Hits)', 'discover/movie?with_original_language=te|ta&sort_by=popularity.desc', '<i class="fas fa-fire"></i>', 'MOVIE');
+
+      // 2. TRUE Bollywood & Hindi Cinema (Locked to Hindi language + India origin country)
+      await renderTMDBRow(
+        'Hindi Blockbuster Movies', 
+        'discover/movie?with_original_language=hi&with_origin_country=IN&sort_by=popularity.desc', 
+        '<i class="fas fa-language"></i>', 
+        'MOVIE'
+      );
+
+      // 3. TRUE Hindi Web Series & Dramas (Locked to Hindi TV series)
+      await renderTMDBRow(
+        'Hindi Web Series & Dramas', 
+        'discover/tv?with_original_language=hi&with_origin_country=IN&with_type=0|4&sort_by=popularity.desc', 
+        '<i class="fas fa-tv"></i>', 
+        'TV'
+      );
+
+      // 4. South Indian Cinema (Telugu & Tamil Hits)
+      await renderTMDBRow(
+        'Telugu & Tamil Indian Cinema', 
+        'discover/movie?with_original_language=te|ta&with_origin_country=IN&sort_by=popularity.desc', 
+        '<i class="fas fa-fire"></i>', 
+        'MOVIE'
+      );
+
+      // 5. Trending Global TV Shows
       await renderTMDBRow('Trending TV Shows Worldwide', 'discover/tv?sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+
+      // 6. Action & Adrenaline (Strict Movie Action=28, TV Action=10759)
       await renderTMDBRow('Explosive Action & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
       await renderTMDBRow('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc', '<i class="fas fa-shield"></i>', 'TV');
+
+      // 7. Sci-Fi (Strict Movie Sci-Fi=878, TV Sci-Fi=10765)
       await renderTMDBRow('Sci-Fi & High Concept Cinema', 'discover/movie?with_genres=878&sort_by=popularity.desc', '<i class="fas fa-microchip"></i>', 'MOVIE');
+
+      // 8. Crime & Mystery Thrillers (Movie Thriller=53, TV Crime=80)
       await renderTMDBRow('Gripping Crime & Mystery Thrillers', 'discover/movie?with_genres=53&sort_by=popularity.desc', '<i class="fas fa-mask"></i>', 'MOVIE');
+
+      // 9. Romance & Drama
       await renderTMDBRow('Romance & Heartwarming Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc', '<i class="fas fa-heart"></i>', 'MOVIE');
       return;
     }
@@ -711,7 +748,7 @@
     items.forEach((item, idx) => {
       if (!item) return;
 
-      const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || (!item.number_of_episodes && Boolean(item.title));
+      const isMovie = forceFormat === 'MOVIE' || item.media_type === 'movie' || Boolean(item.title && !item.name);
       const dispTitle = item.title?.english || item.title?.romaji || item.title || item.name || 'Title';
       const posterPath = item.poster_path || item.backdrop_path;
       const poster = item.coverImage?.extraLarge || item.coverImage?.large || (posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : FALLBACK_POSTER);
@@ -852,10 +889,9 @@
     if (typeof win.showToast === 'function') win.showToast('Loading Hindi & Regional Indian Releases...');
 
     if (win.STATE.isNetflixMode) {
-      await renderTMDBRow('Hindi Blockbuster Movies', 'discover/movie?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
-      await renderTMDBRow('Hindi Web Series & Dramas', 'discover/tv?with_original_language=hi&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
-      await renderTMDBRow('Telugu Action Blockbusters', 'discover/movie?with_original_language=te&sort_by=popularity.desc', '<i class="fas fa-fire"></i>', 'MOVIE');
-      await renderTMDBRow('Tamil Thrillers & Hits', 'discover/movie?with_original_language=ta&sort_by=popularity.desc', '<i class="fas fa-bolt"></i>', 'MOVIE');
+      await renderTMDBRow('Hindi Blockbuster Movies', 'discover/movie?with_original_language=hi&with_origin_country=IN&sort_by=popularity.desc', '<i class="fas fa-film"></i>', 'MOVIE');
+      await renderTMDBRow('Hindi Web Series & Dramas', 'discover/tv?with_original_language=hi&with_origin_country=IN&with_type=0|4&sort_by=popularity.desc', '<i class="fas fa-tv"></i>', 'TV');
+      await renderTMDBRow('Telugu & Tamil Indian Cinema', 'discover/movie?with_original_language=te|ta&with_origin_country=IN&sort_by=popularity.desc', '<i class="fas fa-fire"></i>', 'MOVIE');
     } else {
       await renderHindiDubRow();
       await renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
@@ -870,7 +906,7 @@
       if (normType === 'ALL') { win.syncCategoryState('ALL'); await win.renderHomeRows(); }
       else if (normType === 'MOVIES') await win.navigateGenre('Movies', 'Feature Films');
       else if (normType === 'TOP_AIRING' || normType === 'TV') await win.navigateGenre('TV', 'TV Series');
-      else if (normType === 'HINDI') await win.navigateGenre('Hindi', 'Hindi Dubs');
+      else if (normType === 'HINDI') await win.loadHindiDubbed();
       else if (normType === 'ACTION') await win.navigateGenre('Action', 'Action');
       else if (normType === 'THRILLER') await win.navigateGenre('Thriller', 'Thriller');
       else if (normType === 'SCI_FI') {
@@ -970,7 +1006,6 @@
     if (container) container.classList.add('active');
     doc.documentElement.style.overflowY = 'hidden';
 
-    // Activate Overview tab by default
     const overviewTabBtn = doc.querySelector('.modal-tabs .tab-btn') || doc.querySelector('[onclick*="tab-overview"]');
     if (typeof win.switchTab === 'function') {
       win.switchTab('tab-overview', overviewTabBtn);
@@ -1070,7 +1105,6 @@
     win.STATE.activeServer = targetId;
     localStorage.setItem(win.CONFIG.STORAGE_KEYS.ACTIVE_SERVER, targetId);
 
-    // Update active highlight and red glow on server buttons immediately
     doc.querySelectorAll('.server-node-btn').forEach(btn => {
       btn.classList.remove('active-server', 'playing');
       btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -1246,7 +1280,7 @@
         const parsed = data.episodes.map(ep => ({
           number: ep.episode_number,
           title: ep.name ? String(ep.name).trim() : `Episode ${ep.episode_number}`,
-          overview: ep.overview ? String(ep.overview).trim() : 'No synopsis available for this episode.',
+          overview: ep.overview ? String(ep.overview).trim() : 'Tap to stream this episode in full high-definition.',
           still: ep.still_path ? `https://image.tmdb.org/t/p/w500${ep.still_path}` : null,
           runtime: ep.runtime ? `${ep.runtime}m` : null,
           airDate: ep.air_date ? ep.air_date.slice(0, 4) : ''
@@ -1290,6 +1324,7 @@
 
     if (episodesTotalPill) episodesTotalPill.innerText = `Total ${total}`;
 
+    // Populate Season dropdown with complete franchise seasons
     if (seasonSelect) {
       seasonSelect.innerHTML = seasons.map(s => `
         <option value="${s.season_number}" ${s.season_number === win.STATE.season ? 'selected' : ''}>
@@ -1298,6 +1333,7 @@
       `).join('');
     }
 
+    // Populate Episode Range dropdown (1-50, 51-100, etc.)
     if (episodeRangeSelect) {
       episodeRangeSelect.innerHTML = '';
       const batches = Math.ceil(total / 50);
