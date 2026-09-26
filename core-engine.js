@@ -1,17 +1,7 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 46.8.0 Enterprise Release)
- *
- * Core Fixes & Enhancements:
- *  - Strict Sub-Query Isolation: Completely prevents '%3F' parameter corruption.
- *  - Regional Safe Discovery: Excludes 'vote_count.gte=15' for regional languages/countries.
- *  - Full Quick Filter Support: Seamless category handling for both Anime & Netflix modes.
- *  - Universal Fallback: Safe delegation to streaming-ui.js without duplicate executions.
- *  - Token-Bucket Leaky API Guard with Circuit Breaker (AniList / Kitsu / TMDB).
- *  - 4-Tier Stream Server Mirror Engine (NxSha Ultra, Filmu Native, VidCore, VidFast).
- *  - 24-bit Canvas Chroma Ambilight Extractor for reactive ambient glow.
- *  - Dexie.js IndexedDB offline progress storage & sync telemetry.
+ * Production-Grade JavaScript Controller (Version 58.0.0 Resilient Architecture)
  * ============================================================================
  */
 
@@ -52,7 +42,7 @@ const CONFIG = {
     ANILIST: 'https://graphql.anilist.co',
     KITSU: 'https://kitsu.io/api/edge',
     ANISKIP: 'https://api.aniskip.com/v2/skip-times',
-    TMDB_PROXY: '/api/tmdb'
+    TMDB_PROXY: '/api/tmdb' // Secure Vercel Serverless Edge Gateway
   },
   TMDB_GENRES: {
     ACTION: { movie: 28, tv: 10759 },
@@ -81,6 +71,7 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     rawPath = rawPath.replace(/^3\//, '');
   }
 
+  // Force clean separation of route path and query string to prevent %3F escaping
   let pathOnly = rawPath;
   let queryString = '';
 
@@ -95,6 +86,7 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
   const url = new URL(CONFIG.APIS.TMDB_PROXY, window.location.origin);
   url.searchParams.set('endpoint', pathOnly);
 
+  // Parse and append embedded query strings seamlessly
   if (queryString) {
     const embedded = new URLSearchParams(queryString);
     embedded.forEach((val, key) => {
@@ -102,13 +94,14 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     });
   }
 
-  // Set Discover Defaults safely without wiping out regional feeds
+  // Smart Discovery Defaults without dropping regional Indian titles
   if (pathOnly.startsWith('discover/')) {
     if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
     if (!url.searchParams.has('include_adult')) url.searchParams.set('include_adult', 'false');
     if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
     if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
-    // Only apply default high vote threshold if not a regional/language specific query
+
+    // Only apply global vote_count threshold to non-regional feeds
     if (
       !url.searchParams.has('vote_count.gte') &&
       !url.searchParams.has('with_original_language') &&
@@ -118,6 +111,7 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     }
   }
 
+  // Explicit function-level Custom Params
   for (const [key, value] of Object.entries(customParams)) {
     if (value !== undefined && value !== null && value !== '') {
       url.searchParams.set(key, String(value));
@@ -235,6 +229,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
     let url = getUrl(input);
     const method = String(init.method || 'GET').toUpperCase();
 
+    // Reroute legacy direct TMDB calls securely through the Vercel Proxy
     if (url.includes('db.speedracelight.com/3/')) {
       try {
         const parsed = new URL(url);
@@ -345,7 +340,7 @@ const SERVER_CONFIG = {
   1: {
     id: 1,
     name: 'Server 1 (NxSha Ultra 4K)',
-    caption: 'Server 1 (NxSha Ultra CDN - Multi-Lang 4K Direct)',
+    caption: 'Server 1 (NxSha Ultra CDN - Default Hindi Dubbed 4K)',
     type: 'extractor',
     subHost: 'MbPly-[Multi-Lang]',
     healthStatus: 'optimal',
@@ -405,7 +400,7 @@ const SERVER_CONFIG = {
 window.SERVER_CONFIG = SERVER_CONFIG;
 
 // ============================================================================
-// 4. APPLICATION STATE & MEMORY CACHES (ZERO-BLEED INITIALIZATION)
+// 4. APPLICATION STATE & MEMORY CACHES (ZERO-BLEED URL INITIALIZATION)
 // ============================================================================
 const animeCache = new Map();
 const episodeDataCache = new Map();
@@ -719,7 +714,7 @@ window.executeStream = function (seekTimestamp = 0) {
       <div id="playerBufferingLoader" class="player-buffering-indicator">
         <div class="spinner-ring"></div>
       </div>
-      <button id="aniSkipIntroBtn" class="aniskip-pill-btn" style="display:none;" onclick="triggerAniSkipJump()">
+      <button id="aniSkipIntroBtn" class="aniskip-pill-btn" style="display:none;" onclick="window.triggerAniSkipJump()">
         <i class="fas fa-forward"></i> <span id="aniSkipLabel">Skip Opening (OP)</span>
       </button>
     </div>
