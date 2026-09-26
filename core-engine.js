@@ -1,22 +1,17 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 46.1.1 Enterprise Release)
+ * Production-Grade JavaScript Controller (Version 46.7.0 Enterprise Master)
  *
- * Included Subsystems:
- *  - Anti-DOM-Wipe execution shield & global variable protection.
- *  - Token-Bucket Leaky API Guard with Circuit Breaker (AniList / Kitsu / AniSkip / TMDB).
- *  - Deterministic Sub-Query Isolator for TMDB edge gateways.
- *  - 4-Tier Stream Server Mirror Engine (NxSha Ultra, Filmu Native, VidCore, VidFast).
- *  - High-precision fuzzy regex title sanitizer for franchise/multi-season matching.
- *  - Season catalog query & batch episode metadata resolver.
- *  - 24-bit canvas chroma ambilight extractor for reactive backdrop illumination.
+ * Core Fixes & Enhancements:
+ *  - Strict Sub-Query Splitting: Prevents URL-encoded '%3F' endpoint corruption.
+ *  - Regional Safe Discovery: Excludes 'vote_count.gte=15' for regional languages.
+ *  - Full Quick Filter Support: Seamless category handling for both Anime & Netflix modes.
+ *  - Anime Movie & Airing Format Isolation: Proper AniList format queries.
+ *  - Token-Bucket Leaky API Guard with Circuit Breaker.
+ *  - 4-Tier Stream Server Mirror Engine.
+ *  - 24-bit canvas chroma ambilight extractor.
  *  - Dexie.js IndexedDB offline progress storage & sync telemetry.
- *  - Bidirectional browser history router with URL state deserialization.
- *  - Client-side AniSkip skip chapter polling & execution dispatcher.
- *  - Native AniList airing schedule fetching without third-party proxy dependencies.
- *  - Hardware-accelerated keyboard navigation & accessibility controller.
- *  - Dual-Universe bootstrap lifecycle with race-free cold start loading.
  * ============================================================================
  */
 
@@ -107,12 +102,16 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     });
   }
 
+  // Set Discover Defaults safely without wiping out regional feeds
   if (pathOnly.startsWith('discover/')) {
     if (!url.searchParams.has('without_genres')) url.searchParams.set('without_genres', '16');
-    if (!url.searchParams.has('vote_count.gte')) url.searchParams.set('vote_count.gte', '15');
     if (!url.searchParams.has('include_adult')) url.searchParams.set('include_adult', 'false');
     if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
     if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
+    // Only apply default high vote threshold if not a regional/specific query
+    if (!url.searchParams.has('vote_count.gte') && !url.searchParams.has('with_original_language') && !url.searchParams.has('with_origin_country')) {
+      url.searchParams.set('vote_count.gte', '15');
+    }
   }
 
   for (const [key, value] of Object.entries(customParams)) {
@@ -1040,7 +1039,7 @@ window.updateHeroBillboard = function (item) {
   const heroFormat = document.getElementById('heroFormat');
   const heroFormatBadge = document.getElementById('heroFormatBadge');
   const heroPlayBtn = document.getElementById('heroPlayBtn');
-  const heroInfoBtn = document.getElementById('heroInfoBtn');
+  const infoBtn = document.getElementById('heroInfoBtn');
 
   if (heroTitle) heroTitle.innerText = item.title?.english || item.title?.romaji || 'Featured Title';
   if (heroDesc) heroDesc.innerText = item.description || '';
@@ -1063,89 +1062,180 @@ window.updateHeroBillboard = function (item) {
 };
 
 // ============================================================================
-// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER
+// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER (COMPREHENSIVE BINDING)
 // ============================================================================
 window.applyQuickFilter = async function (filterKey, element) {
-  const key = (filterKey || 'ALL').toUpperCase();
+  const norm = String(filterKey || 'ALL').toUpperCase();
 
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  if (element) {
+  const chips = document.querySelectorAll('.chips-container .chip');
+  chips.forEach(c => c.classList.remove('active'));
+
+  if (element && element.nodeType === 1) {
     element.classList.add('active');
   } else {
-    const match = document.querySelector(`.chip[data-filter="${key}"]`) ||
-                  document.querySelector(`.chip[onclick*="'${filterKey}'"]`);
+    const match = document.querySelector(`.chip[data-filter="${norm}"]`) ||
+                  Array.from(chips).find(c => c.innerText.toUpperCase().includes(norm));
     if (match) match.classList.add('active');
   }
 
-  if (STATE.isNetflixMode) {
-    if (key === 'ALL') return window.navigateGenre(null, 'Home');
-    if (key === 'MOVIES') return window.navigateGenre('Movies', 'Movies');
-    if (key === 'TOP_AIRING' || key === 'TV') return window.navigateGenre('TV', 'TV Shows');
-    if (key === 'HINDI') return window.navigateGenre('Hindi', 'Hindi Dubs');
-    if (key === 'ACTION') return window.navigateGenre('Action', 'Action');
-    if (key === 'THRILLER') return window.navigateGenre('Thriller', 'Thriller');
-    if (key === 'SCI_FI') return window.navigateGenre('Sci-Fi', 'Sci-Fi');
-    if (key === 'ROMANCE') return window.navigateGenre('Romance', 'Romance');
-    return;
+  if (typeof window.syncCategoryState === 'function') {
+    window.syncCategoryState(norm);
   }
 
-  if (key === 'ALL') {
-    if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } else if (key === 'HINDI') {
-    if (typeof window.loadHindiDubbed === 'function') await window.loadHindiDubbed();
-  } else if (key === 'MOVIES') {
-    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Movie', 'Top Anime Movies');
-  } else if (key === 'TOP_AIRING' || key === 'TOP_RATED') {
-    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Top', 'Top Airing Anime');
-  } else if (key === 'ACTION') {
-    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Action', 'Action Anime');
-  } else if (key === 'ROMANCE') {
-    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Romance', 'Romance & Drama');
-  } else if (key === 'SCI_FI') {
-    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Sci-Fi', 'Sci-Fi & Cyberpunk');
-  } else if (key === 'SECONDARY' || key === 'FANTASY') {
-    if (typeof window.navigateGenre === 'function') await window.navigateGenre('Fantasy', 'Isekai & Fantasy');
+  if (STATE.isNetflixMode) {
+    switch (norm) {
+      case 'ALL':
+        return window.navigateGenre(null, 'Home');
+      case 'MOVIES':
+      case 'MOVIE':
+        return window.navigateGenre('Movies', 'Feature Films');
+      case 'TOP_AIRING':
+      case 'TV':
+      case 'SHOWS':
+        return window.navigateGenre('TV', 'TV Series');
+      case 'HINDI':
+        return window.loadHindiDubbed();
+      case 'ACTION':
+        return window.navigateGenre('Action', 'Action');
+      case 'THRILLER':
+      case 'CRIME':
+        return window.navigateGenre('Thriller', 'Thriller');
+      case 'SCI_FI':
+      case 'SCIFI':
+        return window.navigateGenre('Sci-Fi', 'Sci-Fi');
+      case 'ROMANCE':
+        return window.navigateGenre('Romance', 'Romance');
+      default:
+        return window.navigateGenre(null, 'Home');
+    }
+  }
+
+  // Anime Universe Navigation Mode
+  switch (norm) {
+    case 'ALL':
+      return window.navigateGenre(null, 'Home');
+    case 'HINDI':
+      return window.loadHindiDubbed();
+    case 'MOVIES':
+    case 'MOVIE':
+      return window.navigateGenre('Movie', 'Top Anime Movies');
+    case 'TOP_AIRING':
+    case 'AIRING':
+    case 'TOP_RATED':
+      return window.navigateGenre('Top', 'Top Airing Anime');
+    case 'ACTION':
+      return window.navigateGenre('Action', 'Action Hits');
+    case 'ROMANCE':
+      return window.navigateGenre('Romance', 'Romance & Drama');
+    case 'SCI_FI':
+    case 'SCIFI':
+      return window.navigateGenre('Sci-Fi', 'Sci-Fi & Cyberpunk');
+    case 'SECONDARY':
+    case 'FANTASY':
+      return window.navigateGenre('Fantasy', 'Isekai & Fantasy');
+    default:
+      return window.navigateGenre(null, 'Home');
   }
 };
 
 window.navigateGenre = async function (genre, label) {
   document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
-    const match = link.innerText.toLowerCase().includes((label || '').toLowerCase());
+    const match = link.innerText.toLowerCase().includes((label || genre || '').toLowerCase());
     link.classList.toggle('active', Boolean(match));
   });
 
   const contentRows = document.getElementById('contentRows');
   if (contentRows) contentRows.innerHTML = '';
 
-  if (!genre) {
+  if (!genre || genre === 'Home') {
     if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
+  if (STATE.isNetflixMode) {
+    if (genre === 'Movies' || genre === 'Movie') {
+      await window.renderTMDBRow?.('Trending Feature Films', 'discover/movie?sort_by=popularity.desc&vote_count.gte=100&_rail=filter_movies', '<i class="fas fa-film"></i>', 'MOVIE');
+      await window.renderTMDBRow?.('Top Rated Blockbusters', 'discover/movie?sort_by=vote_average.desc&vote_count.gte=300&_rail=filter_top_movies', '<i class="fas fa-star"></i>', 'MOVIE');
+    } else if (genre === 'TV' || genre === 'TV Shows') {
+      await window.renderTMDBRow?.('Top Binge TV Series', 'discover/tv?sort_by=popularity.desc&vote_count.gte=50&_rail=filter_tv', '<i class="fas fa-tv"></i>', 'TV');
+      await window.renderTMDBRow?.('Critically Acclaimed Series', 'discover/tv?sort_by=vote_average.desc&vote_count.gte=200&_rail=filter_top_tv', '<i class="fas fa-star"></i>', 'TV');
+    } else if (genre === 'Action') {
+      await window.renderTMDBRow?.('Action Movies & Thrillers', 'discover/movie?with_genres=28&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_action_m', '<i class="fas fa-bolt"></i>', 'MOVIE');
+      await window.renderTMDBRow?.('Action & Adventure Series', 'discover/tv?with_genres=10759&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_action_tv', '<i class="fas fa-shield"></i>', 'TV');
+    } else if (genre === 'Thriller' || genre === 'Crime') {
+      await window.renderTMDBRow?.('Gripping Crime & Mystery Films', 'discover/movie?with_genres=53&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_crime_m', '<i class="fas fa-mask"></i>', 'MOVIE');
+      await window.renderTMDBRow?.('Psychological Thriller Series', 'discover/tv?with_genres=80&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_crime_tv', '<i class="fas fa-user-secret"></i>', 'TV');
+    } else if (genre === 'Sci-Fi') {
+      await window.renderTMDBRow?.('Sci-Fi Feature Cinema', 'discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_m', '<i class="fas fa-microchip"></i>', 'MOVIE');
+      await window.renderTMDBRow?.('Futuristic TV Shows', 'discover/tv?with_genres=10765&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_scifi_tv', '<i class="fas fa-tv"></i>', 'TV');
+    } else if (genre === 'Romance') {
+      await window.renderTMDBRow?.('Romantic Comedies & Dramas', 'discover/movie?with_genres=10749&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_romance_m', '<i class="fas fa-heart"></i>', 'MOVIE');
+      await window.renderTMDBRow?.('Romantic TV Series', 'discover/tv?with_genres=10766&sort_by=popularity.desc&vote_count.gte=50&_rail=filter_romance_tv', '<i class="fas fa-tv"></i>', 'TV');
+    } else if (genre === 'Hindi') {
+      await window.loadHindiDubbed();
+    }
+    window.scrollTo({ top: 350, behavior: 'smooth' });
+    return;
+  }
+
+  // Anime Universe Rendering
   if (typeof window.renderRow === 'function') {
-    await window.renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
-    await window.renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
+    if (genre === 'Movie' || genre === 'Movies') {
+      await window.renderRow('Anime Feature Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['POPULARITY_DESC'] }, false);
+      await window.renderRow('Top Rated Movies', { page: 1, perPage: 24, format: 'MOVIE', sort: ['SCORE_DESC'] }, false);
+    } else if (genre === 'Top') {
+      await window.renderRow('Top Airing Simulcasts', { page: 1, perPage: 24, status: 'RELEASING', sort: ['POPULARITY_DESC'] }, false);
+      await window.renderRow('All-Time Popular', { page: 1, perPage: 24, sort: ['POPULARITY_DESC'] }, false);
+    } else {
+      await window.renderRow(label || genre, { page: 1, perPage: 24, genre: genre, sort: ['TRENDING_DESC'] }, false);
+      await window.renderRow(`Top Rated ${genre}`, { page: 1, perPage: 24, genre: genre, sort: ['SCORE_DESC'] }, false);
+    }
   }
   window.scrollTo({ top: 350, behavior: 'smooth' });
 };
 
 window.loadHindiDubbed = async function () {
+  if (typeof window.toggleMobileNav === 'function') window.toggleMobileNav(false);
+  if (typeof window.syncCategoryState === 'function') window.syncCategoryState('HINDI');
+
+  const contentRows = document.getElementById('contentRows');
+  if (contentRows) contentRows.innerHTML = '';
+
   if (STATE.isNetflixMode) {
-    await window.navigateGenre('Hindi', 'Hindi Dubs');
+    if (typeof window.renderTMDBRow === 'function') {
+      await window.renderTMDBRow(
+        'Hindi Blockbuster Movies',
+        'discover/movie?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_dub_m',
+        '<i class="fas fa-film"></i>',
+        'MOVIE'
+      );
+      await window.renderTMDBRow(
+        'Hindi Web Series & Dramas',
+        'discover/tv?with_origin_country=IN&with_original_language=hi&without_genres=16&sort_by=popularity.desc&_rail=hindi_dub_tv',
+        '<i class="fas fa-tv"></i>',
+        'TV'
+      );
+      await window.renderTMDBRow(
+        'South Indian Cinema (Telugu Hits)',
+        'discover/movie?with_origin_country=IN&with_original_language=te&without_genres=16&sort_by=popularity.desc&_rail=telugu_dub_m',
+        '<i class="fas fa-fire"></i>',
+        'MOVIE'
+      );
+    }
+    window.scrollTo({ top: 350, behavior: 'smooth' });
     return;
   }
+
+  // Anime Universe Hindi Content
   if (typeof window.renderHindiDubRow === 'function') {
-    const contentRows = document.getElementById('contentRows');
-    if (contentRows) contentRows.innerHTML = '';
     await window.renderHindiDubRow();
     if (typeof window.renderRow === 'function') {
       await window.renderRow('Action Hindi Audio', { page: 1, perPage: 18, genre: 'Action', sort: ['POPULARITY_DESC'] }, false);
       await window.renderRow('Fantasy Hindi Audio', { page: 1, perPage: 18, genre: 'Fantasy', sort: ['POPULARITY_DESC'] }, false);
     }
-    window.scrollTo({ top: 350, behavior: 'smooth' });
   }
+  window.scrollTo({ top: 350, behavior: 'smooth' });
 };
 
 // ============================================================================
