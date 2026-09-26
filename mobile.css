@@ -1,8 +1,8 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
-   File: mobile.css | Version: 43.0.0 Enterprise Ultra-Sync
-   Architecture: 60px Fixed Header, Fully Tappable Search Takeover & Close,
-                 Visible Modal Nav Strip, Native Smooth Horizontal Rails
+   File: mobile.css | Version: 44.0.0 Enterprise Ultra-Sync
+   Architecture: Zero-Overflow Top Bar, Unclipped Sticky Drawer Close,
+                 Fully Visible Modal Nav Strip, Native Touch Mechanics
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -55,7 +55,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     2. MOBILE HEADER (60px COMFORTABLE HEIGHT & NEVER-WRAPPING ICONS)
+     2. MOBILE HEADER & PREVENTING BOOKMARK/ICON OVERFLOW
      -------------------------------------------------------------------------- */
   .header {
     position: sticky !important;
@@ -63,11 +63,12 @@
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    height: 60px !important;
-    min-height: 60px !important;
-    padding: 0 12px !important;
-    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    padding: 0 10px !important;
+    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
     background: rgba(8, 9, 14, 0.98) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
@@ -81,42 +82,50 @@
 
   .header-left {
     display: flex !important;
-    gap: 8px !important;
+    gap: 6px !important;
     align-items: center !important;
-    flex-shrink: 0 !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
 
   .brand {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     text-decoration: none !important;
+    min-width: 0 !important;
   }
 
   .brand-name {
-    font-size: 15px !important;
+    font-size: 13.5px !important;
     font-weight: 800 !important;
-    letter-spacing: 0.2px !important;
+    letter-spacing: 0.1px !important;
     color: #fff !important;
     white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .brand-icon-wrapper {
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 8px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 7px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    flex-shrink: 0 !important;
   }
 
   .brand-icon-wrapper i {
-    font-size: 14px !important;
+    font-size: 12px !important;
   }
 
   .brand-badge {
-    font-size: 8px !important;
-    padding: 1.5px 5px !important;
+    font-size: 7.5px !important;
+    padding: 1px 4px !important;
+    flex-shrink: 0 !important;
   }
 
   .nav-desktop {
@@ -125,41 +134,47 @@
 
   .mobile-nav-toggle {
     display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    justify-content: center !important;
     background: transparent !important;
     border: none !important;
     color: #fff !important;
-    font-size: 19px !important;
+    font-size: 18px !important;
     cursor: pointer !important;
-    width: 38px !important;
-    height: 38px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
     padding: 0 !important;
     border-radius: 50% !important;
     flex-shrink: 0 !important;
   }
 
+  /* CRITICAL FIX: Hide the redundant top install pill so Watchlist doesn't get pushed off screen */
+  .header-right #appStatusPill,
+  .header-right .pwa-status-pill {
+    display: none !important;
+  }
+
   .header-right {
     display: flex !important;
-    gap: 6px !important;
+    gap: 5px !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    flex: 1 0 auto !important;
+    flex: 0 0 auto !important;
     position: static !important;
-    flex-shrink: 0 !important;
   }
 
   .icon-btn {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-    font-size: 14px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    font-size: 13px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: #fff !important;
     padding: 0 !important;
@@ -167,10 +182,36 @@
     cursor: pointer !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
+    position: relative !important;
+  }
+
+  .icon-btn i {
+    font-size: 13px !important;
+  }
+
+  /* Watchlist badge alignment */
+  .badge-counter,
+  .watchlist-badge-counter,
+  #watchlistCount {
+    position: absolute !important;
+    top: -3px !important;
+    right: -3px !important;
+    background: #ff0844 !important;
+    color: #fff !important;
+    font-size: 8.5px !important;
+    font-weight: 800 !important;
+    min-width: 14px !important;
+    height: 14px !important;
+    line-height: 14px !important;
+    padding: 0 3px !important;
+    border-radius: 7px !important;
+    text-align: center !important;
+    border: 1px solid #08090f !important;
+    box-sizing: border-box !important;
   }
 
   /* --------------------------------------------------------------------------
-     SEARCH WRAPPER COLLAPSED VS ACTIVE TAKEOVER
+     SEARCH WRAPPER: CLEAN TAKEOVER WITHOUT LAYOUT OVERFLOW
      -------------------------------------------------------------------------- */
   .search-wrapper {
     position: relative !important;
@@ -181,11 +222,9 @@
     padding: 0 !important;
     margin: 0 !important;
     width: auto !important;
-    box-shadow: none !important;
     flex-shrink: 0 !important;
   }
 
-  /* Collapsed state */
   .search-wrapper:not(.open) .search-input {
     display: none !important;
     width: 0 !important;
@@ -198,22 +237,22 @@
   }
 
   .search-wrapper:not(.open) .fa-search {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: #fff !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     cursor: pointer !important;
     box-sizing: border-box !important;
   }
 
-  /* Active full header takeover */
+  /* Search Takeover Bar */
   .search-wrapper.open {
     position: absolute !important;
     inset: 0 !important;
@@ -222,16 +261,16 @@
     right: 0 !important;
     bottom: 0 !important;
     width: 100% !important;
-    height: 60px !important;
+    height: 56px !important;
     background: #08090f !important;
-    padding: 0 12px !important;
-    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    padding: 0 10px !important;
+    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
     display: flex !important;
     align-items: center !important;
     box-sizing: border-box !important;
     z-index: 10005 !important;
-    animation: searchTakeoverFade 0.18s ease-out forwards;
+    animation: searchTakeoverFade 0.15s ease-out forwards;
   }
 
   @keyframes searchTakeoverFade {
@@ -242,16 +281,16 @@
   .search-wrapper.open .search-input {
     display: block !important;
     width: 100% !important;
-    height: 42px !important;
+    height: 38px !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 8, 68, 0.6) !important;
-    border-radius: 24px !important;
-    padding: 0 46px 0 16px !important;
+    border-radius: 20px !important;
+    padding: 0 42px 0 14px !important;
     color: #ffffff !important;
-    font-size: 14px !important;
+    font-size: 13.5px !important;
     font-family: inherit !important;
     outline: none !important;
-    box-shadow: 0 0 16px rgba(255, 8, 68, 0.25) !important;
+    box-shadow: 0 0 14px rgba(255, 8, 68, 0.25) !important;
     box-sizing: border-box !important;
   }
 
@@ -259,21 +298,20 @@
     display: none !important;
   }
 
-  /* Dedicated Tappable Close / Clear Button */
   .search-wrapper.open .search-clear-icon {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     position: absolute !important;
-    right: 22px !important;
+    right: 18px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    width: 34px !important;
-    height: 34px !important;
-    background: rgba(255, 255, 255, 0.12) !important;
+    width: 30px !important;
+    height: 30px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
     border-radius: 50% !important;
     color: #fff !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     cursor: pointer !important;
     z-index: 10010 !important;
     pointer-events: auto !important;
@@ -283,14 +321,13 @@
     background: rgba(255, 8, 68, 0.6) !important;
   }
 
-  /* Dropdown results overlay below 60px header */
   .search-dropdown {
     position: fixed !important;
-    top: 60px !important;
+    top: 56px !important;
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;
-    max-height: calc(100dvh - 60px) !important;
+    max-height: calc(100dvh - 56px) !important;
     height: auto !important;
     background: rgba(9, 10, 16, 0.98) !important;
     backdrop-filter: blur(20px) !important;
@@ -320,7 +357,85 @@
   }
 
   /* --------------------------------------------------------------------------
-     3. STREAMING MODAL & VISIBLE CLOSE BUTTON
+     3. MOBILE NAV DRAWER & GUARANTEED STICKY CLOSE BUTTON
+     -------------------------------------------------------------------------- */
+  .mobile-nav-drawer {
+    width: 84vw !important;
+    max-width: 320px !important;
+    border-top-right-radius: 18px !important;
+    border-bottom-right-radius: 18px !important;
+    padding: 0 !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    z-index: 30000 !important;
+    background: #090a12 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Sticky Drawer Header with Close Button */
+  .drawer-header {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    padding: 0 14px !important;
+    padding-top: max(8px, env(safe-area-inset-top, 0px)) !important;
+    background: #090a12 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    z-index: 30010 !important;
+  }
+
+  .drawer-header .brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  /* Highly Tappable Close Button in Drawer */
+  .drawer-close-btn,
+  .mobile-nav-drawer .close-btn,
+  .mobile-nav-drawer .drawer-close {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #fff !important;
+    font-size: 15px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    pointer-events: auto !important;
+  }
+
+  .drawer-close-btn:active,
+  .mobile-nav-drawer .close-btn:active {
+    background: rgba(255, 8, 68, 0.5) !important;
+    transform: scale(0.92) !important;
+  }
+
+  .drawer-content,
+  .mobile-nav-drawer .drawer-body {
+    padding: 14px !important;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)) !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     4. STREAMING MODAL & UNCLIPPED MODAL NAV STRIP
      -------------------------------------------------------------------------- */
   .modal-container {
     padding: 0 !important;
@@ -353,12 +468,12 @@
     box-shadow: none !important;
   }
 
-  /* Unclipped top navigation strip containing Close Button */
+  /* Modal Sticky Top Navigation Strip with Close Button */
   .modal-nav-strip {
     position: sticky !important;
     top: 0 !important;
-    height: 52px !important;
-    min-height: 52px !important;
+    height: 50px !important;
+    min-height: 50px !important;
     padding: 0 14px !important;
     padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
     padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
@@ -394,16 +509,15 @@
     text-overflow: ellipsis !important;
   }
 
-  /* Highly tappable, always visible modal close button */
   .btn-close-modal {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
     border-radius: 50% !important;
     background: rgba(255, 255, 255, 0.12) !important;
     border: 1px solid rgba(255, 255, 255, 0.18) !important;
     color: #fff !important;
-    font-size: 16px !important;
+    font-size: 15px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -503,7 +617,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     4. HERO BILLBOARD
+     5. HERO BILLBOARD
      -------------------------------------------------------------------------- */
   .hero {
     min-height: 420px;
@@ -606,7 +720,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     5. HORIZONTAL FILTER CHIPS RAIL
+     6. HORIZONTAL FILTER CHIPS RAIL
      -------------------------------------------------------------------------- */
   .quick-chips-rail {
     padding: 0 12px;
@@ -664,7 +778,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     6. HIGH-DENSITY CARD VIEWPORTS (PRESERVES TOUCH-SCROLL & PREVENTS OVERLAP)
+     7. HIGH-DENSITY CARD VIEWPORTS
      -------------------------------------------------------------------------- */
   .content-rows {
     padding-top: 8px;
@@ -706,7 +820,6 @@
     display: none !important;
   }
 
-  /* Fluid, unshrinkable card aspect ratio */
   .anime-card,
   .card.ui-card-locked {
     flex: 0 0 125px !important;
@@ -779,7 +892,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     7. FLOATING QUICK DOCK
+     8. FLOATING QUICK DOCK
      -------------------------------------------------------------------------- */
   .floating-quick-dock {
     position: fixed;
@@ -842,7 +955,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     8. SERVER SCROLLER & EPISODES
+     9. SERVER SCROLLER & EPISODES
      -------------------------------------------------------------------------- */
   .server-controls {
     padding: 8px 10px;
@@ -909,7 +1022,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     9. TOASTS & DRAWERS
+     10. TOASTS & DRAWERS
      -------------------------------------------------------------------------- */
   .toast-container {
     position: fixed !important;
@@ -943,19 +1056,6 @@
     color: #fff !important;
   }
 
-  .mobile-nav-drawer {
-    width: 82vw;
-    max-width: 300px;
-    border-top-right-radius: 18px;
-    border-bottom-right-radius: 18px;
-    padding-top: max(14px, env(safe-area-inset-top, 0px));
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
-    height: 100dvh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    z-index: 3000 !important;
-  }
-
   .watchlist-drawer,
   .p2p-chat-sidebar {
     width: 100vw !important;
@@ -964,7 +1064,7 @@
     height: 100dvh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    z-index: 3000 !important;
+    z-index: 30000 !important;
   }
 }
 
