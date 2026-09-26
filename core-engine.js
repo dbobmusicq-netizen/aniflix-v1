@@ -1,16 +1,16 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 46.7.0 Enterprise Master)
+ * Production-Grade JavaScript Controller (Version 46.8.0 Enterprise Release)
  *
  * Core Fixes & Enhancements:
- *  - Strict Sub-Query Splitting: Prevents URL-encoded '%3F' endpoint corruption.
- *  - Regional Safe Discovery: Excludes 'vote_count.gte=15' for regional languages.
+ *  - Strict Sub-Query Isolation: Completely prevents '%3F' parameter corruption.
+ *  - Regional Safe Discovery: Excludes 'vote_count.gte=15' for regional languages/countries.
  *  - Full Quick Filter Support: Seamless category handling for both Anime & Netflix modes.
- *  - Anime Movie & Airing Format Isolation: Proper AniList format queries.
- *  - Token-Bucket Leaky API Guard with Circuit Breaker.
- *  - 4-Tier Stream Server Mirror Engine.
- *  - 24-bit canvas chroma ambilight extractor.
+ *  - Universal Fallback: Safe delegation to streaming-ui.js without duplicate executions.
+ *  - Token-Bucket Leaky API Guard with Circuit Breaker (AniList / Kitsu / TMDB).
+ *  - 4-Tier Stream Server Mirror Engine (NxSha Ultra, Filmu Native, VidCore, VidFast).
+ *  - 24-bit Canvas Chroma Ambilight Extractor for reactive ambient glow.
  *  - Dexie.js IndexedDB offline progress storage & sync telemetry.
  * ============================================================================
  */
@@ -108,8 +108,12 @@ function buildSecureTmdbUrl(endpointPath, customParams = {}) {
     if (!url.searchParams.has('include_adult')) url.searchParams.set('include_adult', 'false');
     if (!url.searchParams.has('include_video')) url.searchParams.set('include_video', 'false');
     if (!url.searchParams.has('language')) url.searchParams.set('language', 'en-US');
-    // Only apply default high vote threshold if not a regional/specific query
-    if (!url.searchParams.has('vote_count.gte') && !url.searchParams.has('with_original_language') && !url.searchParams.has('with_origin_country')) {
+    // Only apply default high vote threshold if not a regional/language specific query
+    if (
+      !url.searchParams.has('vote_count.gte') &&
+      !url.searchParams.has('with_original_language') &&
+      !url.searchParams.has('with_origin_country')
+    ) {
       url.searchParams.set('vote_count.gte', '15');
     }
   }
@@ -715,7 +719,7 @@ window.executeStream = function (seekTimestamp = 0) {
       <div id="playerBufferingLoader" class="player-buffering-indicator">
         <div class="spinner-ring"></div>
       </div>
-      <button id="aniSkipIntroBtn" class="aniskip-pill-btn" style="display:none;" onclick="window.triggerAniSkipJump()">
+      <button id="aniSkipIntroBtn" class="aniskip-pill-btn" style="display:none;" onclick="triggerAniSkipJump()">
         <i class="fas fa-forward"></i> <span id="aniSkipLabel">Skip Opening (OP)</span>
       </button>
     </div>
@@ -1062,7 +1066,7 @@ window.updateHeroBillboard = function (item) {
 };
 
 // ============================================================================
-// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER (COMPREHENSIVE BINDING)
+// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER (CROSS-SCRIPT SAFE)
 // ============================================================================
 window.applyQuickFilter = async function (filterKey, element) {
   const norm = String(filterKey || 'ALL').toUpperCase();
