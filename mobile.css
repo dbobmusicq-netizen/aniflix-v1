@@ -1,6 +1,6 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
-   File: mobile.css | Version: 40.0.0 Enterprise Ultra-Sync
+   File: mobile.css | Version: 41.0.0 Enterprise Ultra-Sync
    Architecture: Clean Header Takeover Search, Zero-Bleed Mobile Ergonomics,
                  Unshrinkable Buttons, Notch Immunity & Fluid 100dvh Drawers
    ========================================================================== */
@@ -58,15 +58,15 @@
      2. MOBILE HEADER & CLEAN TAKEOVER SEARCH BAR
      -------------------------------------------------------------------------- */
   .header {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
     height: 52px !important;
-    padding: 0 10px;
+    padding: 0 10px !important;
     padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
     padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
-    position: sticky !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
     background: rgba(8, 8, 14, 0.96) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -74,6 +74,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
+    box-sizing: border-box !important;
     z-index: 10000 !important;
   }
 
@@ -81,7 +82,7 @@
     display: flex !important;
     gap: 8px !important;
     align-items: center !important;
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
   }
 
   .brand {
@@ -144,13 +145,16 @@
     display: flex !important;
     gap: 6px !important;
     align-items: center !important;
-    flex-shrink: 0;
+    justify-content: flex-end !important;
+    flex: 1 0 auto !important;
+    position: static !important; /* Permits .search-wrapper.open to anchor to .header */
   }
 
   .icon-btn {
     width: 34px !important;
     height: 34px !important;
     min-width: 34px !important;
+    max-width: 34px !important;
     font-size: 13px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
@@ -160,31 +164,47 @@
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: #fff !important;
     padding: 0 !important;
+    margin: 0 !important;
     cursor: pointer;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
   }
 
-  /* Default collapsed search wrapper */
+  /* --------------------------------------------------------------------------
+     SEARCH WRAPPER COLLAPSED VS FULL TAKEOVER STATE
+     -------------------------------------------------------------------------- */
   .search-wrapper {
-    position: static !important;
+    position: relative !important;
     display: inline-flex !important;
     align-items: center !important;
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
+    margin: 0 !important;
     width: auto !important;
     box-shadow: none !important;
+    flex-shrink: 0 !important;
   }
 
-  /* Hide input and clear button when closed */
-  .search-wrapper:not(.open) .search-input,
+  /* When collapsed: strictly hide input & clear button */
+  .search-wrapper:not(.open) .search-input {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
   .search-wrapper:not(.open) .search-clear-icon {
     display: none !important;
   }
 
-  /* Collapsed trigger button */
+  /* Collapsed search icon button matching .icon-btn size */
   .search-wrapper:not(.open) .fa-search {
     width: 34px !important;
     height: 34px !important;
+    min-width: 34px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -194,17 +214,17 @@
     color: #fff !important;
     font-size: 13px !important;
     cursor: pointer;
+    box-sizing: border-box !important;
   }
 
-  /* FULL HEADER TAKEOVER WHEN OPEN: Eliminates double line drops */
+  /* WHEN OPEN: Clean full-header takeover without pushing other items */
   .search-wrapper.open {
     position: absolute !important;
-    inset: 0 !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 100vw !important;
+    width: 100% !important;
     height: 100% !important;
     background: #08090f !important;
     padding: 0 10px !important;
@@ -215,13 +235,13 @@
     gap: 8px !important;
     box-sizing: border-box !important;
     z-index: 10001 !important;
-    animation: searchBarSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: searchBarSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   @keyframes searchBarSlideIn {
     from {
       opacity: 0;
-      transform: translateY(-8px);
+      transform: translateY(-6px);
     }
     to {
       opacity: 1;
@@ -233,7 +253,7 @@
     display: block !important;
     flex: 1 1 auto !important;
     width: 100% !important;
-    height: 38px !important;
+    height: 36px !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 8, 68, 0.6) !important;
     border-radius: 20px !important;
@@ -612,7 +632,7 @@
     display: none !important;
   }
 
-  /* Auto-hide floating dock when typing on modern and legacy mobile keyboards */
+  /* Auto-hide floating dock when typing on keyboards */
   body:has(input:focus) .floating-quick-dock,
   body:has(textarea:focus) .floating-quick-dock,
   body.keyboard-open .floating-quick-dock {
