@@ -1,8 +1,8 @@
 /* ==========================================================================
    ANIFLIX ULTRA - ADVANCED MOBILE RESPONSIVE & TOUCH-PHYSICS ENGINE
-   File: mobile.css | Version: 41.0.0 Enterprise Ultra-Sync
-   Architecture: Clean Header Takeover Search, Zero-Bleed Mobile Ergonomics,
-                 Unshrinkable Buttons, Notch Immunity & Fluid 100dvh Drawers
+   File: mobile.css | Version: 42.0.0 Enterprise Ultra-Sync
+   Architecture: Comfortable 60px Header, Reliable Search Takeover & Close,
+                 Unclipped Modal Nav Strip, Notch & Dynamic Viewport (100dvh)
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -32,7 +32,7 @@
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Strict iOS Safari Auto-Zoom Neutralizer & Flex Blowout Guards */
+  /* Strict iOS Safari Auto-Zoom Neutralizer */
   input[type="text"],
   input[type="search"],
   select,
@@ -55,7 +55,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     2. MOBILE HEADER & CLEAN TAKEOVER SEARCH BAR
+     2. MOBILE HEADER (60px COMFORTABLE HEIGHT & RELIABLE SEARCH TAKEOVER)
      -------------------------------------------------------------------------- */
   .header {
     position: sticky !important;
@@ -63,14 +63,15 @@
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    height: 52px !important;
-    padding: 0 10px !important;
-    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
-    background: rgba(8, 8, 14, 0.96) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    height: 60px !important;
+    min-height: 60px !important;
+    padding: 0 12px !important;
+    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    background: rgba(8, 9, 14, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -93,7 +94,7 @@
   }
 
   .brand-name {
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 800 !important;
     letter-spacing: 0.2px !important;
     color: #fff !important;
@@ -101,18 +102,21 @@
   }
 
   .brand-icon-wrapper {
-    width: 28px !important;
-    height: 28px !important;
-    border-radius: 7px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .brand-icon-wrapper i {
-    font-size: 12px !important;
+    font-size: 14px !important;
   }
 
   .brand-badge {
-    font-size: 7.5px !important;
-    padding: 1px 4px !important;
+    font-size: 8px !important;
+    padding: 1.5px 5px !important;
   }
 
   .nav-desktop {
@@ -121,24 +125,18 @@
 
   .mobile-nav-toggle {
     display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    color: var(--text-main, #fff);
-    font-size: 17px;
-    cursor: pointer;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    border-radius: 50%;
-    transition: background 0.15s ease, transform 0.1s ease;
-    flex-shrink: 0;
-  }
-
-  .mobile-nav-toggle:active {
-    background: rgba(255, 255, 255, 0.08);
-    transform: scale(0.92);
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    font-size: 19px !important;
+    cursor: pointer !important;
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
   }
 
   .header-right {
@@ -147,15 +145,15 @@
     align-items: center !important;
     justify-content: flex-end !important;
     flex: 1 0 auto !important;
-    position: static !important; /* Permits .search-wrapper.open to anchor to .header */
+    position: static !important;
   }
 
   .icon-btn {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    max-width: 34px !important;
-    font-size: 13px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    font-size: 14px !important;
     border-radius: 50% !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -165,13 +163,13 @@
     color: #fff !important;
     padding: 0 !important;
     margin: 0 !important;
-    cursor: pointer;
+    cursor: pointer !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
   }
 
   /* --------------------------------------------------------------------------
-     SEARCH WRAPPER COLLAPSED VS FULL TAKEOVER STATE
+     SEARCH WRAPPER COLLAPSED VS ACTIVE TAKEOVER
      -------------------------------------------------------------------------- */
   .search-wrapper {
     position: relative !important;
@@ -186,25 +184,22 @@
     flex-shrink: 0 !important;
   }
 
-  /* When collapsed: strictly hide input & clear button */
+  /* Collapsed state */
   .search-wrapper:not(.open) .search-input {
     display: none !important;
     width: 0 !important;
     padding: 0 !important;
     border: none !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
   }
 
   .search-wrapper:not(.open) .search-clear-icon {
     display: none !important;
   }
 
-  /* Collapsed search icon button matching .icon-btn size */
   .search-wrapper:not(.open) .fa-search {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -212,57 +207,50 @@
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: #fff !important;
-    font-size: 13px !important;
-    cursor: pointer;
+    font-size: 14px !important;
+    cursor: pointer !important;
     box-sizing: border-box !important;
   }
 
-  /* WHEN OPEN: Clean full-header takeover without pushing other items */
+  /* Active full header takeover */
   .search-wrapper.open {
     position: absolute !important;
+    inset: 0 !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
     width: 100% !important;
-    height: 100% !important;
+    height: 60px !important;
     background: #08090f !important;
-    padding: 0 10px !important;
-    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+    padding: 0 12px !important;
+    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
     box-sizing: border-box !important;
-    z-index: 10001 !important;
-    animation: searchBarSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    z-index: 10005 !important;
+    animation: searchTakeoverFade 0.18s ease-out forwards;
   }
 
-  @keyframes searchBarSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-6px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  @keyframes searchTakeoverFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .search-wrapper.open .search-input {
     display: block !important;
-    flex: 1 1 auto !important;
     width: 100% !important;
-    height: 36px !important;
+    height: 42px !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 8, 68, 0.6) !important;
-    border-radius: 20px !important;
-    padding: 0 38px 0 14px !important;
+    border-radius: 24px !important;
+    padding: 0 46px 0 16px !important;
     color: #ffffff !important;
-    font-size: 13.5px !important;
-    font-family: inherit;
+    font-size: 14px !important;
+    font-family: inherit !important;
     outline: none !important;
-    box-shadow: 0 0 14px rgba(255, 8, 68, 0.25) !important;
+    box-shadow: 0 0 16px rgba(255, 8, 68, 0.25) !important;
     box-sizing: border-box !important;
   }
 
@@ -270,60 +258,255 @@
     display: none !important;
   }
 
+  /* Clearly visible, highly tappable Close (X) button */
   .search-wrapper.open .search-clear-icon {
     display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     position: absolute !important;
-    right: 18px !important;
-    color: #a1a1aa !important;
-    font-size: 15px !important;
-    padding: 6px !important;
-    cursor: pointer;
-    z-index: 10;
+    right: 22px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 50% !important;
+    color: #fff !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    z-index: 10010 !important;
+    pointer-events: auto !important;
   }
 
-  /* Full screen search results dropdown below takeover bar */
+  .search-wrapper.open .search-clear-icon:active {
+    background: rgba(255, 8, 68, 0.5) !important;
+  }
+
+  /* Dropdown results overlay below 60px header */
   .search-dropdown {
     position: fixed !important;
-    top: 52px !important;
+    top: 60px !important;
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;
-    max-height: calc(100dvh - 52px) !important;
+    max-height: calc(100dvh - 60px) !important;
     height: auto !important;
     background: rgba(9, 10, 16, 0.98) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     z-index: 99998 !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.95);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.95) !important;
   }
 
   .search-dropdown .search-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
 
   .search-dropdown .search-item img {
-    width: 42px;
-    height: 60px;
-    border-radius: 6px;
-    object-fit: cover;
-    flex-shrink: 0;
+    width: 44px !important;
+    height: 62px !important;
+    border-radius: 6px !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
   }
 
   /* --------------------------------------------------------------------------
-     3. HERO BILLBOARD & UNBREAKABLE BUTTON METRICS
+     3. STREAMING MODAL & UNCLIPPED MODAL NAV STRIP (FIXES CLOSE BUTTON)
+     -------------------------------------------------------------------------- */
+  .modal-container {
+    padding: 0 !important;
+    align-items: stretch !important;
+    transform: none !important;
+    overflow-y: auto !important;
+    z-index: 20000 !important; /* Higher than header */
+  }
+
+  .modal-overlay {
+    z-index: 19999 !important;
+  }
+
+  .modal-dialog {
+    position: relative !important;
+    width: 100vw !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    max-width: 100vw !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #040406 !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    z-index: 20001 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  /* Visible top navigation strip containing Close Button */
+  .modal-nav-strip {
+    position: sticky !important;
+    top: 0 !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    padding: 0 14px !important;
+    padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
+    background: rgba(10, 11, 16, 0.98) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    z-index: 20050 !important;
+    box-sizing: border-box !important;
+  }
+
+  .modal-nav-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+
+  .modal-brand-tag {
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    color: var(--accent-red, #ff0844) !important;
+    white-space: nowrap !important;
+  }
+
+  .modal-now-playing-text {
+    font-size: 12px !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Highly tappable, always visible modal close button */
+  .btn-close-modal {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    z-index: 20051 !important;
+  }
+
+  .btn-close-modal:active {
+    background: rgba(255, 8, 68, 0.6) !important;
+    transform: scale(0.92) !important;
+  }
+
+  .modal-player-wrap {
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    flex-shrink: 0 !important;
+    background: #000 !important;
+    position: relative !important;
+    z-index: 50 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95) !important;
+    touch-action: pan-y !important;
+  }
+
+  .modal-body {
+    padding: 12px !important;
+    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    flex: none !important;
+    background: #07070a !important;
+  }
+
+  .player-action-strip {
+    padding: 8px 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    background: rgba(12, 13, 20, 0.98) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .player-action-left {
+    display: none !important;
+  }
+
+  .player-action-right {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 2px !important;
+    justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .player-action-right::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .modal-pill-btn {
+    flex: 0 0 auto !important;
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    border-radius: 9999px !important;
+  }
+
+  .modal-tabs {
+    gap: 6px !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 2px !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    white-space: nowrap !important;
+    scrollbar-width: none !important;
+  }
+
+  .modal-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .tab-btn {
+    padding: 6px 13px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     4. HERO BILLBOARD & TOUCH TARGETS
      -------------------------------------------------------------------------- */
   .hero {
-    min-height: 400px;
-    height: 62vh;
-    padding: 0 12px 18px 12px;
+    min-height: 420px;
+    height: 64vh;
+    padding: 0 14px 20px 14px;
     align-items: flex-end;
   }
 
@@ -421,10 +604,10 @@
   }
 
   /* --------------------------------------------------------------------------
-     4. HORIZONTAL FILTER CHIPS RAIL
+     5. HORIZONTAL FILTER CHIPS RAIL
      -------------------------------------------------------------------------- */
   .quick-chips-rail {
-    padding: 0 10px;
+    padding: 0 12px;
     margin-top: 4px;
     margin-bottom: 6px;
     width: 100%;
@@ -479,7 +662,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     5. HIGH-DENSITY CARD VIEWPORTS
+     6. HIGH-DENSITY CARD VIEWPORTS
      -------------------------------------------------------------------------- */
   .content-rows {
     padding-top: 8px;
@@ -489,7 +672,7 @@
 
   .row-section {
     margin: 6px 0 !important;
-    padding: 0 10px !important;
+    padding: 0 12px !important;
   }
 
   .row-header {
@@ -579,7 +762,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     6. MOBILE QUICK HUD DOCK & VIRTUAL KEYBOARD AUTO-DISMISS
+     7. FLOATING QUICK DOCK
      -------------------------------------------------------------------------- */
   .floating-quick-dock {
     position: fixed;
@@ -632,7 +815,6 @@
     display: none !important;
   }
 
-  /* Auto-hide floating dock when typing on keyboards */
   body:has(input:focus) .floating-quick-dock,
   body:has(textarea:focus) .floating-quick-dock,
   body.keyboard-open .floating-quick-dock {
@@ -643,142 +825,10 @@
   }
 
   /* --------------------------------------------------------------------------
-     7. UNIFIED STREAMING MODAL & TOUCH-PANNING ENGINE
-     -------------------------------------------------------------------------- */
-  .modal-container {
-    padding: 0 !important;
-    align-items: stretch;
-    transform: none !important;
-    overflow-y: auto !important;
-  }
-
-  .modal-container.active,
-  .modal-container.open {
-    transform: none !important;
-  }
-
-  .modal-dialog {
-    position: relative;
-    width: 100vw !important;
-    min-height: 100dvh;
-    height: auto !important;
-    max-width: 100vw !important;
-    max-height: none !important;
-    border-radius: 0 !important;
-    border: none !important;
-    margin: 0 !important;
-    display: flex;
-    flex-direction: column;
-    background: #040406;
-    padding-top: env(safe-area-inset-top, 0px);
-    z-index: 1400;
-    overflow: visible !important;
-    box-shadow: none !important;
-  }
-
-  .modal-nav-strip {
-    padding: 8px 12px;
-    padding-left: max(12px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(12px, env(safe-area-inset-right, 0px)) !important;
-    background: rgba(10, 11, 16, 0.96);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    z-index: 1401;
-  }
-
-  .modal-player-wrap {
-    width: 100% !important;
-    aspect-ratio: 16 / 9 !important;
-    flex-shrink: 0;
-    background: #000;
-    position: sticky !important;
-    top: 0;
-    z-index: 50;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95);
-    touch-action: pan-y !important;
-  }
-
-  .modal-body {
-    padding: 10px;
-    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
-    overflow-y: visible !important;
-    height: auto !important;
-    flex: none !important;
-    background: #07070a;
-  }
-
-  .player-action-strip {
-    padding: 8px 10px;
-    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-    background: rgba(12, 13, 20, 0.98);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .player-action-left {
-    display: none;
-  }
-
-  .player-action-right {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 6px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding-bottom: 2px;
-    justify-content: flex-start;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-  }
-
-  .player-action-right::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .modal-pill-btn {
-    flex: 0 0 auto !important;
-    min-height: 36px !important;
-    padding: 6px 11px !important;
-    font-size: 11px !important;
-    font-weight: 700;
-    border-radius: 9999px;
-  }
-
-  .modal-tabs {
-    gap: 6px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 2px;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    white-space: nowrap;
-    scrollbar-width: none;
-  }
-
-  .modal-tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tab-btn {
-    padding: 6px 12px;
-    font-size: 11.5px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  /* --------------------------------------------------------------------------
-     8. SERVER SCROLLER & EPISODE BROWSER
+     8. SERVER SCROLLER & EPISODES
      -------------------------------------------------------------------------- */
   .server-controls {
     padding: 8px 10px;
-    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
-    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
     background: rgba(10, 11, 16, 0.98);
     flex-direction: column;
     align-items: flex-start;
@@ -789,7 +839,6 @@
   #serverButtonsContainer,
   #serverSelectionContainer {
     width: 100%;
-    max-width: 100%;
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 6px;
@@ -843,7 +892,7 @@
   }
 
   /* --------------------------------------------------------------------------
-     9. TOAST NOTIFICATIONS & HARDWARE-ACCELERATED DRAWERS
+     9. TOASTS & DRAWERS
      -------------------------------------------------------------------------- */
   .toast-container {
     position: fixed !important;
@@ -862,9 +911,7 @@
   }
 
   .toast {
-    position: relative !important;
     width: 100% !important;
-    box-sizing: border-box !important;
     padding: 10px 14px !important;
     font-size: 12.5px !important;
     font-weight: 700 !important;
@@ -877,27 +924,8 @@
     align-items: center !important;
     gap: 8px !important;
     color: #fff !important;
-    transform: translateY(16px) scale(0.95) !important;
-    opacity: 0 !important;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
   }
 
-  .toast.visible {
-    transform: translateY(0) scale(1) !important;
-    opacity: 1 !important;
-  }
-
-  .toast i,
-  .toast svg {
-    font-size: 13px !important;
-    flex-shrink: 0 !important;
-  }
-
-  .toast-info i { color: #00f2fe !important; }
-  .toast-success i { color: #00f5a0 !important; }
-  .toast-error i { color: #ff0844 !important; }
-
-  /* Full 100dvh Dynamic Touch Drawers */
   .mobile-nav-drawer {
     width: 82vw;
     max-width: 300px;
@@ -908,7 +936,7 @@
     height: 100dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    z-index: var(--z-drawer, 3000) !important;
+    z-index: 3000 !important;
   }
 
   .watchlist-drawer,
@@ -919,29 +947,11 @@
     height: 100dvh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    z-index: var(--z-drawer, 3000) !important;
-  }
-
-  /* --------------------------------------------------------------------------
-     10. TOUCH-HOVER FIX & INSTANT FEEDBACK
-     -------------------------------------------------------------------------- */
-  button:active, 
-  .anime-card:active {
-    transform: scale(0.97);
-    transition: transform 0.08s ease-out;
-  }
-
-  .anime-card:hover,
-  .chip:hover,
-  .modal-pill-btn:hover,
-  .server-btn:hover,
-  .server-node-btn:hover {
-    transform: none !important;
-    box-shadow: none !important;
+    z-index: 3000 !important;
   }
 }
 
-/* Desktop viewport fallback */
+/* Desktop fallback */
 @media (min-width: 769px) {
   #filterChips { 
     overflow: visible; 
