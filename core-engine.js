@@ -1,15 +1,15 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 59.1.0 Enterprise Master)
+ * Production-Grade JavaScript Controller (Version 70.0.0 Enterprise Master)
  *
- * Core Fixes:
- *  - Fixed Anime Mode blank catalog caused by <noscript> element evaluation.
- *  - High-Speed Deeplinking: Non-blocking parallel pipeline execution.
- *  - Complete Jikan API elimination: Direct native AniList Airing Schedules.
- *  - Mobile UI Guard: 100dvh support, touch scrolling, and zero tap delay.
- *  - Official NxSha & Filmu multi-language streaming parameters.
- *  - Zero DOM-wipe protection shield & Rate-Limit Circuit Breaker.
+ * Architecture Summary:
+ *  - Official NxSha & Filmu Multi-Route Edge Matrix.
+ *  - Dual-Universe Catalog Synchronizer (AniList GraphQL & TMDB v3 Proxy).
+ *  - Anti-DOM-Wipe execution shield & Adaptive Circuit Breaker.
+ *  - Complete Jikan Discontinuation Fix (Native AniList Airing Schedules).
+ *  - Fast-Path Non-Blocking Deeplink & Stream Hydration Pipeline.
+ *  - 100dvh Dynamic Viewport, iOS Momentum Scroll, & Mobile Ergonomics.
  * ============================================================================
  */
 
@@ -85,7 +85,7 @@ function mapTmdbGenreIds(genreIds = []) {
 window.mapTmdbGenreIds = mapTmdbGenreIds;
 
 // ============================================================================
-// 1.1 SECURE TMDB URL BUILDER
+// 1.1 SECURE TMDB URL BUILDER (QUERY PARAMETER SEPARATION ENGINE)
 // ============================================================================
 function buildSecureTmdbUrl(endpointPath, customParams = {}) {
   let rawPath = String(endpointPath || '').replace(/^\/+/, '');
@@ -149,8 +149,8 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
   const nativeFetch = window.fetch.bind(window);
 
   const GUARD = {
-    minDelay: 280,
-    maxConcurrent: 5,
+    minDelay: 250,
+    maxConcurrent: 6,
     maxRetries: 2,
     cacheTTL: 5 * 60 * 1000,
     queue: [],
@@ -216,7 +216,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
 
   async function runLimited(job) {
     while (GUARD.active >= GUARD.maxConcurrent) {
-      await sleep(60);
+      await sleep(50);
     }
 
     const now = Date.now();
@@ -288,9 +288,9 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
           if (response.status === 429) {
             let retryAfterMs = Number(response.headers.get('Retry-After')) * 1000;
             if (!Number.isFinite(retryAfterMs) || retryAfterMs <= 0) {
-              retryAfterMs = Math.min(14000, 2500 * Math.pow(2, attempt));
+              retryAfterMs = Math.min(12000, 2000 * Math.pow(2, attempt));
             }
-            retryAfterMs += Math.floor(Math.random() * 600);
+            retryAfterMs += Math.floor(Math.random() * 500);
 
             GUARD.circuitOpenUntil = Date.now() + retryAfterMs;
             console.warn(`[AnimeDrift Guard] 429 hit. Pausing for ${retryAfterMs}ms.`);
@@ -346,7 +346,7 @@ window.buildSecureTmdbUrl = buildSecureTmdbUrl;
 })();
 
 // ============================================================================
-// 3. STREAM SERVER CONFIGURATION (OFFICIAL NXSHA SPECIFICATION)
+// 3. STREAM SERVER CONFIGURATION (OFFICIAL MULTI-SERVER/MULTI-LANG MATRIX)
 // ============================================================================
 const SERVER_CONFIG = {
   1: {
@@ -413,7 +413,7 @@ const SERVER_CONFIG = {
 window.SERVER_CONFIG = SERVER_CONFIG;
 
 // ============================================================================
-// 4. APPLICATION STATE & MEMORY CACHES (ZERO-BLEED URL INITIALIZATION)
+// 4. APPLICATION STATE & MEMORY CACHES (ZERO-BLEED INITIALIZATION)
 // ============================================================================
 const animeCache = new Map();
 const episodeDataCache = new Map();
@@ -612,7 +612,6 @@ const Router = {
     if (p.modal === 'watchparty' && typeof window.openWatchPartyModal === 'function') window.openWatchPartyModal(true);
     if (p.modal === 'shortcuts' && typeof window.toggleShortcutsModal === 'function') window.toggleShortcutsModal(true, true);
 
-    // Fast-path non-blocking deeplinking
     if (p.watch) {
       const watchId = parseInt(p.watch, 10);
       const ep = parseInt(p.ep, 10) || 1;
@@ -1138,7 +1137,7 @@ window.updateHeroBillboard = function (item) {
 };
 
 // ============================================================================
-// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER
+// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER (CROSS-SCRIPT SAFE)
 // ============================================================================
 window.applyQuickFilter = async function (filterKey, element) {
   const norm = String(filterKey || 'ALL').toUpperCase();
@@ -1186,7 +1185,7 @@ window.applyQuickFilter = async function (filterKey, element) {
     }
   }
 
-  // Anime Universe: Distinct sort priorities to prevent duplicate cards
+  // Anime Universe Navigation Mode
   switch (norm) {
     case 'ALL':
       return window.navigateGenre(null, 'Home');
@@ -1255,7 +1254,7 @@ window.navigateGenre = async function (genre, label) {
     return;
   }
 
-  // Anime Universe: Varied sorts to eliminate repeating duplicate cards
+  // Anime Universe Rendering
   if (typeof window.renderRow === 'function') {
     if (genre === 'Movie' || genre === 'Movies') {
       await window.renderRow('Anime Feature Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['POPULARITY_DESC'] }, false);
@@ -1956,7 +1955,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const noscript = contentRows.querySelector('noscript');
     if (noscript) noscript.remove();
 
-    // Check if rows are already populated (by URL sync/mode toggle)
     const existingRails = contentRows.querySelectorAll('.content-row, .row-section');
     if (existingRails.length === 0) {
       if (typeof window.renderHomeRows === 'function') {
