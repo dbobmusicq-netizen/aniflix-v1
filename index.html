@@ -206,6 +206,32 @@
       to { transform: rotate(360deg); }
     }
 
+    /* Network Offline/Online Banner */
+    #networkStatusBanner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000000;
+      background: #ff0844;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      text-align: center;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+    #networkStatusBanner.is-online {
+      background: #00e676;
+      color: #000;
+    }
+
     /* ==========================================================================
        VERSION UPDATE & DEEP PURGE TOAST MODAL
        ========================================================================== */
@@ -321,67 +347,228 @@
     }
 
     /* ==========================================================================
-       DESKTOP CAROUSEL MOUSE DRAG & CHEVRON CONTROLS
+       DESKTOP-ONLY SCROLL CHEVRONS & MOUSE DRAG
+       Strictly hidden on mobile & touch devices!
        ========================================================================== */
-    .carousel-rail,
-    .carousel-track,
-    .content-row-items,
-    .ep-grid {
-      cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-      scroll-behavior: smooth;
-    }
-    .carousel-rail.is-mouse-dragging,
-    .carousel-track.is-mouse-dragging {
-      cursor: grabbing !important;
-      scroll-behavior: auto !important;
-    }
-    .carousel-rail.is-mouse-dragging * {
-      pointer-events: none !important;
-    }
-
-    /* Carousel Floating Navigation Arrows for Mouse Users */
     .row-wrapper-relative {
       position: relative;
     }
+
+    /* Default: HIDE the scroll arrow buttons completely */
     .row-nav-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    /* Only show scroll arrows on desktop devices with hover & mouse pointer */
+    @media (hover: hover) and (pointer: fine) and (min-width: 769px) {
+      .row-nav-arrow {
+        display: flex !important;
+        visibility: visible !important;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(14, 15, 24, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #fff;
+        font-size: 16px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.2s ease, background 0.2s ease;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      }
+      .row-wrapper-relative:hover .row-nav-arrow {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .row-nav-arrow:hover {
+        background: #ff0844;
+        border-color: #ff0844;
+        transform: translateY(-50%) scale(1.12);
+      }
+      .row-nav-arrow.arrow-prev {
+        left: 12px;
+      }
+      .row-nav-arrow.arrow-next {
+        right: 12px;
+      }
+    }
+
+    /* Desktop mouse drag styles */
+    @media (hover: hover) and (pointer: fine) {
+      .carousel-rail,
+      .carousel-track,
+      .content-row-items,
+      .ep-grid {
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .carousel-rail.is-mouse-dragging,
+      .carousel-track.is-mouse-dragging {
+        cursor: grabbing !important;
+        scroll-behavior: auto !important;
+      }
+      .carousel-rail.is-mouse-dragging * {
+        pointer-events: none !important;
+      }
+    }
+
+    /* Mobile native momentum scrolling */
+    @media (max-width: 768px), (pointer: coarse) {
+      .carousel-rail,
+      .carousel-track,
+      .content-row-items,
+      .chips-container {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        touch-action: pan-x pan-y;
+      }
+    }
+
+    /* ==========================================================================
+       MOBILE BOTTOM NAVIGATION BAR (APP DOCK)
+       ========================================================================== */
+    .mobile-bottom-dock {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+
+      .mobile-bottom-dock {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 99990;
+        height: calc(58px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(8, 9, 14, 0.94);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.8);
+        align-items: center;
+        justify-content: space-around;
+      }
+
+      .dock-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #747994;
+        text-decoration: none;
+        font-family: 'Outfit', sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        gap: 3px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s, transform 0.15s;
+        position: relative;
+      }
+
+      .dock-nav-item i {
+        font-size: 17px;
+      }
+
+      .dock-nav-item.active,
+      .dock-nav-item:active {
+        color: #ff0844;
+        transform: scale(0.96);
+      }
+
+      .dock-badge-dot {
+        position: absolute;
+        top: 6px;
+        right: calc(50% - 15px);
+        background: #ff0844;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 1px 5px;
+        border-radius: 99px;
+        min-width: 14px;
+        text-align: center;
+      }
+
+      /* Adjust update banner positioning on mobile screens */
+      #updateNoticeBanner {
+        bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        right: 16px !important;
+        left: 16px !important;
+        width: auto !important;
+      }
+
+      /* Floating dock alignment on mobile */
+      .floating-quick-dock {
+        bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
+
+    /* ==========================================================================
+       FLOATING BACK TO TOP BUTTON
+       ========================================================================== */
+    #backToTopBtn {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 99980;
       width: 44px;
       height: 44px;
       border-radius: 50%;
       background: rgba(14, 15, 24, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fff;
-      font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 16px;
       cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.2s ease, background 0.2s ease;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      visibility: hidden;
+      transform: translateY(16px);
+      transition: opacity 0.3s, transform 0.3s, background 0.2s;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     }
-    .row-wrapper-relative:hover .row-nav-arrow {
+    #backToTopBtn.visible {
       opacity: 1;
-      pointer-events: auto;
+      visibility: visible;
+      transform: translateY(0);
     }
-    .row-nav-arrow:hover {
+    #backToTopBtn:hover {
       background: #ff0844;
       border-color: #ff0844;
-      transform: translateY(-50%) scale(1.12);
+      transform: translateY(-2px);
     }
-    .row-nav-arrow.arrow-prev {
-      left: 12px;
-    }
-    .row-nav-arrow.arrow-next {
-      right: 12px;
+
+    @media (max-width: 768px) {
+      #backToTopBtn {
+        bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        left: 16px !important;
+        width: 40px;
+        height: 40px;
+      }
     }
 
     /* Community Comments Iframe Drawer */
@@ -474,6 +661,11 @@
 </head>
 <body class="theme-dark">
 
+  <!-- NETWORK STATUS BANNER -->
+  <div id="networkStatusBanner" role="status" aria-live="assertive">
+    <i class="fas fa-wifi"></i> <span id="networkStatusText">Connection Lost. Offline Mode Active.</span>
+  </div>
+
   <!-- SPLASH PRELOADER -->
   <div id="siteSplashPreloader" aria-hidden="false">
     <div class="aesthetic-loader">
@@ -518,6 +710,11 @@
     <div class="mini-spinner-quantum"></div>
     <span id="globalTransitionText">Switching Universe...</span>
   </div>
+
+  <!-- FLOATING BACK TO TOP BUTTON -->
+  <button id="backToTopBtn" type="button" title="Back to top" aria-label="Back to top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+    <i class="fas fa-chevron-up"></i>
+  </button>
 
   <!-- AMBIENT GLOW -->
   <div class="ambient-glow" id="ambientGlow"></div>
@@ -1017,10 +1214,35 @@
         <div class="shortcut-row"><span>Fullscreen</span><kbd>F</kbd></div>
         <div class="shortcut-row"><span>Mute</span><kbd>M</kbd></div>
         <div class="shortcut-row"><span>Close Modal</span><kbd>Esc</kbd></div>
-        <div class="shortcut-row"><span>Drag Cards (Mouse)</span><kbd>Right-Click + Drag</kbd></div>
+        <div class="shortcut-row"><span>Drag Cards (Desktop)</span><kbd>Right-Click + Drag</kbd></div>
       </div>
     </div>
   </div>
+
+  <!-- NATIVE MOBILE BOTTOM APP DOCK -->
+  <nav class="mobile-bottom-dock" aria-label="Mobile Bottom Navigation">
+    <button class="dock-nav-item active" type="button" onclick="triggerNavWithLoader('Home', () => window.navigateGenre(null, 'Home'))">
+      <i class="fas fa-house"></i>
+      <span>Home</span>
+    </button>
+    <button class="dock-nav-item" type="button" onclick="triggerNavWithLoader('Hindi Dubs', () => window.loadHindiDubbed())">
+      <i class="fas fa-language"></i>
+      <span>Hindi Dubs</span>
+    </button>
+    <button class="dock-nav-item" type="button" onclick="window.openScheduleModal()">
+      <i class="fas fa-calendar-days"></i>
+      <span>Schedule</span>
+    </button>
+    <button class="dock-nav-item" type="button" onclick="window.toggleSearch(true)">
+      <i class="fas fa-search"></i>
+      <span>Search</span>
+    </button>
+    <button class="dock-nav-item" type="button" onclick="window.openWatchlistModal()">
+      <i class="fas fa-bookmark"></i>
+      <span>My List</span>
+      <span class="dock-badge-dot" id="dockWatchlistCount">0</span>
+    </button>
+  </nav>
 
   <!-- SCRIPT PIPELINE ENGINES (Synchronized to v72.0.0) -->
   <script src="core-engine.js?v=72.0.0"></script>
@@ -1033,12 +1255,13 @@
   <!-- ADVANCED LIFECYCLE, UPDATE DETECTION & DESKTOP MOUSE-DRAG CONTROLLERS -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
+    const isTouchDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
 
     // ========================================================================
     // 1. UPDATE DETECTION & DEEP PURGE CONTROLLER
     // ========================================================================
     (function initUpdateAndCacheLifecycle() {
-      const TARGET_BUILD = window.APP_BUILD_VERSION || '72.0.0';
+      const TARGET_BUILD = window.APP_BUILD_VERSION || '73.0.0';
       const storedBuild = localStorage.getItem('animedrift_build_version');
 
       // Check if build version changed from previous visit
@@ -1127,9 +1350,12 @@
     };
 
     // ========================================================================
-    // 2. DESKTOP MOUSE DRAG & MOUSE WHEEL SCROLL FOR ANIME RAILS
+    // 2. DESKTOP-ONLY MOUSE DRAG & MOUSE WHEEL SCROLL FOR ANIME RAILS
     // ========================================================================
     (function initDesktopMouseDragAndWheel() {
+      // Strictly disabled on mobile touch devices
+      if (isTouchDevice()) return;
+
       let isDragging = false;
       let startX = 0;
       let scrollLeft = 0;
@@ -1138,7 +1364,7 @@
 
       // Click & Hold Right Mouse Button (button 2) or Middle Click (button 1) to Drag
       document.addEventListener('mousedown', (e) => {
-        // Detect Right Click (2) or Middle Click (1)
+        if (isTouchDevice()) return;
         if (e.button !== 2 && e.button !== 1) return;
 
         const rail = e.target.closest('.carousel-rail, .carousel-track, .content-row-items, .chips-container, #filterChips, .schedule-day-tabs');
@@ -1157,7 +1383,7 @@
         if (!isDragging || !targetRail) return;
 
         const x = e.pageX - targetRail.offsetLeft;
-        const walk = (x - startX) * 1.7; // Drag acceleration factor
+        const walk = (x - startX) * 1.7;
 
         if (Math.abs(walk) > 6) {
           hasDraggedSignificantly = true;
@@ -1188,18 +1414,20 @@
 
       // Mouse Wheel to Horizontal Carousel Conversion
       document.addEventListener('wheel', (e) => {
+        if (isTouchDevice()) return;
         const rail = e.target.closest('.carousel-rail, .carousel-track, .content-row-items, .chips-container, #filterChips');
         if (!rail) return;
 
-        // If user is rolling the wheel vertically, scroll the row horizontally
         if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
           e.preventDefault();
           rail.scrollLeft += e.deltaY * 1.35;
         }
       }, { passive: false });
 
-      // Automatically attach Left/Right Chevron Navigation buttons to dynamic row carousels
+      // Automatically attach Left/Right Chevron Navigation buttons ONLY for desktop users
       const observeAndAttachRowArrows = () => {
+        if (isTouchDevice()) return;
+
         document.querySelectorAll('.carousel-rail, .carousel-track, .content-row').forEach(rail => {
           const wrapper = rail.parentElement;
           if (!wrapper || wrapper.classList.contains('row-nav-injected')) return;
@@ -1241,6 +1469,7 @@
     // ========================================================================
     let globalLoaderTimeout = null;
     window.triggerNavWithLoader = function(label, callback) {
+      if (navigator.vibrate) navigator.vibrate(10);
       if (isSearchBot) {
         if (typeof callback === 'function') callback();
         return;
@@ -1291,6 +1520,48 @@
       if (splash) {
         splash.classList.add('preloader-hidden');
         setTimeout(() => splash.remove(), 600);
+      }
+    });
+
+    // Back to top visibility listener
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('backToTopBtn');
+      if (btn) {
+        btn.classList.toggle('visible', window.scrollY > 380);
+      }
+    }, { passive: true });
+
+    // Sync watchlist count to bottom mobile dock
+    const originalUpdateWatchlistBadge = window.updateWatchlistBadge;
+    window.updateWatchlistBadge = function() {
+      if (typeof originalUpdateWatchlistBadge === 'function') {
+        originalUpdateWatchlistBadge();
+      }
+      const dockCount = document.getElementById('dockWatchlistCount');
+      if (dockCount && window.STATE?.watchlist) {
+        dockCount.innerText = window.STATE.watchlist.length;
+      }
+    };
+
+    // Online/Offline detection listeners
+    window.addEventListener('offline', () => {
+      const b = document.getElementById('networkStatusBanner');
+      const t = document.getElementById('networkStatusText');
+      if (b && t) {
+        b.classList.remove('is-online');
+        t.innerText = 'Network Connection Lost. Offline Mode Active.';
+        b.style.display = 'flex';
+      }
+    });
+
+    window.addEventListener('online', () => {
+      const b = document.getElementById('networkStatusBanner');
+      const t = document.getElementById('networkStatusText');
+      if (b && t) {
+        b.classList.add('is-online');
+        t.innerText = 'Back Online. Streaming nodes reconnected.';
+        b.style.display = 'flex';
+        setTimeout(() => { b.style.display = 'none'; }, 3000);
       }
     });
 
