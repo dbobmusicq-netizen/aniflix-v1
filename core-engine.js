@@ -1,13 +1,14 @@
 /**
  * ============================================================================
  * AnimeDrift Core Engine — Secure Edge Proxy Architecture
- * Production-Grade JavaScript Controller (Version 70.0.0 Enterprise Master)
+ * Production-Grade JavaScript Controller (Version 71.0.0 Enterprise Master)
  *
  * Architecture Summary:
+ *  - High-Speed AniList GraphQL Hero Spotlight Engine with Fallback Poster Hydration.
  *  - Official NxSha & Filmu Multi-Route Edge Matrix.
  *  - Dual-Universe Catalog Synchronizer (AniList GraphQL & TMDB v3 Proxy).
  *  - Anti-DOM-Wipe execution shield & Adaptive Circuit Breaker.
- *  - Complete Jikan Discontinuation Fix (Native AniList Airing Schedules).
+ *  - Native AniList Airing Schedules (Zero Jikan Dependency).
  *  - Fast-Path Non-Blocking Deeplink & Stream Hydration Pipeline.
  *  - 100dvh Dynamic Viewport, iOS Momentum Scroll, & Mobile Ergonomics.
  * ============================================================================
@@ -431,6 +432,7 @@ const initialNetflixMode = urlParamsInit.get('mode') === 'netflix';
 
 let STATE = {
   currentAnime: null,
+  featuredAnime: null,
   currentTMDBId: CONFIG.DEFAULT_TMDB_FALLBACK,
   season: 1,
   episode: 1,
@@ -440,6 +442,7 @@ let STATE = {
   activeServer: parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_SERVER), 10) || 1,
   isTheaterMode: false,
   isCinemaLights: false,
+  isAudioBoosted: false,
   isNetflixMode: initialNetflixMode,
   isSmartAutoPlayNext: true,
   isMuted: false,
@@ -688,7 +691,208 @@ window.extractChromaAmbilight = function (imageUrl) {
 };
 
 // ============================================================================
-// 8. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION
+// 8. HERO BILLBOARD CONTROLLER & DUAL-UNIVERSE SPOTLIGHT HYDRATION
+// ============================================================================
+window.updateHeroBillboard = function (item) {
+  if (!item) return;
+  STATE.featuredAnime = item;
+
+  const heroTitle = document.getElementById('heroTitle');
+  const heroDesc = document.getElementById('heroDesc');
+  const heroBg = document.getElementById('heroBg');
+  const heroScore = document.getElementById('heroScore');
+  const heroYear = document.getElementById('heroYear');
+  const heroFormat = document.getElementById('heroFormat');
+  const heroStatus = document.getElementById('heroStatus');
+  const heroFormatBadge = document.getElementById('heroFormatBadge');
+  const heroPlayBtn = document.getElementById('heroPlayBtn');
+  const heroInfoBtn = document.getElementById('heroInfoBtn');
+  const heroBookmarkBtn = document.getElementById('heroBookmarkBtn');
+  const heroShareBtn = document.getElementById('heroShareBtn');
+
+  const titleText = item.title?.english || item.title?.romaji || item.title?.native || 'Featured Title';
+  if (heroTitle) heroTitle.innerText = titleText;
+
+  if (heroDesc) {
+    const cleanDesc = window.cleanHTML ? window.cleanHTML(item.description) : (item.description || '');
+    heroDesc.innerText = cleanDesc || 'Stream trending anime series and simulcasts with real-time multiplayer party synchronization.';
+  }
+
+  // Priority Poster/Backdrop Pipeline: bannerImage -> extraLarge -> large -> medium
+  const posterUrl = item.bannerImage ||
+    item.coverImage?.extraLarge ||
+    item.coverImage?.large ||
+    item.coverImage?.medium ||
+    '';
+
+  if (heroBg && posterUrl) {
+    heroBg.src = posterUrl;
+    heroBg.alt = titleText;
+    heroBg.style.opacity = '1';
+    heroBg.onerror = function () {
+      if (item.coverImage?.extraLarge && heroBg.src !== item.coverImage.extraLarge) {
+        heroBg.src = item.coverImage.extraLarge;
+      }
+    };
+  }
+
+  if (heroScore) {
+    const scoreVal = item.averageScore ? `${item.averageScore}% Rating` : '98% Rating';
+    heroScore.innerHTML = `<i class="fas fa-star"></i> ${scoreVal}`;
+  }
+
+  if (heroYear) {
+    const yearVal = item.year || item.seasonYear || item.startDate?.year || (item.release_date ? item.release_date.slice(0, 4) : '2026');
+    heroYear.innerText = yearVal;
+  }
+
+  if (heroFormat) {
+    heroFormat.innerText = item.format === 'MOVIE' ? 'MOVIE' : (item.format ? `${item.format} SERIES` : 'TV SERIES');
+  }
+
+  if (heroStatus) {
+    const statusMap = {
+      'RELEASING': 'AIRING',
+      'FINISHED': 'COMPLETED',
+      'NOT_YET_RELEASED': 'UPCOMING',
+      'CANCELLED': 'ENDED',
+      'HIATUS': 'ON HIATUS'
+    };
+    heroStatus.innerText = statusMap[item.status] || (item.status ? String(item.status).toUpperCase() : 'AIRING');
+  }
+
+  if (heroFormatBadge) {
+    heroFormatBadge.innerHTML = STATE.isNetflixMode
+      ? `<i class="fas fa-play"></i> NETFLIX LIVE SPOTLIGHT`
+      : `<i class="fas fa-play"></i> FEATURED SPOTLIGHT`;
+  }
+
+  if (heroPlayBtn) {
+    heroPlayBtn.onclick = () => {
+      if (typeof window.openModalById === 'function') window.openModalById(item.id, 1, 1);
+    };
+  }
+
+  if (heroInfoBtn) {
+    heroInfoBtn.onclick = () => {
+      if (typeof window.openModalById === 'function') window.openModalById(item.id, 1, 1);
+    };
+  }
+
+  if (heroBookmarkBtn) {
+    const isBookmarked = STATE.watchlist.some(w => w.id === item.id);
+    heroBookmarkBtn.innerHTML = `<i class="fas fa-${isBookmarked ? 'check' : 'plus'}"></i>`;
+    heroBookmarkBtn.onclick = () => {
+      window.toggleWatchlist(item);
+      const updated = STATE.watchlist.some(w => w.id === item.id);
+      heroBookmarkBtn.innerHTML = `<i class="fas fa-${updated ? 'check' : 'plus'}"></i>`;
+    };
+  }
+
+  if (heroShareBtn) {
+    heroShareBtn.onclick = () => window.shareCurrentTitleLink(item);
+  }
+
+  if (posterUrl && typeof window.extractChromaAmbilight === 'function') {
+    window.extractChromaAmbilight(posterUrl);
+  }
+};
+
+window.renderHeroSpotlight = async function () {
+  try {
+    if (STATE.isNetflixMode) {
+      const proxyUrl = buildSecureTmdbUrl('trending/all/day');
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        const data = await res.json();
+        const valid = (data.results || []).filter(i => {
+          const genres = i.genre_ids || [];
+          return !genres.includes(CONFIG.TMDB_GENRES.ANIMATION_EXCLUDE_ID) && (i.backdrop_path || i.poster_path);
+        });
+        if (valid.length > 0) {
+          const chosen = valid[0];
+          const formatted = window.formatTmdbMediaItem(chosen);
+          animeCache.set(formatted.id, formatted);
+          window.updateHeroBillboard(formatted);
+          return formatted;
+        }
+      }
+    } else {
+      // High-Priority AniList GraphQL Query for Top Spotlight Anime
+      const query = `
+        query {
+          Page(page: 1, perPage: 12) {
+            media(type: ANIME, sort: [TRENDING_DESC, POPULARITY_DESC], isAdult: false) {
+              id
+              idMal
+              title {
+                romaji
+                english
+                native
+              }
+              format
+              status
+              episodes
+              duration
+              description
+              bannerImage
+              coverImage {
+                extraLarge
+                large
+                medium
+              }
+              genres
+              averageScore
+              seasonYear
+              startDate {
+                year
+              }
+            }
+          }
+        }
+      `;
+
+      const res = await fetch(CONFIG.APIS.ANILIST, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ query })
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        const mediaList = json.data?.Page?.media || [];
+
+        mediaList.forEach(m => {
+          m.year = m.seasonYear || m.startDate?.year || 2026;
+          animeCache.set(m.id, m);
+        });
+
+        const candidate = mediaList.find(m => m.bannerImage) || mediaList[0];
+        if (candidate) {
+          window.updateHeroBillboard(candidate);
+          return candidate;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[renderHeroSpotlight] Error:', err);
+  }
+
+  // Graceful Fallback: Hydrate immediately from existing cache
+  if (animeCache.size > 0) {
+    const cachedItem = animeCache.values().next().value;
+    if (cachedItem) {
+      window.updateHeroBillboard(cachedItem);
+      return cachedItem;
+    }
+  }
+};
+
+// ============================================================================
+// 9. STREAM MATRIX RESOLUTION & PIPELINE EXECUTION
 // ============================================================================
 window.resolveActiveStreamUrl = function () {
   const isMovie = STATE.currentAnime?.format === 'MOVIE';
@@ -788,7 +992,7 @@ window.renderServerSwitcherGrid = function () {
 };
 
 // ============================================================================
-// 9. ANISKIP TELEMETRY INTEGRATION
+// 10. ANISKIP TELEMETRY INTEGRATION
 // ============================================================================
 let __AniSkipRequest = 0;
 
@@ -859,7 +1063,7 @@ window.triggerAniSkipJump = function () {
 };
 
 // ============================================================================
-// 10. MULTI-SEASON QUERY & INTELLIGENT TMDB ID RESOLVER
+// 11. MULTI-SEASON QUERY & INTELLIGENT TMDB ID RESOLVER
 // ============================================================================
 window.resolveTMDBId = async function (rawTitle, isMovie = false) {
   if (STATE.isNetflixMode && STATE.currentAnime?.tmdbId) {
@@ -998,8 +1202,161 @@ window.fetchSeasonEpisodesData = async function (tmdbId, seasonNum) {
 };
 
 // ============================================================================
-// 11. DEEP MODAL DETAILS HYDRATION ENGINE
+// 12. MODAL CONTROLS & STREAM HYDRATION
 // ============================================================================
+window.openModalById = async function (id, ep = 1, s = 1) {
+  const animeId = parseInt(id, 10);
+  if (isNaN(animeId)) return;
+
+  STATE.episode = parseInt(ep, 10) || 1;
+  STATE.season = parseInt(s, 10) || 1;
+
+  const modalContainer = document.getElementById('modalContainer');
+  const modalOverlay = document.getElementById('modalOverlay');
+  if (modalContainer && modalOverlay) {
+    modalContainer.classList.add('active', 'open');
+    modalOverlay.classList.add('active', 'open');
+    document.body.classList.add('scroll-locked');
+    document.documentElement.classList.add('scroll-locked');
+  }
+
+  let anime = animeCache.get(animeId);
+  if (!anime) {
+    if (STATE.isNetflixMode) {
+      try {
+        const proxyUrl = buildSecureTmdbUrl(`movie/${animeId}`);
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          const item = await res.json();
+          anime = window.formatTmdbMediaItem(item, 'MOVIE');
+        } else {
+          const tvRes = await fetch(buildSecureTmdbUrl(`tv/${animeId}`));
+          if (tvRes.ok) {
+            const item = await tvRes.json();
+            anime = window.formatTmdbMediaItem(item, 'TV');
+          }
+        }
+      } catch (e) {}
+    } else {
+      try {
+        const query = `
+          query ($id: Int) {
+            Media(id: $id, type: ANIME) {
+              id
+              idMal
+              title {
+                romaji
+                english
+                native
+              }
+              format
+              status
+              episodes
+              duration
+              description
+              bannerImage
+              coverImage {
+                extraLarge
+                large
+                medium
+              }
+              genres
+              averageScore
+              seasonYear
+              startDate {
+                year
+              }
+            }
+          }
+        `;
+        const res = await fetch(CONFIG.APIS.ANILIST, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ query, variables: { id: animeId } })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          anime = json.data?.Media;
+          if (anime) {
+            anime.year = anime.seasonYear || anime.startDate?.year || 2026;
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  if (anime) {
+    animeCache.set(anime.id, anime);
+    STATE.currentAnime = anime;
+    STATE.totalEpisodes = anime.episodes || 1;
+
+    window.hydrateModalDeepDetails({
+      description: anime.description,
+      nativeTitle: anime.title?.native,
+      genres: anime.genres,
+      duration: anime.duration || 24,
+      status: anime.status,
+      averageScore: anime.averageScore,
+      year: anime.year
+    });
+
+    window.updateModalWatchlistButtonState();
+
+    if (anime.bannerImage || anime.coverImage?.extraLarge) {
+      window.extractChromaAmbilight(anime.bannerImage || anime.coverImage?.extraLarge);
+    }
+
+    await window.resolveTMDBId();
+    window.executeStream(0);
+
+    if (typeof window.renderEpisodeGrid === 'function') {
+      window.renderEpisodeGrid();
+    }
+  }
+};
+
+window.closeModal = function (skipUrlSync = false) {
+  const modalContainer = document.getElementById('modalContainer');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const wrap = document.getElementById('modalPlayerWrap');
+
+  if (modalContainer) modalContainer.classList.remove('active', 'open');
+  if (modalOverlay) modalOverlay.classList.remove('active', 'open');
+  if (wrap) wrap.innerHTML = '';
+
+  document.body.classList.remove('scroll-locked');
+  document.documentElement.classList.remove('scroll-locked');
+  STATE.isIframeStreamLive = false;
+
+  if (!skipUrlSync && window.Router) {
+    Router.set({ watch: null, ep: null, s: null, srv: null, fs: null });
+  }
+};
+
+window.nextEpisode = function () {
+  if (!STATE.currentAnime || STATE.currentAnime.format === 'MOVIE') return;
+  const maxEp = STATE.totalEpisodes || 999;
+  if (STATE.episode < maxEp) {
+    STATE.episode++;
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Loading Episode ${STATE.episode}...`);
+    }
+    window.executeStream(0);
+  } else {
+    if (typeof window.showToast === 'function') {
+      window.showToast('You have reached the final episode!');
+    }
+  }
+};
+
+window.prevEpisode = function () {
+  if (!STATE.currentAnime || STATE.currentAnime.format === 'MOVIE') return;
+  if (STATE.episode > 1) {
+    STATE.episode--;
+    window.executeStream(0);
+  }
+};
+
 window.hydrateModalDeepDetails = function (data) {
   if (!data) return;
   const descEl = document.getElementById('modalDesc');
@@ -1105,39 +1462,8 @@ window.renderTmdbLiveActionHome = async function () {
   }
 };
 
-window.updateHeroBillboard = function (item) {
-  const heroTitle = document.getElementById('heroTitle');
-  const heroDesc = document.getElementById('heroDesc');
-  const heroBg = document.getElementById('heroBg');
-  const heroScore = document.getElementById('heroScore');
-  const heroYear = document.getElementById('heroYear');
-  const heroFormat = document.getElementById('heroFormat');
-  const heroFormatBadge = document.getElementById('heroFormatBadge');
-  const heroPlayBtn = document.getElementById('heroPlayBtn');
-  const infoBtn = document.getElementById('heroInfoBtn');
-
-  if (heroTitle) heroTitle.innerText = item.title?.english || item.title?.romaji || 'Featured Title';
-  if (heroDesc) heroDesc.innerText = item.description || '';
-  if (heroBg && item.bannerImage) heroBg.src = item.bannerImage;
-  if (heroScore) heroScore.innerHTML = `<i class="fas fa-star"></i> ${item.averageScore || 95}% Match`;
-  if (heroYear) heroYear.innerText = item.year || '2026';
-  if (heroFormat) heroFormat.innerText = item.format === 'MOVIE' ? 'MOVIE' : 'TV SERIES';
-  if (heroFormatBadge) heroFormatBadge.innerHTML = `<i class="fas fa-play"></i> NETFLIX LIVE SPOTLIGHT`;
-
-  if (heroPlayBtn) {
-    heroPlayBtn.onclick = () => {
-      if (typeof window.openModalById === 'function') window.openModalById(item.id, 1, 1);
-    };
-  }
-  if (heroInfoBtn) {
-    heroInfoBtn.onclick = () => {
-      if (typeof window.openModalById === 'function') window.openModalById(item.id, 1, 1);
-    };
-  }
-};
-
 // ============================================================================
-// 12. UNIFIED CATEGORY DISCOVERY & QUICK CHIPS HANDLER (CROSS-SCRIPT SAFE)
+// 13. QUICK FILTERS & NAVIGATION SYSTEM
 // ============================================================================
 window.applyQuickFilter = async function (filterKey, element) {
   const norm = String(filterKey || 'ALL').toUpperCase();
@@ -1185,7 +1511,6 @@ window.applyQuickFilter = async function (filterKey, element) {
     }
   }
 
-  // Anime Universe Navigation Mode
   switch (norm) {
     case 'ALL':
       return window.navigateGenre(null, 'Home');
@@ -1254,7 +1579,6 @@ window.navigateGenre = async function (genre, label) {
     return;
   }
 
-  // Anime Universe Rendering
   if (typeof window.renderRow === 'function') {
     if (genre === 'Movie' || genre === 'Movies') {
       await window.renderRow('Anime Feature Films', { page: 1, perPage: 24, format: 'MOVIE', sort: ['POPULARITY_DESC'] }, false);
@@ -1311,7 +1635,6 @@ window.loadHindiDubbed = async function () {
     return;
   }
 
-  // Anime Universe Hindi Audio Content
   if (typeof window.renderHindiDubRow === 'function') {
     await window.renderHindiDubRow();
     if (typeof window.renderRow === 'function') {
@@ -1323,7 +1646,7 @@ window.loadHindiDubbed = async function () {
 };
 
 // ============================================================================
-// 13. DUAL-UNIVERSE TRANSFORMER (NETFLIX VS ANIME UNIVERSE)
+// 14. DUAL-UNIVERSE TRANSFORMER (NETFLIX VS ANIME UNIVERSE)
 // ============================================================================
 window.toggleNetflixMode = async function (forcedState = null, skipUrlSync = false) {
   if (typeof forcedState === 'boolean') {
@@ -1395,12 +1718,12 @@ window.toggleNetflixMode = async function (forcedState = null, skipUrlSync = fal
     }
 
     if (typeof window.showToast === 'function') window.showToast('Switched to Netflix Live-Action Mode');
-    if (typeof window.renderHeroSpotlight === 'function') await window.renderHeroSpotlight();
+    await window.renderHeroSpotlight();
     if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
   } else {
     document.body.classList.remove('netflix-theme-active');
     if (btn) btn.classList.remove('netflix-mode-active');
-    if (brandText) brandText.innerHTML = 'ANIMEDRIFT<small class="brand-badge">PORTAL</small>';
+    if (brandText) brandText.innerHTML = 'ANIME<small class="brand-badge">DRIFT</small>';
     if (searchInput) searchInput.placeholder = "Search anime, movies, series...";
 
     if (quickDock) {
@@ -1447,7 +1770,7 @@ window.toggleNetflixMode = async function (forcedState = null, skipUrlSync = fal
     }
 
     if (typeof window.showToast === 'function') window.showToast('Switched to Anime Universe');
-    if (typeof window.renderHeroSpotlight === 'function') await window.renderHeroSpotlight();
+    await window.renderHeroSpotlight();
     if (typeof window.renderHomeRows === 'function') await window.renderHomeRows();
   }
 
@@ -1455,7 +1778,308 @@ window.toggleNetflixMode = async function (forcedState = null, skipUrlSync = fal
 };
 
 // ============================================================================
-// 14. MODAL, DRAWER & WATCHLIST MANAGERS
+// 15. SEARCH, DISCOVERY & LIVE SHARING ENGINE
+// ============================================================================
+window.toggleSearch = function (forceOpen) {
+  const wrapper = document.getElementById('searchWrapper');
+  const input = document.getElementById('searchInput');
+  const dropdown = document.getElementById('searchDropdown');
+  if (!wrapper) return;
+
+  const shouldOpen = (forceOpen !== undefined) ? Boolean(forceOpen) : !wrapper.classList.contains('open');
+  if (shouldOpen) {
+    wrapper.classList.add('open');
+    if (input) input.focus();
+  } else {
+    wrapper.classList.remove('open');
+    if (input) input.value = '';
+    if (dropdown) {
+      dropdown.classList.remove('visible');
+      dropdown.innerHTML = '';
+    }
+  }
+};
+
+window.clearSearch = function () {
+  window.toggleSearch(false);
+};
+
+function initSearchEngine() {
+  const input = document.getElementById('searchInput');
+  const dropdown = document.getElementById('searchDropdown');
+  if (!input || !dropdown) return;
+
+  input.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    if (STATE.searchDebounce) clearTimeout(STATE.searchDebounce);
+
+    if (query.length < 2) {
+      dropdown.classList.remove('visible');
+      dropdown.innerHTML = '';
+      return;
+    }
+
+    STATE.searchDebounce = setTimeout(async () => {
+      dropdown.innerHTML = `<div style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>`;
+      dropdown.classList.add('visible');
+
+      try {
+        if (STATE.isNetflixMode) {
+          const res = await fetch(buildSecureTmdbUrl('search/multi', { query }));
+          if (!res.ok) throw new Error('Search failed');
+          const data = await res.json();
+          const results = (data.results || []).filter(r => r.media_type !== 'person' && (r.poster_path || r.backdrop_path)).slice(0, 8);
+
+          if (!results.length) {
+            dropdown.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No results found for "${query}"</div>`;
+            return;
+          }
+
+          dropdown.innerHTML = results.map(item => {
+            const formatted = window.formatTmdbMediaItem(item);
+            animeCache.set(formatted.id, formatted);
+            const title = formatted.title?.english || formatted.title?.romaji || 'Title';
+            const img = formatted.coverImage?.medium || formatted.coverImage?.large || '';
+            const year = formatted.year || '';
+            const type = formatted.format === 'MOVIE' ? 'Movie' : 'TV';
+
+            return `
+              <div class="search-item" onclick="window.clearSearch(); window.openModalById(${formatted.id});">
+                <img src="${img}" alt="${title}" />
+                <div class="search-info">
+                  <div class="search-title">${title}</div>
+                  <div class="search-meta"><span>${type}</span> &bull; <span>${year}</span></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          const gqlQuery = `
+            query ($search: String) {
+              Page(page: 1, perPage: 8) {
+                media(search: $search, type: ANIME, isAdult: false) {
+                  id
+                  idMal
+                  title {
+                    romaji
+                    english
+                    native
+                  }
+                  format
+                  status
+                  episodes
+                  description
+                  bannerImage
+                  coverImage {
+                    medium
+                    large
+                    extraLarge
+                  }
+                  genres
+                  averageScore
+                  seasonYear
+                  startDate {
+                    year
+                  }
+                }
+              }
+            }
+          `;
+          const res = await fetch(CONFIG.APIS.ANILIST, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ query: gqlQuery, variables: { search: query } })
+          });
+          if (!res.ok) throw new Error('AniList search failed');
+          const data = await res.json();
+          const results = data.data?.Page?.media || [];
+
+          if (!results.length) {
+            dropdown.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No anime found for "${query}"</div>`;
+            return;
+          }
+
+          dropdown.innerHTML = results.map(item => {
+            item.year = item.seasonYear || item.startDate?.year || 2026;
+            animeCache.set(item.id, item);
+            const title = item.title?.english || item.title?.romaji || 'Title';
+            const img = item.coverImage?.medium || item.coverImage?.large || '';
+            const format = item.format || 'TV';
+            const eps = item.episodes ? `${item.episodes} Ep` : 'Airing';
+
+            return `
+              <div class="search-item" onclick="window.clearSearch(); window.openModalById(${item.id});">
+                <img src="${img}" alt="${title}" />
+                <div class="search-info">
+                  <div class="search-title">${title}</div>
+                  <div class="search-meta"><span>${format}</span> &bull; <span>${eps}</span></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        dropdown.innerHTML = `<div style="padding:14px; text-align:center; color:var(--accent-red); font-size:12px;">Search failed. Check network.</div>`;
+      }
+    }, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#searchWrapper') && !e.target.closest('#searchDropdown')) {
+      dropdown.classList.remove('visible');
+    }
+  });
+}
+
+window.shareCurrentTitleLink = function (item = STATE.featuredAnime || STATE.currentAnime) {
+  if (!item) return;
+  const title = item.title?.english || item.title?.romaji || 'Anime';
+  const url = `${window.location.origin}/?watch=${item.id}${STATE.isNetflixMode ? '&mode=netflix' : ''}`;
+  if (navigator.share) {
+    navigator.share({
+      title: `${title} on AnimeDrift`,
+      text: `Watch ${title} in Ultra HD on AnimeDrift!`,
+      url: url
+    }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      if (typeof window.showToast === 'function') window.showToast('Link copied to clipboard!');
+    });
+  }
+};
+
+window.shareDeepLinkEpisode = function () {
+  if (!STATE.currentAnime) return;
+  const title = STATE.currentAnime.title?.english || STATE.currentAnime.title?.romaji || 'Anime';
+  const url = `${window.location.origin}/?watch=${STATE.currentAnime.id}&ep=${STATE.episode}&s=${STATE.season}&srv=${STATE.activeServer}${STATE.isNetflixMode ? '&mode=netflix' : ''}`;
+  if (navigator.share) {
+    navigator.share({
+      title: `${title} Ep ${STATE.episode} on AnimeDrift`,
+      text: `Watch ${title} Episode ${STATE.episode} on AnimeDrift!`,
+      url: url
+    }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      if (typeof window.showToast === 'function') window.showToast('Episode link copied to clipboard!');
+    });
+  }
+};
+
+window.playRandomAnime = async function () {
+  try {
+    if (animeCache.size > 0) {
+      const keys = Array.from(animeCache.keys());
+      const randomKey = keys[Math.floor(Math.random() * keys.length)];
+      window.openModalById(randomKey);
+      return;
+    }
+
+    if (STATE.isNetflixMode) {
+      const res = await fetch(buildSecureTmdbUrl('trending/all/week'));
+      if (res.ok) {
+        const data = await res.json();
+        const results = (data.results || []).filter(r => !r.genre_ids?.includes(CONFIG.TMDB_GENRES.ANIMATION_EXCLUDE_ID));
+        if (results.length > 0) {
+          const chosen = results[Math.floor(Math.random() * results.length)];
+          const formatted = window.formatTmdbMediaItem(chosen);
+          animeCache.set(formatted.id, formatted);
+          window.openModalById(formatted.id);
+          return;
+        }
+      }
+    } else {
+      const randomPage = Math.floor(Math.random() * 8) + 1;
+      const query = `
+        query ($page: Int) {
+          Page(page: $page, perPage: 20) {
+            media(type: ANIME, sort: [POPULARITY_DESC], isAdult: false) {
+              id
+              idMal
+              title {
+                romaji
+                english
+                native
+              }
+              format
+              status
+              episodes
+              description
+              bannerImage
+              coverImage {
+                large
+                extraLarge
+              }
+              genres
+              averageScore
+              seasonYear
+              startDate {
+                year
+              }
+            }
+          }
+        }
+      `;
+      const res = await fetch(CONFIG.APIS.ANILIST, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ query, variables: { page: randomPage } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const list = json.data?.Page?.media || [];
+        if (list.length > 0) {
+          const chosen = list[Math.floor(Math.random() * list.length)];
+          chosen.year = chosen.seasonYear || chosen.startDate?.year || 2026;
+          animeCache.set(chosen.id, chosen);
+          window.openModalById(chosen.id);
+          return;
+        }
+      }
+    }
+  } catch (err) {
+    if (typeof window.showToast === 'function') window.showToast('Could not roll random title');
+  }
+};
+
+window.toggleAudioVolumeBooster = function () {
+  const btn = document.getElementById('audioBoosterBtn');
+  const label = document.getElementById('audioBoosterLabel');
+  if (!btn || !label) return;
+
+  STATE.isAudioBoosted = !STATE.isAudioBoosted;
+  if (STATE.isAudioBoosted) {
+    btn.classList.add('boosted');
+    label.innerText = '200% Volume';
+    if (typeof window.showToast === 'function') window.showToast('Audio Boosted to 200%');
+  } else {
+    btn.classList.remove('boosted');
+    label.innerText = '100% Volume';
+    if (typeof window.showToast === 'function') window.showToast('Volume reset to 100%');
+  }
+
+  const iframe = document.getElementById('streamFrame');
+  if (iframe) {
+    iframe.contentWindow?.postMessage({
+      type: 'SET_VOLUME_BOOST',
+      boosted: STATE.isAudioBoosted
+    }, '*');
+  }
+};
+
+window.toggleCinemaLights = function () {
+  const btn = document.getElementById('cinemaLightsBtn');
+  STATE.isCinemaLights = !STATE.isCinemaLights;
+  document.body.classList.toggle('cinema-lights-dimmed', STATE.isCinemaLights);
+  if (btn) {
+    btn.style.color = STATE.isCinemaLights ? 'var(--accent-gold)' : '';
+  }
+  if (typeof window.showToast === 'function') {
+    window.showToast(STATE.isCinemaLights ? 'Lights Dimmed' : 'Lights On');
+  }
+};
+
+// ============================================================================
+// 16. DRAWER, WATCHLIST & WATCH PARTY MANAGERS
 // ============================================================================
 window.toggleMobileNav = function (isOpen, skipUrlSync = false) {
   const drawer = document.getElementById('mobileNavDrawer');
@@ -1518,7 +2142,7 @@ window.openWatchlistModal = function (skipUrlSync = false) {
     animeCache.set(anime.id, anime);
     const title = anime.title?.english || anime.title?.romaji || 'Title';
     listContainer.innerHTML += `
-      <div class="search-item" onclick="window.closeWatchlistModal(); if (typeof window.openModalById === 'function') window.openModalById(${anime.id});">
+      <div class="search-item" onclick="window.closeWatchlistModal(); window.openModalById(${anime.id});">
         <img src="${anime.coverImage?.extraLarge || anime.coverImage?.large || ''}" alt="${title}" />
         <div class="search-info">
           <div class="search-title">${title}</div>
@@ -1597,8 +2221,84 @@ window.updateWatchlistBadge = function () {
   if (mobileCounter) mobileCounter.innerText = STATE.watchlist.length;
 };
 
+window.openWatchPartyModal = function (skipUrlSync = false) {
+  const modal = document.getElementById('watchPartyModal');
+  const overlay = document.getElementById('watchPartyOverlay');
+  if (!modal || !overlay) return;
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+  overlay.classList.add('active');
+  document.body.classList.add('scroll-locked');
+  if (!skipUrlSync && window.Router) Router.set({ modal: 'watchparty' }, true);
+};
+
+window.closeWatchPartyModal = function (skipUrlSync = false) {
+  const modal = document.getElementById('watchPartyModal');
+  const overlay = document.getElementById('watchPartyOverlay');
+  if (!modal || !overlay) return;
+  modal.classList.remove('open');
+  modal.style.display = 'none';
+  overlay.classList.remove('active');
+  document.body.classList.remove('scroll-locked');
+  if (!skipUrlSync && window.Router && window.Router.get('modal') === 'watchparty') {
+    Router.set({ modal: null });
+  }
+};
+
+window.copyWatchPartyCode = function () {
+  const input = document.getElementById('partyMyPeerId');
+  if (!input || !input.value || input.value.includes('Click Host')) {
+    if (typeof window.showToast === 'function') window.showToast('Please click Host first!');
+    return;
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(input.value).then(() => {
+      if (typeof window.showToast === 'function') window.showToast('Room Code copied to clipboard!');
+    });
+  }
+};
+
+window.joinWatchPartyRoom = function () {
+  const input = document.getElementById('partyJoinInput');
+  if (!input || !input.value.trim()) {
+    if (typeof window.showToast === 'function') window.showToast('Please enter a room code');
+    return;
+  }
+  const code = input.value.trim();
+  if (window.p2pParty && typeof window.p2pParty.joinRoom === 'function') {
+    window.p2pParty.joinRoom(code);
+    window.closeWatchPartyModal();
+  } else {
+    if (typeof window.showToast === 'function') window.showToast(`Connecting to room ${code}...`);
+  }
+};
+
+window.openTraceMoeModal = function (skipUrlSync = false) {
+  const modal = document.getElementById('traceMoeModal');
+  const overlay = document.getElementById('traceMoeOverlay');
+  if (!modal || !overlay) return;
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+  overlay.classList.add('active');
+  document.body.classList.add('scroll-locked');
+  if (!skipUrlSync && window.Router) Router.set({ modal: 'tracemoe' }, true);
+};
+
+window.closeTraceMoeModal = function (skipUrlSync = false) {
+  const modal = document.getElementById('traceMoeModal');
+  const overlay = document.getElementById('traceMoeOverlay');
+  if (!modal || !overlay) return;
+  modal.classList.remove('open');
+  modal.style.display = 'none';
+  overlay.classList.remove('active');
+  document.body.classList.remove('scroll-locked');
+  if (!skipUrlSync && window.Router && window.Router.get('modal') === 'tracemoe') {
+    Router.set({ modal: null });
+  }
+};
+
 // ============================================================================
-// 15. NATIVE ANILIST AIRING SCHEDULE ENGINE (JIKAN DISCONTINUATION FIX)
+// 17. NATIVE ANILIST AIRING SCHEDULE ENGINE (JIKAN DISCONTINUATION FIX)
 // ============================================================================
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -1770,7 +2470,7 @@ window.renderScheduleList = function (items) {
     const score = media.averageScore ? `${media.averageScore}%` : 'N/A';
 
     return `
-      <div class="search-item" onclick="window.closeScheduleModal(); if (typeof window.openModalById === 'function') window.openModalById(${media.id});" style="cursor:pointer; display:flex; gap:12px; padding:10px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); align-items:center;">
+      <div class="search-item" onclick="window.closeScheduleModal(); window.openModalById(${media.id});" style="cursor:pointer; display:flex; gap:12px; padding:10px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); align-items:center;">
         <img src="${poster}" alt="${title}" style="width:48px; height:68px; object-fit:cover; border-radius:6px; flex-shrink:0;" />
         <div class="search-info" style="flex:1; min-width:0;">
           <div class="search-title" style="font-size:13px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
@@ -1784,8 +2484,27 @@ window.renderScheduleList = function (items) {
 };
 
 // ============================================================================
-// 16. KEYBOARD ACCESSIBILITY & SHORTCUT ENGINE
+// 18. KEYBOARD SHORTCUTS & FULLSCREEN CONTROLLER
 // ============================================================================
+window.toggleShortcutsModal = function (open, skipUrlSync = false) {
+  const modal = document.getElementById('shortcutsModal');
+  if (!modal) return;
+  const shouldOpen = (open !== undefined) ? Boolean(open) : !modal.classList.contains('open');
+  if (shouldOpen) {
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+    document.body.classList.add('scroll-locked');
+    if (!skipUrlSync && window.Router) Router.set({ modal: 'shortcuts' }, true);
+  } else {
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+    document.body.classList.remove('scroll-locked');
+    if (!skipUrlSync && window.Router && window.Router.get('modal') === 'shortcuts') {
+      Router.set({ modal: null });
+    }
+  }
+};
+
 function initKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
     if (['input', 'textarea', 'select'].includes(document.activeElement.tagName.toLowerCase())) return;
@@ -1799,7 +2518,7 @@ function initKeyboardShortcuts() {
       case 's':
       case 'S':
         e.preventDefault();
-        if (typeof window.toggleSearch === 'function') window.toggleSearch();
+        window.toggleSearch();
         break;
       case ' ':
       case 'k':
@@ -1819,7 +2538,7 @@ function initKeyboardShortcuts() {
         break;
       case 'n':
       case 'N':
-        if (typeof window.nextEpisode === 'function') window.nextEpisode();
+        window.nextEpisode();
         break;
     }
   });
@@ -1848,7 +2567,7 @@ window.toggleTheaterMode = function () {
 };
 
 // ============================================================================
-// 17. RUNTIME UTILITIES & TELEMETRY LISTENERS
+// 19. RUNTIME UTILITIES & TELEMETRY LISTENERS
 // ============================================================================
 window.showToast = function (msg) {
   const container = document.getElementById('toastContainer');
@@ -1904,16 +2623,17 @@ window.addEventListener('message', (e) => {
 
   if (e.data.type === 'PLAYER_ENDED' && STATE.isSmartAutoPlayNext) {
     if (typeof window.showToast === 'function') window.showToast('Episode complete. Loading next...');
-    if (typeof window.nextEpisode === 'function') window.nextEpisode();
+    window.nextEpisode();
   }
 });
 
 // ============================================================================
-// 18. BOOTSTRAP ORCHESTRATOR (GUARANTEED DISPATCH ON MOBILE & DESKTOP)
+// 20. BOOTSTRAP ORCHESTRATOR & FALLBACK HYDRATION ENGINE
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   window.updateWatchlistBadge();
   initKeyboardShortcuts();
+  initSearchEngine();
 
   document.body.addEventListener('focusin', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
@@ -1933,7 +2653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pill) pill.style.display = isPwaInstalled ? 'inline-flex' : 'none';
   } catch (e) {}
 
-  // 1. Process URL routing FIRST
+  // 1. Process URL routing
   if (window.Router) {
     try {
       await window.Router.syncUIFromURL();
@@ -1942,12 +2662,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 2. Dispatch Hero Spotlight
-  if (typeof window.renderHeroSpotlight === 'function') {
-    window.renderHeroSpotlight().catch((err) => {
-      console.warn('[Hero Spotlight Error]:', err);
-    });
-  }
+  // 2. Dispatch Hero Spotlight immediately
+  window.renderHeroSpotlight().catch((err) => {
+    console.warn('[Hero Spotlight Error]:', err);
+  });
 
   // 3. Clear noscript fallback and ALWAYS dispatch Home Rows on load
   const contentRows = document.getElementById('contentRows');
@@ -1964,9 +2682,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }
+
+  // 4. Guaranteed Fail-Safe: Hydrate hero from loaded rows if spotlight is still stuck
+  const ensureHeroHydration = () => {
+    const heroTitle = document.getElementById('heroTitle');
+    if (heroTitle && (heroTitle.innerText === 'Connecting to Stream...' || !heroTitle.innerText.trim())) {
+      if (animeCache.size > 0) {
+        const first = animeCache.values().next().value;
+        if (first) window.updateHeroBillboard(first);
+      } else {
+        window.renderHeroSpotlight();
+      }
+    }
+  };
+
+  setTimeout(ensureHeroHydration, 500);
+  setTimeout(ensureHeroHydration, 1500);
+  setTimeout(ensureHeroHydration, 3000);
 });
 
-// Mobile viewport height and resize handling
+// Mobile viewport height and dynamic resize handling
 window.addEventListener('resize', () => {
   STATE.isMobile = window.innerWidth <= 768;
   const vh = window.innerHeight * 0.01;
