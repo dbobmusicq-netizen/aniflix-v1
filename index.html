@@ -50,38 +50,17 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Instant Cache Purge & Version Sync Engine -->
+  <!-- Build Version Definition -->
   <script>
-    (function () {
-      const TARGET_BUILD = '70.0.0';
-      const storedBuild = localStorage.getItem('animedrift_build_version');
-
-      if (storedBuild !== TARGET_BUILD) {
-        if ('caches' in window) {
-          caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
-        }
-        if (window.indexedDB) {
-          try {
-            indexedDB.deleteDatabase('AnimeDriftUltraDB');
-            indexedDB.deleteDatabase('AnimeDriftDatabase');
-          } catch (e) {}
-        }
-        localStorage.setItem('animedrift_build_version', TARGET_BUILD);
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(regs => {
-            regs.forEach(reg => reg.unregister());
-          });
-        }
-      }
-    })();
+    window.APP_BUILD_VERSION = '72.0.0';
   </script>
 
-  <!-- Favicon Suite & PWA Icons (Synchronized to v70.0.0) -->
-  <link rel="shortcut icon" href="favicon.ico?v=70.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=70.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=70.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=70.0.0" />
-  <link rel="manifest" href="manifest.json?v=70.0.0" />
+  <!-- Favicon Suite & PWA Icons (Synchronized to v72.0.0) -->
+  <link rel="shortcut icon" href="favicon.ico?v=72.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=72.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=72.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=72.0.0" />
+  <link rel="manifest" href="manifest.json?v=72.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -107,12 +86,12 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v70.0.0) -->
-  <link rel="stylesheet" href="theme-base.css?v=70.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=70.0.0">
-  <link rel="stylesheet" href="p2p.css?v=70.0.0">
-  <link rel="stylesheet" href="webapp.css?v=70.0.0">
-  <link rel="stylesheet" href="mobile.css?v=70.0.0">
+  <!-- Modular Stylesheets (Synchronized to v72.0.0) -->
+  <link rel="stylesheet" href="theme-base.css?v=72.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=72.0.0">
+  <link rel="stylesheet" href="p2p.css?v=72.0.0">
+  <link rel="stylesheet" href="webapp.css?v=72.0.0">
+  <link rel="stylesheet" href="mobile.css?v=72.0.0">
 
   <style>
     /* ==========================================================================
@@ -227,6 +206,184 @@
       to { transform: rotate(360deg); }
     }
 
+    /* ==========================================================================
+       VERSION UPDATE & DEEP PURGE TOAST MODAL
+       ========================================================================== */
+    #updateNoticeBanner {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999999;
+      background: rgba(14, 15, 24, 0.96);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 240, 255, 0.15);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 380px;
+      width: calc(100vw - 32px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(30px);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #updateNoticeBanner.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .update-banner-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .update-banner-header i {
+      color: #00f0ff;
+      font-size: 18px;
+      animation: pulseUpdate 1.8s infinite;
+    }
+    @keyframes pulseUpdate {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #00f0ff); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 10px #00f0ff); }
+    }
+    .update-banner-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .update-banner-body {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.72);
+      line-height: 1.45;
+    }
+    .update-banner-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn-update-purge {
+      background: linear-gradient(135deg, #ff0844, #ff4d6d);
+      color: #fff;
+      border: none;
+      border-radius: 99px;
+      padding: 8px 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(255, 8, 68, 0.4);
+      transition: transform 0.2s, filter 0.2s;
+    }
+    .btn-update-purge:hover {
+      transform: scale(1.03);
+      filter: brightness(1.1);
+    }
+    .btn-update-dismiss {
+      background: rgba(255, 255, 255, 0.08);
+      color: #a0a5b8;
+      border: none;
+      border-radius: 99px;
+      padding: 8px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+    }
+    .btn-update-dismiss:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    /* Purge Loading Screen */
+    #cachePurgeOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999999;
+      background: rgba(4, 4, 6, 0.98);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+      backdrop-filter: blur(20px);
+    }
+    #cachePurgeOverlay.active {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       DESKTOP CAROUSEL MOUSE DRAG & CHEVRON CONTROLS
+       ========================================================================== */
+    .carousel-rail,
+    .carousel-track,
+    .content-row-items,
+    .ep-grid {
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      scroll-behavior: smooth;
+    }
+    .carousel-rail.is-mouse-dragging,
+    .carousel-track.is-mouse-dragging {
+      cursor: grabbing !important;
+      scroll-behavior: auto !important;
+    }
+    .carousel-rail.is-mouse-dragging * {
+      pointer-events: none !important;
+    }
+
+    /* Carousel Floating Navigation Arrows for Mouse Users */
+    .row-wrapper-relative {
+      position: relative;
+    }
+    .row-nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(14, 15, 24, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #fff;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.2s ease, background 0.2s ease;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    }
+    .row-wrapper-relative:hover .row-nav-arrow {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .row-nav-arrow:hover {
+      background: #ff0844;
+      border-color: #ff0844;
+      transform: translateY(-50%) scale(1.12);
+    }
+    .row-nav-arrow.arrow-prev {
+      left: 12px;
+    }
+    .row-nav-arrow.arrow-next {
+      right: 12px;
+    }
+
     /* Community Comments Iframe Drawer */
     #iframeChatDrawer {
       position: fixed;
@@ -327,6 +484,34 @@
       <span class="aesthetic-status-text">Connecting Edge Network...</span>
     </div>
   </div>
+
+  <!-- DEEP CACHE PURGE ACTIVE SCREEN -->
+  <div id="cachePurgeOverlay" role="alert" aria-live="assertive">
+    <div class="aesthetic-loader">
+      <div class="aesthetic-brand-title">Purging<span>Cache</span></div>
+      <div class="aesthetic-line-track">
+        <div class="aesthetic-line-fill"></div>
+      </div>
+      <span class="aesthetic-status-text" id="purgeStatusText">Clearing Edge Assets & Refreshing Engine...</span>
+    </div>
+  </div>
+
+  <!-- VERSION UPDATE NOTIFICATION TOAST -->
+  <aside id="updateNoticeBanner" role="dialog" aria-labelledby="updateNoticeTitle" aria-live="polite">
+    <div class="update-banner-header">
+      <i class="fas fa-sparkles"></i>
+      <span class="update-banner-title" id="updateNoticeTitle">Engine Update Ready</span>
+    </div>
+    <div class="update-banner-body">
+      A fresh version of AnimeDrift (<span id="newVersionTag">v72.0.0</span>) is ready with faster streaming nodes and UI enhancements.
+    </div>
+    <div class="update-banner-actions">
+      <button class="btn-update-purge" type="button" onclick="window.executeDeepCachePurge()">
+        <i class="fas fa-rotate"></i> Update & Clear Cache
+      </button>
+      <button class="btn-update-dismiss" type="button" onclick="window.dismissUpdateNotice()">Later</button>
+    </div>
+  </aside>
 
   <!-- MODE TRANSITION HUD LOADER -->
   <div id="globalTransitionLoader" role="status" aria-live="polite">
@@ -460,6 +645,10 @@
       <button class="drawer-tool-btn" id="drawerNotifyBtn" type="button" onclick="window.toggleMobileNav(false); requestNotificationPermission()">
         <i class="fas fa-bell" style="color:var(--accent-gold);"></i>
         <span>Notifications</span>
+      </button>
+      <button class="drawer-tool-btn" type="button" onclick="window.toggleMobileNav(false); window.executeDeepCachePurge()">
+        <i class="fas fa-broom" style="color:var(--accent-red);"></i>
+        <span>Clear Cache</span>
       </button>
     </div>
 
@@ -828,23 +1017,228 @@
         <div class="shortcut-row"><span>Fullscreen</span><kbd>F</kbd></div>
         <div class="shortcut-row"><span>Mute</span><kbd>M</kbd></div>
         <div class="shortcut-row"><span>Close Modal</span><kbd>Esc</kbd></div>
+        <div class="shortcut-row"><span>Drag Cards (Mouse)</span><kbd>Right-Click + Drag</kbd></div>
       </div>
     </div>
   </div>
 
-  <!-- SCRIPT PIPELINE ENGINES (Synchronized to v70.0.0) -->
+  <!-- SCRIPT PIPELINE ENGINES (Synchronized to v72.0.0) -->
   <script src="core-engine.js?v=72.0.0"></script>
-  <script src="dash-player.js?v=70.0.0"></script>
-  <script src="streaming-ui.js?v=70.0.0"></script>
-  <script src="p2p.js?v=70.0.0"></script>
-  <script src="webapp.js?v=70.0.0"></script>
-  <script src="adblock-engine.js?v=70.0.0"></script>
+  <script src="dash-player.js?v=72.0.0"></script>
+  <script src="streaming-ui.js?v=72.0.0"></script>
+  <script src="p2p.js?v=72.0.0"></script>
+  <script src="webapp.js?v=72.0.0"></script>
+  <script src="adblock-engine.js?v=72.0.0"></script>
 
-  <!-- CONTROLLERS & INTERACTIONS -->
+  <!-- ADVANCED LIFECYCLE, UPDATE DETECTION & DESKTOP MOUSE-DRAG CONTROLLERS -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
 
-    // Nav Transition Loader Controller
+    // ========================================================================
+    // 1. UPDATE DETECTION & DEEP PURGE CONTROLLER
+    // ========================================================================
+    (function initUpdateAndCacheLifecycle() {
+      const TARGET_BUILD = window.APP_BUILD_VERSION || '72.0.0';
+      const storedBuild = localStorage.getItem('animedrift_build_version');
+
+      // Check if build version changed from previous visit
+      if (storedBuild && storedBuild !== TARGET_BUILD) {
+        setTimeout(() => {
+          window.showUpdateNotice(TARGET_BUILD);
+        }, 800);
+      } else if (!storedBuild) {
+        localStorage.setItem('animedrift_build_version', TARGET_BUILD);
+      }
+
+      // Listen for Service Worker updates
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  window.showUpdateNotice(TARGET_BUILD);
+                }
+              });
+            }
+          });
+        });
+
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('[AnimeDrift SW] Controller changed. Engine updated.');
+        });
+      }
+    })();
+
+    window.showUpdateNotice = function(version) {
+      const banner = document.getElementById('updateNoticeBanner');
+      const tag = document.getElementById('newVersionTag');
+      if (tag && version) tag.innerText = `v${version}`;
+      if (banner) banner.classList.add('show');
+    };
+
+    window.dismissUpdateNotice = function() {
+      const banner = document.getElementById('updateNoticeBanner');
+      if (banner) banner.classList.remove('show');
+    };
+
+    // Deep Clear Cache Engine
+    window.executeDeepCachePurge = async function() {
+      const overlay = document.getElementById('cachePurgeOverlay');
+      const statusText = document.getElementById('purgeStatusText');
+      if (overlay) overlay.classList.add('active');
+
+      try {
+        if (statusText) statusText.innerText = 'Purging Stale Edge CacheStorage...';
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+
+        if (statusText) statusText.innerText = 'Unregistering Obsolete Service Workers...';
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+
+        if (statusText) statusText.innerText = 'Cleaning Stored State Indexes...';
+        if (window.indexedDB) {
+          try {
+            indexedDB.deleteDatabase('AnimeDriftUltraDB');
+            indexedDB.deleteDatabase('AnimeDriftDatabase');
+          } catch (e) {}
+        }
+
+        sessionStorage.clear();
+        localStorage.setItem('animedrift_build_version', window.APP_BUILD_VERSION || '72.0.0');
+
+        if (statusText) statusText.innerText = 'Finalizing Refresh Pipeline...';
+        await new Promise(r => setTimeout(r, 600));
+
+        // Reload fresh with cache buster query
+        const url = new URL(window.location.href);
+        url.searchParams.set('build_purge', Date.now());
+        window.location.href = url.toString();
+      } catch (err) {
+        console.error('[Deep Cache Purge Failed]:', err);
+        window.location.reload(true);
+      }
+    };
+
+    // ========================================================================
+    // 2. DESKTOP MOUSE DRAG & MOUSE WHEEL SCROLL FOR ANIME RAILS
+    // ========================================================================
+    (function initDesktopMouseDragAndWheel() {
+      let isDragging = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let targetRail = null;
+      let hasDraggedSignificantly = false;
+
+      // Click & Hold Right Mouse Button (button 2) or Middle Click (button 1) to Drag
+      document.addEventListener('mousedown', (e) => {
+        // Detect Right Click (2) or Middle Click (1)
+        if (e.button !== 2 && e.button !== 1) return;
+
+        const rail = e.target.closest('.carousel-rail, .carousel-track, .content-row-items, .chips-container, #filterChips, .schedule-day-tabs');
+        if (!rail) return;
+
+        isDragging = true;
+        hasDraggedSignificantly = false;
+        targetRail = rail;
+        startX = e.pageX - rail.offsetLeft;
+        scrollLeft = rail.scrollLeft;
+
+        rail.classList.add('is-mouse-dragging');
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging || !targetRail) return;
+
+        const x = e.pageX - targetRail.offsetLeft;
+        const walk = (x - startX) * 1.7; // Drag acceleration factor
+
+        if (Math.abs(walk) > 6) {
+          hasDraggedSignificantly = true;
+        }
+
+        targetRail.scrollLeft = scrollLeft - walk;
+      });
+
+      const stopDragging = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        if (targetRail) {
+          targetRail.classList.remove('is-mouse-dragging');
+          targetRail = null;
+        }
+      };
+
+      document.addEventListener('mouseup', stopDragging);
+      document.addEventListener('mouseleave', stopDragging);
+
+      // Prevent the browser context menu from popping up when user finishes right-click dragging
+      document.addEventListener('contextmenu', (e) => {
+        if (hasDraggedSignificantly) {
+          e.preventDefault();
+          hasDraggedSignificantly = false;
+        }
+      });
+
+      // Mouse Wheel to Horizontal Carousel Conversion
+      document.addEventListener('wheel', (e) => {
+        const rail = e.target.closest('.carousel-rail, .carousel-track, .content-row-items, .chips-container, #filterChips');
+        if (!rail) return;
+
+        // If user is rolling the wheel vertically, scroll the row horizontally
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          rail.scrollLeft += e.deltaY * 1.35;
+        }
+      }, { passive: false });
+
+      // Automatically attach Left/Right Chevron Navigation buttons to dynamic row carousels
+      const observeAndAttachRowArrows = () => {
+        document.querySelectorAll('.carousel-rail, .carousel-track, .content-row').forEach(rail => {
+          const wrapper = rail.parentElement;
+          if (!wrapper || wrapper.classList.contains('row-nav-injected')) return;
+          wrapper.classList.add('row-wrapper-relative', 'row-nav-injected');
+
+          const leftBtn = document.createElement('button');
+          leftBtn.type = 'button';
+          leftBtn.className = 'row-nav-arrow arrow-prev';
+          leftBtn.setAttribute('aria-label', 'Previous Cards');
+          leftBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+          leftBtn.onclick = () => {
+            rail.scrollBy({ left: -(rail.clientWidth * 0.75), behavior: 'smooth' });
+          };
+
+          const rightBtn = document.createElement('button');
+          rightBtn.type = 'button';
+          rightBtn.className = 'row-nav-arrow arrow-next';
+          rightBtn.setAttribute('aria-label', 'Next Cards');
+          rightBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+          rightBtn.onclick = () => {
+            rail.scrollBy({ left: rail.clientWidth * 0.75, behavior: 'smooth' });
+          };
+
+          wrapper.appendChild(leftBtn);
+          wrapper.appendChild(rightBtn);
+        });
+      };
+
+      const observer = new MutationObserver(observeAndAttachRowArrows);
+      const contentRows = document.getElementById('contentRows');
+      if (contentRows) {
+        observer.observe(contentRows, { childList: true, subtree: true });
+      }
+      setTimeout(observeAndAttachRowArrows, 1200);
+    })();
+
+    // ========================================================================
+    // 3. UI LOADERS, DRAWER & PWA INSTALL HANDLERS
+    // ========================================================================
     let globalLoaderTimeout = null;
     window.triggerNavWithLoader = function(label, callback) {
       if (isSearchBot) {
@@ -868,7 +1262,6 @@
       }, 3500);
     };
 
-    // Blogger Community Comments Controller
     window.toggleIframeChat = function(open) {
       const drawer = document.getElementById('iframeChatDrawer');
       const overlay = document.getElementById('chatDrawerOverlay');
@@ -893,7 +1286,6 @@
       window.open('https://nexalogz.blogspot.com/2026/09/animedrift.html', '_blank', 'noopener,noreferrer');
     };
 
-    // Clean Splash Screen Removal on Load
     window.addEventListener('load', () => {
       const splash = document.getElementById('siteSplashPreloader');
       if (splash) {
@@ -902,7 +1294,6 @@
       }
     });
 
-    // PWA Install Lifecycle Handler
     let deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
