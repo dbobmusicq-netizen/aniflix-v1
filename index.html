@@ -52,15 +52,15 @@
 
   <!-- Build Version Definition -->
   <script>
-    window.APP_BUILD_VERSION = '72.0.0';
+    window.APP_BUILD_VERSION = '73.0.0';
   </script>
 
-  <!-- Favicon Suite & PWA Icons (Synchronized to v72.0.0) -->
-  <link rel="shortcut icon" href="favicon.ico?v=72.0.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=72.0.0" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=72.0.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=72.0.0" />
-  <link rel="manifest" href="manifest.json?v=72.0.0" />
+  <!-- Favicon Suite & PWA Icons (Synchronized to v73.0.0) -->
+  <link rel="shortcut icon" href="favicon.ico?v=73.0.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=73.0.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=73.0.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=73.0.0" />
+  <link rel="manifest" href="manifest.json?v=73.0.0" />
   
   <!-- Mobile & PWA Theme Metadata -->
   <meta name="theme-color" content="#040406" />
@@ -86,16 +86,81 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
-  <!-- Modular Stylesheets (Synchronized to v72.0.0) -->
-  <link rel="stylesheet" href="theme-base.css?v=72.0.0">
-  <link rel="stylesheet" href="components-modal.css?v=72.0.0">
-  <link rel="stylesheet" href="p2p.css?v=72.0.0">
-  <link rel="stylesheet" href="webapp.css?v=72.0.0">
-  <link rel="stylesheet" href="mobile.css?v=72.0.0">
+  <!-- Modular Stylesheets (Synchronized to v73.0.0) -->
+  <link rel="stylesheet" href="theme-base.css?v=73.0.0">
+  <link rel="stylesheet" href="components-modal.css?v=73.0.0">
+  <link rel="stylesheet" href="p2p.css?v=73.0.0">
+  <link rel="stylesheet" href="webapp.css?v=73.0.0">
+  <link rel="stylesheet" href="mobile.css?v=73.0.0">
 
   <style>
     /* ==========================================================================
-       AESTHETIC SPLASH PRELOADER & HUD
+       0. ULTRA-FAST SCROLLING & ZERO-BLANK ANTI-CHECKERBOARD ENGINE
+       ========================================================================== */
+    html, :root {
+      background-color: #040406 !important;
+      background: #040406 !important;
+      color-scheme: dark;
+      overscroll-behavior-y: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      background-color: #040406 !important;
+      background: #040406 !important;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      contain: paint;
+    }
+
+    /* Hardware compositing layer promotion on root structural blocks */
+    .hero,
+    .header,
+    .content-rows,
+    .content-row,
+    .carousel-rail,
+    .carousel-track {
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      -webkit-perspective: 1000px;
+      perspective: 1000px;
+    }
+
+    /* Content rows layout preservation during fast vertical scrolling */
+    .content-rows {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      background: #040406;
+      contain: layout style;
+    }
+
+    .content-row {
+      contain: layout style;
+      margin-bottom: 24px;
+    }
+
+    /* Card placeholder bounds: prevents reflow collapse on rapid flicking */
+    .anime-card,
+    .card-poster-wrap,
+    .search-item img {
+      background-color: #11121b;
+      aspect-ratio: 2 / 3;
+      transform: translateZ(0);
+    }
+
+    /* ==========================================================================
+       1. AESTHETIC SPLASH PRELOADER & HUD
        ========================================================================== */
     #siteSplashPreloader {
       position: fixed;
@@ -233,7 +298,7 @@
     }
 
     /* ==========================================================================
-       VERSION UPDATE & DEEP PURGE TOAST MODAL
+       2. VERSION UPDATE & DEEP PURGE TOAST MODAL
        ========================================================================== */
     #updateNoticeBanner {
       position: fixed;
@@ -347,7 +412,7 @@
     }
 
     /* ==========================================================================
-       DESKTOP-ONLY SCROLL CHEVRONS & MOUSE DRAG
+       3. DESKTOP-ONLY SCROLL CHEVRONS & MOUSE DRAG
        Strictly hidden on mobile & touch devices!
        ========================================================================== */
     .row-wrapper-relative {
@@ -434,98 +499,17 @@
         scroll-behavior: smooth;
         touch-action: pan-x pan-y;
       }
-    }
 
-    /* ==========================================================================
-       MOBILE BOTTOM NAVIGATION BAR (APP DOCK)
-       ========================================================================== */
-    .mobile-bottom-dock {
-      display: none;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
-      }
-
-      .mobile-bottom-dock {
-        display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 99990;
-        height: calc(58px + env(safe-area-inset-bottom, 0px));
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        background: rgba(8, 9, 14, 0.94);
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.8);
-        align-items: center;
-        justify-content: space-around;
-      }
-
-      .dock-nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        color: #747994;
-        text-decoration: none;
-        font-family: 'Outfit', sans-serif;
-        font-size: 10px;
-        font-weight: 600;
-        gap: 3px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        transition: color 0.2s, transform 0.15s;
-        position: relative;
-      }
-
-      .dock-nav-item i {
-        font-size: 17px;
-      }
-
-      .dock-nav-item.active,
-      .dock-nav-item:active {
-        color: #ff0844;
-        transform: scale(0.96);
-      }
-
-      .dock-badge-dot {
-        position: absolute;
-        top: 6px;
-        right: calc(50% - 15px);
-        background: #ff0844;
-        color: #fff;
-        font-size: 9px;
-        font-weight: 800;
-        padding: 1px 5px;
-        border-radius: 99px;
-        min-width: 14px;
-        text-align: center;
-      }
-
-      /* Adjust update banner positioning on mobile screens */
       #updateNoticeBanner {
-        bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
         right: 16px !important;
         left: 16px !important;
         width: auto !important;
       }
-
-      /* Floating dock alignment on mobile */
-      .floating-quick-dock {
-        bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
-      }
     }
 
     /* ==========================================================================
-       FLOATING BACK TO TOP BUTTON
+       4. FLOATING BACK TO TOP BUTTON
        ========================================================================== */
     #backToTopBtn {
       position: fixed;
@@ -564,7 +548,7 @@
 
     @media (max-width: 768px) {
       #backToTopBtn {
-        bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
         left: 16px !important;
         width: 40px;
         height: 40px;
@@ -695,7 +679,7 @@
       <span class="update-banner-title" id="updateNoticeTitle">Engine Update Ready</span>
     </div>
     <div class="update-banner-body">
-      A fresh version of AnimeDrift (<span id="newVersionTag">v72.0.0</span>) is ready with faster streaming nodes and UI enhancements.
+      A fresh version of AnimeDrift (<span id="newVersionTag">v73.0.0</span>) is ready with faster streaming nodes and UI enhancements.
     </div>
     <div class="update-banner-actions">
       <button class="btn-update-purge" type="button" onclick="window.executeDeepCachePurge()">
@@ -932,7 +916,7 @@
     </div>
   </section>
 
-  <!-- CONTENT ROWS -->
+  <!-- CONTENT ROWS (Protected from blanking on fast scroll) -->
   <main class="content-rows" id="contentRows"></main>
 
   <!-- STREAMING MODAL -->
@@ -1219,40 +1203,15 @@
     </div>
   </div>
 
-  <!-- NATIVE MOBILE BOTTOM APP DOCK -->
-  <nav class="mobile-bottom-dock" aria-label="Mobile Bottom Navigation">
-    <button class="dock-nav-item active" type="button" onclick="triggerNavWithLoader('Home', () => window.navigateGenre(null, 'Home'))">
-      <i class="fas fa-house"></i>
-      <span>Home</span>
-    </button>
-    <button class="dock-nav-item" type="button" onclick="triggerNavWithLoader('Hindi Dubs', () => window.loadHindiDubbed())">
-      <i class="fas fa-language"></i>
-      <span>Hindi Dubs</span>
-    </button>
-    <button class="dock-nav-item" type="button" onclick="window.openScheduleModal()">
-      <i class="fas fa-calendar-days"></i>
-      <span>Schedule</span>
-    </button>
-    <button class="dock-nav-item" type="button" onclick="window.toggleSearch(true)">
-      <i class="fas fa-search"></i>
-      <span>Search</span>
-    </button>
-    <button class="dock-nav-item" type="button" onclick="window.openWatchlistModal()">
-      <i class="fas fa-bookmark"></i>
-      <span>My List</span>
-      <span class="dock-badge-dot" id="dockWatchlistCount">0</span>
-    </button>
-  </nav>
+  <!-- SCRIPT PIPELINE ENGINES (Synchronized to v73.0.0) -->
+  <script src="core-engine.js?v=73.0.0"></script>
+  <script src="dash-player.js?v=73.0.0"></script>
+  <script src="streaming-ui.js?v=73.0.0"></script>
+  <script src="p2p.js?v=73.0.0"></script>
+  <script src="webapp.js?v=73.0.0"></script>
+  <script src="adblock-engine.js?v=73.0.0"></script>
 
-  <!-- SCRIPT PIPELINE ENGINES (Synchronized to v72.0.0) -->
-  <script src="core-engine.js?v=72.0.0"></script>
-  <script src="dash-player.js?v=72.0.0"></script>
-  <script src="streaming-ui.js?v=72.0.0"></script>
-  <script src="p2p.js?v=72.0.0"></script>
-  <script src="webapp.js?v=72.0.0"></script>
-  <script src="adblock-engine.js?v=72.0.0"></script>
-
-  <!-- ADVANCED LIFECYCLE, UPDATE DETECTION & DESKTOP MOUSE-DRAG CONTROLLERS -->
+  <!-- ADVANCED LIFECYCLE, UPDATE DETECTION & SCROLL ENGINES -->
   <script>
     const isSearchBot = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|duckduckbot|slurp|chrome-lighthouse/i.test(navigator.userAgent || '');
     const isTouchDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
@@ -1261,10 +1220,9 @@
     // 1. UPDATE DETECTION & DEEP PURGE CONTROLLER
     // ========================================================================
     (function initUpdateAndCacheLifecycle() {
-      const TARGET_BUILD = window.APP_BUILD_VERSION || '73.0.0';
+      const TARGET_BUILD = window.APP_BUILD_VERSION || '74.0.0';
       const storedBuild = localStorage.getItem('animedrift_build_version');
 
-      // Check if build version changed from previous visit
       if (storedBuild && storedBuild !== TARGET_BUILD) {
         setTimeout(() => {
           window.showUpdateNotice(TARGET_BUILD);
@@ -1273,7 +1231,6 @@
         localStorage.setItem('animedrift_build_version', TARGET_BUILD);
       }
 
-      // Listen for Service Worker updates
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(reg => {
           reg.addEventListener('updatefound', () => {
@@ -1334,12 +1291,11 @@
         }
 
         sessionStorage.clear();
-        localStorage.setItem('animedrift_build_version', window.APP_BUILD_VERSION || '72.0.0');
+        localStorage.setItem('animedrift_build_version', window.APP_BUILD_VERSION || '73.0.0');
 
         if (statusText) statusText.innerText = 'Finalizing Refresh Pipeline...';
         await new Promise(r => setTimeout(r, 600));
 
-        // Reload fresh with cache buster query
         const url = new URL(window.location.href);
         url.searchParams.set('build_purge', Date.now());
         window.location.href = url.toString();
@@ -1353,7 +1309,6 @@
     // 2. DESKTOP-ONLY MOUSE DRAG & MOUSE WHEEL SCROLL FOR ANIME RAILS
     // ========================================================================
     (function initDesktopMouseDragAndWheel() {
-      // Strictly disabled on mobile touch devices
       if (isTouchDevice()) return;
 
       let isDragging = false;
@@ -1362,7 +1317,6 @@
       let targetRail = null;
       let hasDraggedSignificantly = false;
 
-      // Click & Hold Right Mouse Button (button 2) or Middle Click (button 1) to Drag
       document.addEventListener('mousedown', (e) => {
         if (isTouchDevice()) return;
         if (e.button !== 2 && e.button !== 1) return;
@@ -1404,7 +1358,6 @@
       document.addEventListener('mouseup', stopDragging);
       document.addEventListener('mouseleave', stopDragging);
 
-      // Prevent the browser context menu from popping up when user finishes right-click dragging
       document.addEventListener('contextmenu', (e) => {
         if (hasDraggedSignificantly) {
           e.preventDefault();
@@ -1412,7 +1365,6 @@
         }
       });
 
-      // Mouse Wheel to Horizontal Carousel Conversion
       document.addEventListener('wheel', (e) => {
         if (isTouchDevice()) return;
         const rail = e.target.closest('.carousel-rail, .carousel-track, .content-row-items, .chips-container, #filterChips');
@@ -1424,7 +1376,7 @@
         }
       }, { passive: false });
 
-      // Automatically attach Left/Right Chevron Navigation buttons ONLY for desktop users
+      // Automatically attach Left/Right Chevron Navigation buttons ONLY for desktop
       const observeAndAttachRowArrows = () => {
         if (isTouchDevice()) return;
 
@@ -1469,7 +1421,6 @@
     // ========================================================================
     let globalLoaderTimeout = null;
     window.triggerNavWithLoader = function(label, callback) {
-      if (navigator.vibrate) navigator.vibrate(10);
       if (isSearchBot) {
         if (typeof callback === 'function') callback();
         return;
@@ -1523,25 +1474,20 @@
       }
     });
 
-    // Back to top visibility listener
+    // 60fps/120fps rAF Throttled Scroll Observer for Back to Top Button
+    let isScrollTicking = false;
     window.addEventListener('scroll', () => {
-      const btn = document.getElementById('backToTopBtn');
-      if (btn) {
-        btn.classList.toggle('visible', window.scrollY > 380);
+      if (!isScrollTicking) {
+        window.requestAnimationFrame(() => {
+          const btn = document.getElementById('backToTopBtn');
+          if (btn) {
+            btn.classList.toggle('visible', window.scrollY > 400);
+          }
+          isScrollTicking = false;
+        });
+        isScrollTicking = true;
       }
     }, { passive: true });
-
-    // Sync watchlist count to bottom mobile dock
-    const originalUpdateWatchlistBadge = window.updateWatchlistBadge;
-    window.updateWatchlistBadge = function() {
-      if (typeof originalUpdateWatchlistBadge === 'function') {
-        originalUpdateWatchlistBadge();
-      }
-      const dockCount = document.getElementById('dockWatchlistCount');
-      if (dockCount && window.STATE?.watchlist) {
-        dockCount.innerText = window.STATE.watchlist.length;
-      }
-    };
 
     // Online/Offline detection listeners
     window.addEventListener('offline', () => {
