@@ -95,7 +95,7 @@
 
   <style>
     /* ==========================================================================
-       0. ULTRA-FAST SCROLLING & ZERO-BLANK ANTI-CHECKERBOARD ENGINE
+       0. ZERO-BLANK / STABLE VIEWPORT ARCHITECTURE
        ========================================================================== */
     html, :root {
       background-color: #040406 !important;
@@ -104,7 +104,6 @@
       overscroll-behavior-y: none;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
     }
 
     body {
@@ -118,49 +117,25 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      contain: paint;
+      position: relative;
     }
 
-    /* Hardware compositing layer promotion on root structural blocks */
-    .hero,
-    .header,
-    .content-rows,
-    .content-row,
-    .carousel-rail,
-    .carousel-track {
-      -webkit-transform: translate3d(0, 0, 0);
-      transform: translate3d(0, 0, 0);
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      -webkit-perspective: 1000px;
-      perspective: 1000px;
-    }
-
-    /* Content rows layout preservation during fast vertical scrolling */
+    /* Content rows layout preservation */
     .content-rows {
       position: relative;
       z-index: 1;
-      min-height: 100vh;
+      min-height: 80vh;
       background: #040406;
-      contain: layout style;
     }
 
-    .content-row {
-      contain: layout style;
-      margin-bottom: 24px;
-    }
-
-    /* Card placeholder bounds: prevents reflow collapse on rapid flicking */
     .anime-card,
-    .card-poster-wrap,
-    .search-item img {
-      background-color: #11121b;
+    .card-poster-wrap {
+      background-color: #12131d;
       aspect-ratio: 2 / 3;
-      transform: translateZ(0);
     }
 
     /* ==========================================================================
-       1. AESTHETIC SPLASH PRELOADER & HUD
+       1. SPLASH PRELOADER & HUD
        ========================================================================== */
     #siteSplashPreloader {
       position: fixed;
@@ -172,7 +147,6 @@
       align-items: center;
       justify-content: center;
       transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
-      contain: strict;
     }
     #siteSplashPreloader.preloader-hidden {
       opacity: 0;
@@ -298,13 +272,13 @@
     }
 
     /* ==========================================================================
-       2. VERSION UPDATE & DEEP PURGE TOAST MODAL
+       2. VERSION UPDATE NOTIFICATION (RESPONSIVE TOP-SLIDE ON MOBILE)
        ========================================================================== */
     #updateNoticeBanner {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      z-index: 9999999;
+      z-index: 99999;
       background: rgba(14, 15, 24, 0.96);
       border: 1px solid rgba(0, 240, 255, 0.4);
       backdrop-filter: blur(16px);
@@ -327,6 +301,22 @@
       pointer-events: auto;
       transform: translateY(0);
     }
+
+    @media (max-width: 768px) {
+      #updateNoticeBanner {
+        top: 68px !important;
+        bottom: auto !important;
+        left: 14px !important;
+        right: 14px !important;
+        width: auto !important;
+        max-width: none !important;
+        transform: translateY(-20px) !important;
+      }
+      #updateNoticeBanner.show {
+        transform: translateY(0) !important;
+      }
+    }
+
     .update-banner-header {
       display: flex;
       align-items: center;
@@ -412,21 +402,17 @@
     }
 
     /* ==========================================================================
-       3. DESKTOP-ONLY SCROLL CHEVRONS & MOUSE DRAG
-       Strictly hidden on mobile & touch devices!
+       3. DESKTOP-ONLY SCROLL CHEVRONS (STRICTLY DISABLED ON MOBILE)
        ========================================================================== */
     .row-wrapper-relative {
       position: relative;
     }
-
-    /* Default: HIDE the scroll arrow buttons completely */
     .row-nav-arrow {
       display: none !important;
       visibility: hidden !important;
       pointer-events: none !important;
     }
 
-    /* Only show scroll arrows on desktop devices with hover & mouse pointer */
     @media (hover: hover) and (pointer: fine) and (min-width: 769px) {
       .row-nav-arrow {
         display: flex !important;
@@ -461,71 +447,38 @@
         border-color: #ff0844;
         transform: translateY(-50%) scale(1.12);
       }
-      .row-nav-arrow.arrow-prev {
-        left: 12px;
-      }
-      .row-nav-arrow.arrow-next {
-        right: 12px;
-      }
-    }
+      .row-nav-arrow.arrow-prev { left: 12px; }
+      .row-nav-arrow.arrow-next { right: 12px; }
 
-    /* Desktop mouse drag styles */
-    @media (hover: hover) and (pointer: fine) {
       .carousel-rail,
       .carousel-track,
-      .content-row-items,
-      .ep-grid {
+      .content-row-items {
         cursor: grab;
-        user-select: none;
-        -webkit-user-select: none;
       }
-      .carousel-rail.is-mouse-dragging,
-      .carousel-track.is-mouse-dragging {
-        cursor: grabbing !important;
-        scroll-behavior: auto !important;
-      }
-      .carousel-rail.is-mouse-dragging * {
-        pointer-events: none !important;
-      }
-    }
-
-    /* Mobile native momentum scrolling */
-    @media (max-width: 768px), (pointer: coarse) {
-      .carousel-rail,
-      .carousel-track,
-      .content-row-items,
-      .chips-container {
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-        touch-action: pan-x pan-y;
-      }
-
-      #updateNoticeBanner {
-        bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-        right: 16px !important;
-        left: 16px !important;
-        width: auto !important;
+      .carousel-rail:active,
+      .carousel-track:active {
+        cursor: grabbing;
       }
     }
 
     /* ==========================================================================
-       4. FLOATING BACK TO TOP BUTTON
+       4. BACK TO TOP BUTTON (CLEAN BOTTOM-RIGHT DOCKING)
        ========================================================================== */
     #backToTopBtn {
       position: fixed;
       bottom: 24px;
-      left: 24px;
-      z-index: 99980;
+      right: 24px;
+      z-index: 999;
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: rgba(14, 15, 24, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(14, 15, 24, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -533,7 +486,7 @@
       visibility: hidden;
       transform: translateY(16px);
       transition: opacity 0.3s, transform 0.3s, background 0.2s;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
     }
     #backToTopBtn.visible {
       opacity: 1;
@@ -548,10 +501,15 @@
 
     @media (max-width: 768px) {
       #backToTopBtn {
-        bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-        left: 16px !important;
+        bottom: max(18px, calc(env(safe-area-inset-bottom, 0px) + 12px)) !important;
+        right: 16px !important;
         width: 40px;
         height: 40px;
+      }
+
+      /* HIDE the floating bubble dock on mobile so it never covers row cards */
+      .floating-quick-dock {
+        display: none !important;
       }
     }
 
@@ -771,7 +729,7 @@
     </div>
   </header>
 
-  <!-- QUICK FEATURE HUD DOCK -->
+  <!-- QUICK FEATURE HUD DOCK (Desktop Only) -->
   <aside class="floating-quick-dock" id="floatingQuickDock" aria-label="Quick Feature Tools">
     <button class="dock-btn" title="Community Comments" aria-label="Live Comments" onclick="window.toggleIframeChat(true)">
       <i class="fas fa-comment-dots" style="color:#00d2ff;"></i>
@@ -916,7 +874,7 @@
     </div>
   </section>
 
-  <!-- CONTENT ROWS (Protected from blanking on fast scroll) -->
+  <!-- CONTENT ROWS -->
   <main class="content-rows" id="contentRows"></main>
 
   <!-- STREAMING MODAL -->
@@ -1198,14 +1156,13 @@
         <div class="shortcut-row"><span>Fullscreen</span><kbd>F</kbd></div>
         <div class="shortcut-row"><span>Mute</span><kbd>M</kbd></div>
         <div class="shortcut-row"><span>Close Modal</span><kbd>Esc</kbd></div>
-        <div class="shortcut-row"><span>Drag Cards (Desktop)</span><kbd>Right-Click + Drag</kbd></div>
       </div>
     </div>
   </div>
 
   <!-- SCRIPT PIPELINE ENGINES (Synchronized to v73.0.0) -->
   <script src="core-engine.js?v=73.0.0"></script>
-  <script src="dash-player.js?v=73.0.0"></script>
+  <script src="dash-player.js?v=74.0.0"></script>
   <script src="streaming-ui.js?v=73.0.0"></script>
   <script src="p2p.js?v=73.0.0"></script>
   <script src="webapp.js?v=73.0.0"></script>
@@ -1220,7 +1177,7 @@
     // 1. UPDATE DETECTION & DEEP PURGE CONTROLLER
     // ========================================================================
     (function initUpdateAndCacheLifecycle() {
-      const TARGET_BUILD = window.APP_BUILD_VERSION || '74.0.0';
+      const TARGET_BUILD = window.APP_BUILD_VERSION || '73.0.0';
       const storedBuild = localStorage.getItem('animedrift_build_version');
 
       if (storedBuild && storedBuild !== TARGET_BUILD) {
@@ -1306,64 +1263,10 @@
     };
 
     // ========================================================================
-    // 2. DESKTOP-ONLY MOUSE DRAG & MOUSE WHEEL SCROLL FOR ANIME RAILS
+    // 2. DESKTOP-ONLY WHEEL & CHEVRON CONTROLS FOR CAROUSELS
     // ========================================================================
-    (function initDesktopMouseDragAndWheel() {
+    (function initDesktopCarousels() {
       if (isTouchDevice()) return;
-
-      let isDragging = false;
-      let startX = 0;
-      let scrollLeft = 0;
-      let targetRail = null;
-      let hasDraggedSignificantly = false;
-
-      document.addEventListener('mousedown', (e) => {
-        if (isTouchDevice()) return;
-        if (e.button !== 2 && e.button !== 1) return;
-
-        const rail = e.target.closest('.carousel-rail, .carousel-track, .content-row-items, .chips-container, #filterChips, .schedule-day-tabs');
-        if (!rail) return;
-
-        isDragging = true;
-        hasDraggedSignificantly = false;
-        targetRail = rail;
-        startX = e.pageX - rail.offsetLeft;
-        scrollLeft = rail.scrollLeft;
-
-        rail.classList.add('is-mouse-dragging');
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        if (!isDragging || !targetRail) return;
-
-        const x = e.pageX - targetRail.offsetLeft;
-        const walk = (x - startX) * 1.7;
-
-        if (Math.abs(walk) > 6) {
-          hasDraggedSignificantly = true;
-        }
-
-        targetRail.scrollLeft = scrollLeft - walk;
-      });
-
-      const stopDragging = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        if (targetRail) {
-          targetRail.classList.remove('is-mouse-dragging');
-          targetRail = null;
-        }
-      };
-
-      document.addEventListener('mouseup', stopDragging);
-      document.addEventListener('mouseleave', stopDragging);
-
-      document.addEventListener('contextmenu', (e) => {
-        if (hasDraggedSignificantly) {
-          e.preventDefault();
-          hasDraggedSignificantly = false;
-        }
-      });
 
       document.addEventListener('wheel', (e) => {
         if (isTouchDevice()) return;
@@ -1376,7 +1279,6 @@
         }
       }, { passive: false });
 
-      // Automatically attach Left/Right Chevron Navigation buttons ONLY for desktop
       const observeAndAttachRowArrows = () => {
         if (isTouchDevice()) return;
 
